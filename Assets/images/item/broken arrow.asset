@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: broken arrow
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: 折れた矢
+  icon: {fileID: -7401890289317631410, guid: e78e0f34158afe441917bd3c29178e26, type: 3}
+  itemType: 0
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 40
+  mass: 2
+  collisionRadius: 0.1
+  equipOnStart: 0
+  weaponPrefab: {fileID: 0}
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 3
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u534A\u5206\u304B\u3089\u6298\u308C\u305F\u77E2\u3002\u307E\u3060\u5148\u306F\u3059\u308B\u3069\u3044\u3002"
+  isConsumable: 0
+  itemEffects: []

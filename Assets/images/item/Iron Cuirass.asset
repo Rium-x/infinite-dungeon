@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Iron Cuirass
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u9244\u306E\u80F4\u7532"
+  icon: {fileID: -8506126273727069008, guid: 96019c5d2caa04cfabba98d28568fe1d, type: 3}
+  itemType: 4
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 90
+  mass: 2
+  collisionRadius: 0.1
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 555737676813804302, guid: cdecc38e7addf4d418d9d3bae840f44e, type: 3}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 3
+  equipScale: 1.5
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: cba3b43e5f9b64fc195b36270a0d1405, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u9244\u677F\u3092\u52A0\u5DE5\u3057\u3066\u4F5C\u3089\u308C\u305F\u6A19\u6E96\u7684\u306A\u80F4\u93A7\u3002\n\u91CD\u3044\u304C\u3001\u9632\u5FA1\u529B\u306B\u512A\u308C\u305F\u4FE1\u983C\u6027\u306E\u9AD8\u3044\u9632\u5177\u3002\n"
+  isConsumable: 0
+  itemEffects: []

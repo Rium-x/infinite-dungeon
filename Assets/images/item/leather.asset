@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: leather
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u76AE"
+  icon: {fileID: 5974187721683995368, guid: db3b0f8d208b7fe449963e3a43262cd4, type: 3}
+  itemType: 0
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 60
+  mass: 2
+  collisionRadius: 0.1
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 3
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u307C\u308D\u307C\u308D\u306E\u9769\u3002\u7C21\u6613\u7684\u306A\u4FEE\u7406\u6750\u306B\u4F7F\u3048\u305D\u3046\u3060\u3002\uFF08\u9060\u56DE\u3057\u306A\u300C\u4F7F\u3044\u7269\u306B\u306A\u3089\u306A\u305D\u3046\u300D\uFF09"
+  isConsumable: 0
+  itemEffects: []

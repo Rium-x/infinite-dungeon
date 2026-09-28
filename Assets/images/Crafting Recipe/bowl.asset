@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 538b36143f03e4769877db7324151c5c, type: 3}
+  m_Name: bowl
+  m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
+  recipeId: 
+  displayName: "\u30DC\u30A6\u30EB"
+  description: 
+  category: 
+  recipeType: 0
+  successChance: 100
+  consumeInputs: 1
+  outputMultiplier: 1
+  inputs:
+  - itemData: {fileID: 11400000, guid: 595b5e264859043d1a62824469565d6c, type: 2}
+    amount: 2
+  outputs:
+  - itemData: {fileID: 11400000, guid: f3ba201c547854aeebcbd4efb1acb9c7, type: 2}
+    amount: 1

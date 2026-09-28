@@ -1,0 +1,32 @@
+{
+  "recipes": [
+    {
+      "id": "wood_plank",
+      "name": "木材から板材を作る",
+      "type": "craft",
+      "description": "木材を加工して板材を作ります。",
+      "category": "素材加工",
+      "ingredients": [
+        { "itemId": "wood", "quantity": 2 }
+      ],
+      "results": [
+        { "itemId": "wood_plank", "quantity": 1 }
+      ],
+      "successChance": 100,
+      "consume": true,
+      "multiplier": 1
+    },
+    {
+      "id": "stone_reclaim",
+      "displayName": "石材を分解する",
+      "recipeType": "Dismantle",
+      "inputs": [
+        { "item": "stone", "amount": 1 }
+      ],
+      "outputs": [
+        { "item": "wood", "amount": 1 },
+        { "item": "stone", "amount": 2 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 538b36143f03e4769877db7324151c5c, type: 3}
+  m_Name: MHsoup
+  m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
+  recipeType: 0
+  inputs:
+  - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
+    amount: 1
+  - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
+    amount: 1
+  - itemData: {fileID: 11400000, guid: f3ba201c547854aeebcbd4efb1acb9c7, type: 2}
+    amount: 1
+  - itemData: {fileID: 11400000, guid: bcdb77378297fbc4885d775f32b087a4, type: 2}
+    amount: 1
+  outputs:
+  - itemData: {fileID: 11400000, guid: 0ecababa1e28d41afb09878ae0096a67, type: 2}
+    amount: 1

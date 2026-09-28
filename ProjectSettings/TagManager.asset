@@ -1,0 +1,72 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 3
+  tags:
+  - Enemy
+  - wall
+  - P_HB
+  - Chest
+  - Item
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - Wall
+  - Water
+  - UI
+  - Enemy
+  - Player
+  - Chest
+  - Item
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: "\u5730\u9762"
+    uniqueID: 2793600625
+    locked: 0
+  - name: Default
+    uniqueID: 0
+    locked: 0
+  - name: Wall
+    uniqueID: 1512260081
+    locked: 0
+  - name: Characters
+    uniqueID: 1651033857
+    locked: 0
+  - name: Armor
+    uniqueID: 458812037
+    locked: 0
+  - name: Sky
+    uniqueID: 1003949601
+    locked: 0
+  - name: UI
+    uniqueID: 3678935987
+    locked: 0
+  - name: Visibility
+    uniqueID: 1902660487
+    locked: 0
+  m_RenderingLayers:
+  - Default
+  m_MigratedRenderPipelines: []

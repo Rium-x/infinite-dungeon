@@ -1,0 +1,111 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4ff71bbe6d35d6245b7b983d5628737c, type: 3}
+  m_Name: 2
+  m_EditorClassIdentifier: Assembly-CSharp::StageData
+  stageName: "Goblin's lair \\n (\u30B4\u30D6\u30EA\u30F3\u306E\u305D\u3046\u304F\u3064)"
+  randomPlayerSpawn: 1
+  playerSpawnPosition: {x: 0, y: 0}
+  manualMapPrefab: {fileID: 0}
+  mapWidth: 180
+  mapHeight: 180
+  roomLibrary: {fileID: 11400000, guid: b8ce77ecff4dc4a49a5971bd85d5169f, type: 2}
+  groundTile: {fileID: 11400000, guid: 9c856d9c2663fae428408e8cae5759a2, type: 2}
+  groundTileWeights:
+  - tile: {fileID: 11400000, guid: 9c856d9c2663fae428408e8cae5759a2, type: 2}
+    weight: 80
+  - tile: {fileID: 11400000, guid: 8b74a652c6a34fb4aa342dbafb78d0a7, type: 2}
+    weight: 18
+  - tile: {fileID: 11400000, guid: 5d85e946032d5ee44bb0b645fed1935f, type: 2}
+    weight: 1
+  randomizeRoomFloors: 0
+  wallTile: {fileID: 0}
+  spawnList:
+  - enemyName: Slime
+    prefab: {fileID: 298427082835796845, guid: e3a1c42963b3b284dbb370b274fb5736, type: 3}
+    maxCount: 20
+    spawnMode: 3
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 20
+  - enemyName: Goblin
+    prefab: {fileID: 298427082835796845, guid: 8aa4bf6ebfd815446b4c41a2bd2c7887, type: 3}
+    maxCount: 25
+    spawnMode: 0
+    startDelay: 40
+    minSpawnDelay: 5
+    maxSpawnDelay: 15
+  - enemyName: Chest
+    prefab: {fileID: 362433543248169716, guid: 7844ba9a4071fd844bbb0402464a8292, type: 3}
+    maxCount: 10
+    spawnMode: 1
+    startDelay: 40
+    minSpawnDelay: 5
+    maxSpawnDelay: 30
+  - enemyName: Chest1
+    prefab: {fileID: 362433543248169716, guid: 89910b4ed82320d4b9f0d4c1fc208bb5, type: 3}
+    maxCount: 23
+    spawnMode: 0
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 30
+  - enemyName: Slime aaa
+    prefab: {fileID: 298427082835796845, guid: 6366fa78279c80e41921db416348ccbf, type: 3}
+    maxCount: 15
+    spawnMode: 0
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 30
+  - enemyName: mushroom
+    prefab: {fileID: 362433543248169716, guid: 4cdd271c995133547a07599c27d4b0dd, type: 3}
+    maxCount: 10
+    spawnMode: 3
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 20
+  - enemyName: mushroom01
+    prefab: {fileID: 362433543248169716, guid: f1686296e018f624fab9385ea49b209a, type: 3}
+    maxCount: 5
+    spawnMode: 3
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 20
+  - enemyName: aaaaaaaaa
+    prefab: {fileID: 362433543248169716, guid: cba1a841bdc8d124fa96e730954cb596, type: 3}
+    maxCount: 2
+    spawnMode: 0
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 20
+  - enemyName: Goblin aaa
+    prefab: {fileID: 298427082835796845, guid: 8aa4bf6ebfd815446b4c41a2bd2c7887, type: 3}
+    maxCount: 10
+    spawnMode: 0
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 20
+  - enemyName: Goblin aaaaaa
+    prefab: {fileID: 298427082835796845, guid: 95248f27357c5594fac2432a9ac03fff, type: 3}
+    maxCount: 20
+    spawnMode: 0
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 20
+  - enemyName: 4444
+    prefab: {fileID: 298427082835796845, guid: 95248f27357c5594fac2432a9ac03fff, type: 3}
+    maxCount: 15
+    spawnMode: 2
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 20
+  spawnEnemiesOnManualMap: 0
+  nextStage: {fileID: 11400000, guid: 8cdf45dddeddb3847908676c0fb51886, type: 2}

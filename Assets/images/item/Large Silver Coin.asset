@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Large Silver Coin
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u5927\u9280\u8CA8"
+  icon: {fileID: 7581980872028768777, guid: 9fb2a658a818a9a48a4c65fe94a657f5, type: 3}
+  itemType: 0
+  rarity: 1
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 220
+  mass: 5
+  collisionRadius: 0.2
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 2
+  equipScale: 1.1
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u901A\u5E38\u9280\u8CA8\u3088\u308A\u4FA1\u5024\u304C\u9AD8\u3044\u3002\u3067\u304B\u3063"
+  isConsumable: 0
+  itemEffects: []

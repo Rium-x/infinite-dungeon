@@ -1,0 +1,28 @@
+{
+  "items": [
+    {
+      "id": "wood",
+      "itemName": "木材",
+      "itemType": "Material",
+      "rarity": "Common",
+      "description": "加工に使われる普通の木材。",
+      "canStack": true,
+      "maxStackSize": 99
+    },
+    {
+      "id": "stone",
+      "itemName": "石",
+      "itemType": "Material",
+      "rarity": "Common",
+      "description": "普通の石。"
+    },
+    {
+      "id": "herb",
+      "itemName": "薬草",
+      "itemType": "Consumable",
+      "rarity": "Common",
+      "description": "体力を回復する薬草。",
+      "isConsumable": true
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Broken Sword
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u6298\u308C\u305F\u5263"
+  icon: {fileID: 21300000, guid: cc803e33f282fd44f8d9fe2f7c3cc185, type: 3}
+  itemType: 1
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 180
+  mass: 5
+  collisionRadius: 0.1
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 555737676813804302, guid: 6e0d8e571e9b3604db742fc34993142e, type: 3}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.17, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 1.5
+  canStack: 0
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u8D64\u304F\u3055\u3073\u305F\u53E4\u3044\u5263\u3002\u307E\u3060\u5207\u308C\u308B\u3002\u3054\u3081\u3093\u3084\u3063\u3071\u304D\u308C\u306A\u3044\u304B\u3082"
+  isConsumable: 0
+  itemEffects: []

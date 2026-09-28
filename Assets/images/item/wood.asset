@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: wood
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: 木材
+  icon: {fileID: -3309080738005559460, guid: fd3b85673b8dc49808a08c60f6da1df9, type: 3}
+  itemType: 0
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 90
+  mass: 2
+  collisionRadius: 0.1
+  equipOnStart: 0
+  weaponPrefab: {fileID: 0}
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 2
+  equipScale: 2
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u6728\u6750\u3002\u3053\u308C\u3067\u4F55\u304B\u4F5C\u308C\u308B\u3060\u308D\u3046\u304B"
+  isConsumable: 0
+  itemEffects: []

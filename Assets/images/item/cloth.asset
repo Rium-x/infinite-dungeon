@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: cloth
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u5E03"
+  icon: {fileID: 5070220869725930858, guid: 2736db1f0e3346748ae29e522cb08f1f, type: 3}
+  itemType: 0
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 60
+  mass: 2
+  collisionRadius: 0.1
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 3
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u53E4\u3073\u305F\u7AEF\u5207\u308C\u3002\u624B\u89E6\u308A\u306F\u7C97\u3044\u304C\u3001\u4F7F\u3044\u53E4\u3055\u308C\u305F\u6E29\u3082\u308A\u304C\u3042\u308B\u3002
+    \u751F\u6696\u304B\u3044...\u30AD\u30E2"
+  isConsumable: 0
+  itemEffects: []

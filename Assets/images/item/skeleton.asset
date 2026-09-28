@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: skeleton
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: 骸骨
+  icon: {fileID: 7353546891000795130, guid: bd981c9eabafb4d0b88aa3a4b9a8d921, type: 3}
+  itemType: 0
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 90
+  mass: 2
+  collisionRadius: 0.1
+  equipOnStart: 0
+  weaponPrefab: {fileID: 0}
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 3
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u304B\u3064\u3066\u4EBA\u306E\u9854\u3092\u5F62\u4F5C\u3063\u3066\u3044\u305F\u9AA8\u3002\u9577\u3044\u5E74\u6708\u3092\u7D4C\u3066\u3082\u3001\u305D\u306E\u5F62\u3060\u3051\u306F\u6B8B\u3063\u3066\u3044\u308B\u3002"
+  isConsumable: 0
+  itemEffects: []

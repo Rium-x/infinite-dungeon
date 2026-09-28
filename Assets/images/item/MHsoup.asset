@@ -1,0 +1,40 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: MHsoup
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: キノコスープ
+  icon: {fileID: 4487842036446715964, guid: c0c0b3da4e9a14b09b5eafd8fa8b7467, type: 3}
+  itemType: 2
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 5
+  baseLifeTime: 180
+  mass: 1
+  collisionRadius: 0.13
+  equipOnStart: 0
+  weaponPrefab: {fileID: 0}
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 5
+  equipScale: 2
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u30AD\u30CE\u30B3\u304C\u5165\u3063\u305F\u30B9\u30FC\u30D7\u3002\u30CF\u30FC\u30D6\u304C\u5165\u3063\u3066\u3044\u308B\u306E\u3067\u6804\u990A\u6E80\u70B9"
+  isConsumable: 1
+  itemEffects:
+  - {fileID: 11400000, guid: 9a1e9fdce68f30e4e8195b3f7049a6aa, type: 2}
+  - {fileID: 11400000, guid: 9a1e9fdce68f30e4e8195b3f7049a6aa, type: 2}

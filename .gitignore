@@ -104,3 +104,12 @@ InitTestScene*.unity*
 
 # Auto-generated cache in Assets folder
 /[Aa]ssets/[Ss]ceneDependencyCache*
+
+# Local editor state
+.obsidian/
+.vscode/*
+!.vscode/extensions.json
+
+# OS metadata
+.DS_Store
+Thumbs.db

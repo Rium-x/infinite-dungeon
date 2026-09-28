@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Iron Shield
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: 鉄の盾
+  icon: {fileID: 21300000, guid: a6f70f33958436a4daac3103a704ca8f, type: 3}
+  itemType: 1
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 30
+  mass: 5
+  collisionRadius: 0.1
+  equipOnStart: 1
+  weaponPrefab: {fileID: 555737676813804302, guid: 61083cd236e7147b28c6c28910b9b676, type: 3}
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0.2, y: 0.5, z: 0}
+  visualScale: 4.5
+  equipScale: 1.5
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u9244\u3067\u4F5C\u3089\u308C\u305F\u9811\u4E08\u306A\u76FE\u3002\u6728\u306E\u76FE\u3088\u308A\u3082\u91CD\u3044\u304C\u3001\u3088\u308A\u5F37\u529B\u306A\u653B\u6483\u3092\u53D7\u3051\u6B62\u3081\u308B\u3053\u3068\u304C\u3067\u304D\u308B\u3002"
+  isConsumable: 0
+  itemEffects: []

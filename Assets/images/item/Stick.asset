@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Stick
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: 棒
+  icon: {fileID: 7353294426574453240, guid: e358ed7bde62fd84b8295cab681fe291, type: 3}
+  itemType: 1
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 60
+  mass: 5
+  collisionRadius: 0.1
+  equipOnStart: 1
+  weaponPrefab: {fileID: 555737676813804302, guid: 1583757063357a64c80bdbcbe0e69a1a, type: 3}
+  handLayer: 1
+  equipPositionOffset: {x: 0.05, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 1.5
+  canStack: 0
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u6298\u308C\u304B\u3051\u305F\u6728\u306E\u68D2\u3002\u5F31\u3044\u304C\u7121\u3044\u3088\u308A\u307E\u3057\u3002"
+  isConsumable: 0
+  itemEffects: []

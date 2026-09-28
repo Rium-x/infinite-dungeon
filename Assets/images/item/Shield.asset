@@ -1,0 +1,38 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Shield
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u6728\u306E\u76FE"
+  icon: {fileID: -7469855268645434294, guid: 6e2841accb801254587587672c2ba330, type: 3}
+  itemType: 1
+  rarity: 0
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 180
+  mass: 5
+  collisionRadius: 0.1
+  equipOnStart: 1
+  weaponPrefab: {fileID: 555737676813804302, guid: 44d7c0612f07541d3bb91a071f029064, type: 3}
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.1, z: 0}
+  equipRotationOffset: {x: 0.2, y: 0.5, z: 0}
+  visualScale: 4.5
+  equipScale: 1.5
+  canStack: 0
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u767D\u3044\u5341\u5B57\u306E\u6A21\u69D8\u304C\u63CF\u304B\u308C\u305F\u3001\u6728\u306E\u76FE\u3002"
+  isConsumable: 0
+  itemEffects: []
