@@ -12,15 +12,47 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 02625238967e24e13b6fbf7f2dc9ab0c, type: 3}
   m_Name: DungeonRoomLibrary
   m_EditorClassIdentifier: Assembly-CSharp::DungeonRoomLibrary
-  smallRooms:
-  - {fileID: 8346961634279647381, guid: 28a4a95e8094d4a7c8f2758e7215bbf9, type: 3}
-  - {fileID: 2268309366662937298, guid: bc20979b6b38c4805bccc333d3b5cc29, type: 3}
-  largeRooms:
-  - {fileID: 3827745028263364601, guid: b3f9653e7b7344921b7f4e15a9a8b287, type: 3}
-  - {fileID: 4985094446915672750, guid: e28a62b54bf5f412baba03a9462b9a14, type: 3}
-  specialRooms:
-  - {fileID: 6841493121066132117, guid: d357adb4b04d941319e178de92f59fba, type: 3}
-  specialRoomChance: 0.08
-  targetRoomCount: 18
+  rooms:
+  - prefab: {fileID: 2268309366662937298, guid: bc20979b6b38c4805bccc333d3b5cc29, type: 3}
+    size: 0
+    spawnWeight: 7
+    guaranteedCount: 0
+  - prefab: {fileID: 8346961634279647381, guid: 28a4a95e8094d4a7c8f2758e7215bbf9, type: 3}
+    size: 0
+    spawnWeight: 5
+    guaranteedCount: 0
+  - prefab: {fileID: 4985094446915672750, guid: e28a62b54bf5f412baba03a9462b9a14, type: 3}
+    size: 1
+    spawnWeight: 3
+    guaranteedCount: 0
+  - prefab: {fileID: 3827745028263364601, guid: b3f9653e7b7344921b7f4e15a9a8b287, type: 3}
+    size: 1
+    spawnWeight: 1
+    guaranteedCount: 0
+  - prefab: {fileID: 6841493121066132117, guid: d357adb4b04d941319e178de92f59fba, type: 3}
+    size: 2
+    spawnWeight: 3
+    guaranteedCount: 0
+  - prefab: {fileID: 6841493121066132117, guid: da14553f859be48f6a879795ca456c25, type: 3}
+    size: 2
+    spawnWeight: 0
+    guaranteedCount: 3
+  - prefab: {fileID: 4985094446915672750, guid: 4fdee5d9228254b95bfd99748b8b067b, type: 3}
+    size: 1
+    spawnWeight: 1
+    guaranteedCount: 0
+  - prefab: {fileID: 4985094446915672750, guid: 5fd642043faf748dd8f33ac99bf1cff9, type: 3}
+    size: 1
+    spawnWeight: 2
+    guaranteedCount: 0
+  - prefab: {fileID: 8346961634279647381, guid: af56755a90d744daba5ce6a073649e6b, type: 3}
+    size: 0
+    spawnWeight: 12
+    guaranteedCount: 0
+  - prefab: {fileID: 8346961634279647381, guid: 037184087403b46cdae13c6f4e8073f5, type: 3}
+    size: 0
+    spawnWeight: 5
+    guaranteedCount: 0
+  targetRoomCount: 2
   corridorWidth: 3
-  extraConnectionChance: 0.12
+  extraConnectionChance: 0.482

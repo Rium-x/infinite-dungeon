@@ -2,13 +2,14 @@ using UnityEditor;
 using UnityEngine;
 
 [CustomEditor(typeof(ItemData))]
+[CanEditMultipleObjects]
 public class ItemDataEditor : Editor
 {
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
         SerializedProperty itemType = serializedObject.FindProperty("itemType");
-        bool isArmor = itemType != null &&
+        bool isArmor = itemType != null && !itemType.hasMultipleDifferentValues &&
             (ItemType)itemType.enumValueIndex == ItemType.Armor;
 
         SerializedProperty property = serializedObject.GetIterator();

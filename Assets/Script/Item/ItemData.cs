@@ -3,8 +3,9 @@ using UnityEngine.Serialization;
 using System.Collections.Generic;
 using System.Linq;
 
+// Kept for importing older JSON values such as "Rare"; ItemData stores numeric rarity.
 public enum ItemRarity { Common, Rare, Epic, Legendary }
-public enum ItemType { Coin, Weapon, Consumable, Material, Armor }
+public enum ItemType { Coin, Weapon, Consumable, Material, Armor, Garbage }
 public enum HandLayer { BehindHand, InFrontOfHand }
 public enum ArmorSlot { Hands, Body, Face, Feet }
 
@@ -14,7 +15,14 @@ public class ItemData : ScriptableObject
     public string itemName;
     public Sprite icon;
     public ItemType itemType;
-    public ItemRarity rarity;
+    [Range(0f, 100f), Tooltip("基本のドロップ確率(%)。0～100で設定し、大きいほど出やすくなります。通常ドロップではステージ補正を加算します。")]
+    public float rarity;
+    [Header("ドロップ個数")]
+    [Min(1), Tooltip("ドロップ個数グラフの横軸上限です。")]
+    public int maxDropCount = 10;
+    [Tooltip("横軸は落ちる個数(1～上限)、縦軸はその個数の確率です。個数ごとのグラフ値を合計100%になるよう正規化して抽選します。整数個数の点をベル型に並べればガウス分布のような形になります。通常・モンスター固有の両ドロップに適用します。")]
+    public AnimationCurve dropCountProbability = new AnimationCurve(
+        new Keyframe(0f, 0f), new Keyframe(1f, 100f), new Keyframe(2f, 0f), new Keyframe(10f, 0f));
 
     [Header("初期設定")]
     public bool isDefaultItem = false;   // 初期配布するかどうか

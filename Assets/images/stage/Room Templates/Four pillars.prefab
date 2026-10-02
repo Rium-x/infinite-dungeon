@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 2680010133382115841}
   - component: {fileID: 4985094446915672750}
   m_Layer: 0
-  m_Name: Large Cross
+  m_Name: Four pillars
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -59,7 +59,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52d051bc09ed54163a6dd1223c0fa636, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DungeonRoomDefinition
-  size: 1
+  usableExitCount: 4
   floorTilemap: {fileID: 1999771329053869684}
   wallTilemap: {fileID: 3809114797783957847}
   exits:

@@ -68,12 +68,10 @@ public class Item : MonoBehaviour
         float rarityMultiplier = 1.0f;
         if (data != null)
         {
-            switch (data.rarity)
-            {
-                case ItemRarity.Rare:      rarityMultiplier = 1.5f; break;
-                case ItemRarity.Epic:      rarityMultiplier = 2.0f; break;
-                case ItemRarity.Legendary: rarityMultiplier = 5.0f; break;
-            }
+            // Preserve legacy rarity lifetime tiers while rarity itself is now numeric.
+            if (data.rarity >= 3f) rarityMultiplier = 5.0f;
+            else if (data.rarity >= 2f) rarityMultiplier = 2.0f;
+            else if (data.rarity >= 1f) rarityMultiplier = 1.5f;
         }
 
         float baseTime = (data != null ? data.baseLifeTime : 180f) * rarityMultiplier;

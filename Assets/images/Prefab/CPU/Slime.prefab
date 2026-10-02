@@ -197,21 +197,21 @@ MonoBehaviour:
   fadeInDuration: 1
   fadeOutDuration: 1
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
+  normalDropRate: 17
+  normalItemTypeAdjustments:
+  - itemType: 0
+    modifier: -20
+  - itemType: 1
+    modifier: -41
+  - itemType: 3
+    modifier: 9
+  - itemType: 4
+    modifier: -23
+  - itemType: 5
+    modifier: 6
   dropList:
-  - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
-    dropProbability: 10
-  - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
-    dropProbability: 10
-  - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
-    dropProbability: 5
-  - itemData: {fileID: 11400000, guid: 888cf211361fbbc43a045b2e99125cff, type: 2}
-    dropProbability: 5
   - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
-    dropProbability: 2
-  - itemData: {fileID: 11400000, guid: c573c7be79f06a444b5aa5cebf2b259f, type: 2}
-    dropProbability: 2
-  - itemData: {fileID: 11400000, guid: c124b1c58a5c6254882ab855a0074f7a, type: 2}
-    dropProbability: 1
+    monsterModifier: 30
 --- !u!114 &-2762092022758411803
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -238,7 +238,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSorting
   sortingLayerName: Characters
   yToSortingScale: 10
-  extraOffset: 5
+  characterOrderRange: 100
+  characterOffset: 0
 --- !u!1 &582678512741391667
 GameObject:
   m_ObjectHideFlags: 0
@@ -367,7 +368,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9284174071077574dbf54ed3683362dc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  currentState: 3
+  currentState: 0
   detectRange: 7
   detectionMask:
     serializedVersion: 2

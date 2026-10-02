@@ -45,7 +45,8 @@ public struct DungeonRoomExit
 /// </summary>
 public sealed class DungeonRoomDefinition : MonoBehaviour
 {
-    public DungeonRoomSize size = DungeonRoomSize.Small;
+    [Range(1, 4), Tooltip("この部屋で通路接続に使える出入口アンカー数。1なら登録済みの出入口から1つをランダム選択、4なら全出入口を使います。")]
+    public int usableExitCount = 4;
     public Tilemap floorTilemap;
     public Tilemap wallTilemap;
     public List<DungeonRoomExit> exits = new List<DungeonRoomExit>();

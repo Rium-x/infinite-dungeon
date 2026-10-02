@@ -4199,6 +4199,16 @@ Tilemap:
       m_TileObjectToInstantiateIndex: 65535
       dummyAlignment: 0
       m_AllTileFlags: 1073741825
+  - first: {x: -78, y: -7, z: 0}
+    second:
+      serializedVersion: 2
+      m_TileIndex: 0
+      m_TileSpriteIndex: 0
+      m_TileMatrixIndex: 1
+      m_TileColorIndex: 0
+      m_TileObjectToInstantiateIndex: 65535
+      dummyAlignment: 0
+      m_AllTileFlags: 1073741825
   - first: {x: 79, y: -2, z: 0}
     second:
       serializedVersion: 2
@@ -4272,14 +4282,14 @@ Tilemap:
   m_AnimatedTiles: {}
   m_TileAssetArray:
   - serializedVersion: 2
-    m_RefCount: 8
+    m_RefCount: 9
     m_Data: {fileID: 11400000, guid: 0c4a6f6002b0e3b40a19a9bbcc65a3fa, type: 2}
   - serializedVersion: 2
     m_RefCount: 0
     m_Data: {fileID: 11400000, guid: d62e94c332e1d2b49a41b13b99f0079d, type: 2}
   m_TileSpriteArray:
   - serializedVersion: 2
-    m_RefCount: 8
+    m_RefCount: 9
     m_Data: {fileID: 21300000, guid: 338d319301d12d348b9b5a31d81b1390, type: 3}
   - serializedVersion: 2
     m_RefCount: 0
@@ -4305,7 +4315,7 @@ Tilemap:
       e32: 0
       e33: 1
   - serializedVersion: 2
-    m_RefCount: 8
+    m_RefCount: 9
     m_Data:
       e00: 1
       e01: 0
@@ -4325,7 +4335,7 @@ Tilemap:
       e33: 1
   m_TileColorArray:
   - serializedVersion: 2
-    m_RefCount: 8
+    m_RefCount: 9
     m_Data: {r: 1, g: 1, b: 1, a: 1}
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
@@ -4409,6 +4419,14 @@ MonoBehaviour:
           tangent: {x: -1, y: 0, z: 85.99997, w: -2}
         - position: {x: 85.99997, y: -2, z: 0}
           tangent: {x: -1, y: 0, z: 85.99997, w: -1}
+        - position: {x: -77.00003, y: -6, z: 0}
+          tangent: {x: -1, y: 0, z: -78, w: -6.0000305}
+        - position: {x: -78, y: -6.0000305, z: 0}
+          tangent: {x: -1, y: 0, z: -77.99997, w: -7}
+        - position: {x: -77.99997, y: -7, z: 0}
+          tangent: {x: -1, y: 0, z: -77.00003, w: -7}
+        - position: {x: -77.00003, y: -7, z: 0}
+          tangent: {x: -1, y: 0, z: -77.00003, w: -6}
         - position: {x: -88.00003, y: -56, z: 0}
           tangent: {x: -1, y: 0, z: -89, w: -56.00003}
         - position: {x: -89, y: -56.00003, z: 0}
@@ -4449,6 +4467,38 @@ MonoBehaviour:
           tangent: {x: 1, y: 0, z: 85.99997, w: -1}
         - position: {x: 85.99997, y: -2, z: 0}
           tangent: {x: 3, y: 0, z: 85.99997, w: -1}
+        - position: {x: -77.00003, y: -6, z: 0}
+          tangent: {x: 0, y: 0, z: -78, w: -6.0000305}
+        - position: {x: -78, y: -6.0000305, z: 0}
+          tangent: {x: 0, y: 0, z: -77.00003, w: -6}
+        - position: {x: -77.00003, y: -6, z: 0}
+          tangent: {x: 1, y: 0, z: -78, w: -6.0000305}
+        - position: {x: -77.00003, y: -6, z: 0}
+          tangent: {x: 3, y: 0, z: -78, w: -6.0000305}
+        - position: {x: -78, y: -6.0000305, z: 0}
+          tangent: {x: 0, y: 0, z: -77.99997, w: -7}
+        - position: {x: -77.99997, y: -7, z: 0}
+          tangent: {x: 0, y: 0, z: -78, w: -6.0000305}
+        - position: {x: -78, y: -6.0000305, z: 0}
+          tangent: {x: 1, y: 0, z: -77.99997, w: -7}
+        - position: {x: -78, y: -6.0000305, z: 0}
+          tangent: {x: 3, y: 0, z: -77.99997, w: -7}
+        - position: {x: -77.99997, y: -7, z: 0}
+          tangent: {x: 0, y: 0, z: -77.00003, w: -7}
+        - position: {x: -77.00003, y: -7, z: 0}
+          tangent: {x: 0, y: 0, z: -77.99997, w: -7}
+        - position: {x: -77.99997, y: -7, z: 0}
+          tangent: {x: 1, y: 0, z: -77.00003, w: -7}
+        - position: {x: -77.99997, y: -7, z: 0}
+          tangent: {x: 3, y: 0, z: -77.00003, w: -7}
+        - position: {x: -77.00003, y: -7, z: 0}
+          tangent: {x: 0, y: 0, z: -77.00003, w: -6}
+        - position: {x: -77.00003, y: -6, z: 0}
+          tangent: {x: 0, y: 0, z: -77.00003, w: -7}
+        - position: {x: -77.00003, y: -7, z: 0}
+          tangent: {x: 1, y: 0, z: -77.00003, w: -6}
+        - position: {x: -77.00003, y: -7, z: 0}
+          tangent: {x: 3, y: 0, z: -77.00003, w: -6}
         - position: {x: -88.00003, y: -56, z: 0}
           tangent: {x: 0, y: 0, z: -89, w: -56.00003}
         - position: {x: -89, y: -56.00003, z: 0}
@@ -4481,7 +4531,7 @@ MonoBehaviour:
           tangent: {x: 1, y: 0, z: -88.00003, w: -56}
         - position: {x: -88.00003, y: -57, z: 0}
           tangent: {x: 3, y: 0, z: -88.00003, w: -56}
-        m_Indices: 000000000800000009000000090000000100000000000000010000000c0000000d0000000d0000000200000001000000020000001000000011000000110000000300000002000000030000001400000015000000150000000000000003000000000000000a0000000b000000010000000e0000000f000000020000001200000013000000030000001600000017000000040000001800000019000000190000000500000004000000050000001c0000001d0000001d0000000600000005000000060000002000000021000000210000000700000006000000070000002400000025000000250000000400000007000000040000001a0000001b000000050000001e0000001f000000060000002200000023000000070000002600000027000000
+        m_Indices: 000000000c0000000d0000000d0000000100000000000000010000001000000011000000110000000200000001000000020000001400000015000000150000000300000002000000030000001800000019000000190000000000000003000000000000000e0000000f000000010000001200000013000000020000001600000017000000030000001a0000001b000000040000001c0000001d0000001d0000000500000004000000050000002000000021000000210000000600000005000000060000002400000025000000250000000700000006000000070000002800000029000000290000000400000007000000040000001e0000001f000000050000002200000023000000060000002600000027000000070000002a0000002b000000080000002c0000002d0000002d0000000900000008000000090000003000000031000000310000000a000000090000000a0000003400000035000000350000000b0000000a0000000b000000380000003900000039000000080000000b000000080000002e0000002f0000000900000032000000330000000a00000036000000370000000b0000003a0000003b000000
         m_LocalBounds:
           m_Center: {x: -1.5000153, y: -29, z: 0}
           m_Extent: {x: 87.499985, y: 28, z: 0}
@@ -4680,6 +4730,14 @@ CompositeCollider2D:
         Y: -20000000
       - X: 860000000
         Y: -20000000
+    - - X: -770000000
+        Y: -60000000
+      - X: -780000000
+        Y: -60000000
+      - X: -780000000
+        Y: -70000000
+      - X: -770000000
+        Y: -70000000
     - - X: -880000000
         Y: -560000000
       - X: -890000000
@@ -4694,6 +4752,10 @@ CompositeCollider2D:
       - {x: 85.99997, y: -1}
       - {x: 79, y: -1.0000293}
       - {x: 79.00003, y: -2}
+    - - {x: -77.00003, y: -7}
+      - {x: -77.00003, y: -6}
+      - {x: -78, y: -6.000029}
+      - {x: -77.99997, y: -7}
     - - {x: -88.00003, y: -57}
       - {x: -88.00003, y: -56}
       - {x: -89, y: -56.000034}
@@ -544503,19 +544565,18 @@ MonoBehaviour:
   overrideMapSize: 0
   mapWidth: 120
   mapHeight: 120
-  roomCount: 50
+  roomCount: 54
   maxRoomDensity: 0.8
-  smallRoomChance: 0.65
-  specialRoomChance: 0.21
-  roomPlacementPadding: 2
+  roomPlacementPadding: 3
   corridorWidth: 3
   extraBranchCount: 24
-  branchChance: 1
-  maxRoomLinkDistance: 36
-  maxCorridorTurns: 6
-  windingCorridorChance: 0.796
-  outsideFloorPadding: 8
+  branchChance: 0.878
+  maxRoomLinkDistance: 29
+  maxCorridorTurns: 4
+  windingCorridorChance: 0.729
+  outsideFloorPadding: 20
   layoutSeed: -1
+  removedRoomRetryThreshold: 4
 --- !u!1 &1891767855
 GameObject:
   m_ObjectHideFlags: 0

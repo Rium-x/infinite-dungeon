@@ -23,11 +23,11 @@ public static class DungeonRoomAssetBuilder
             return;
         }
 
-        DungeonRoomDefinition smallSquare = CreateRoom("Small Square", DungeonRoomSize.Small, 9, 9, floor, wall, 0);
-        DungeonRoomDefinition smallHall = CreateRoom("Small Hall", DungeonRoomSize.Small, 11, 9, floor, wall, 1);
-        DungeonRoomDefinition largeHall = CreateRoom("Large Hall", DungeonRoomSize.Large, 15, 13, floor, wall, 2);
-        DungeonRoomDefinition largeCross = CreateRoom("Large Cross", DungeonRoomSize.Large, 17, 15, floor, wall, 3);
-        DungeonRoomDefinition archive = CreateRoom("Special Archive", DungeonRoomSize.Special, 13, 13, floor, wall, 4);
+        DungeonRoomDefinition smallSquare = CreateRoom("Small Square", 9, 9, floor, wall, 0);
+        DungeonRoomDefinition smallHall = CreateRoom("Small Hall", 11, 9, floor, wall, 1);
+        DungeonRoomDefinition largeHall = CreateRoom("Large Hall", 15, 13, floor, wall, 2);
+        DungeonRoomDefinition largeCross = CreateRoom("Large Cross", 17, 15, floor, wall, 3);
+        DungeonRoomDefinition archive = CreateRoom("Special Archive", 13, 13, floor, wall, 4);
 
         DungeonRoomLibrary library = AssetDatabase.LoadAssetAtPath<DungeonRoomLibrary>(LibraryPath);
         if (library == null)
@@ -35,10 +35,14 @@ public static class DungeonRoomAssetBuilder
             library = ScriptableObject.CreateInstance<DungeonRoomLibrary>();
             AssetDatabase.CreateAsset(library, LibraryPath);
         }
-        library.smallRooms = new List<DungeonRoomDefinition> { smallSquare, smallHall };
-        library.largeRooms = new List<DungeonRoomDefinition> { largeHall, largeCross };
-        library.specialRooms = new List<DungeonRoomDefinition> { archive };
-        library.specialRoomChance = 0.08f;
+        library.rooms = new List<DungeonRoomSpawnRule>
+        {
+            new DungeonRoomSpawnRule { prefab = smallSquare, size = DungeonRoomSize.Small, spawnWeight = 1f },
+            new DungeonRoomSpawnRule { prefab = smallHall, size = DungeonRoomSize.Small, spawnWeight = 1f },
+            new DungeonRoomSpawnRule { prefab = largeHall, size = DungeonRoomSize.Large, spawnWeight = 1f },
+            new DungeonRoomSpawnRule { prefab = largeCross, size = DungeonRoomSize.Large, spawnWeight = 1f },
+            new DungeonRoomSpawnRule { prefab = archive, size = DungeonRoomSize.Special, spawnWeight = 1f }
+        };
         library.targetRoomCount = 18;
         library.corridorWidth = 2;
         library.extraConnectionChance = 0.12f;
@@ -64,7 +68,7 @@ public static class DungeonRoomAssetBuilder
         if (!AssetDatabase.IsValidFolder(path)) AssetDatabase.CreateFolder(parent, child);
     }
 
-    private static DungeonRoomDefinition CreateRoom(string name, DungeonRoomSize size,
+    private static DungeonRoomDefinition CreateRoom(string name,
         int width, int height, TileBase floorTile, TileBase wallTile, int style)
     {
         string path = RoomFolder + "/" + name + ".prefab";
@@ -77,7 +81,6 @@ public static class DungeonRoomAssetBuilder
         Tilemap floorMap = CreateTilemap(root.transform, "Floor", 0);
         Tilemap wallMap = CreateTilemap(root.transform, "Wall", 1);
         DungeonRoomDefinition definition = root.AddComponent<DungeonRoomDefinition>();
-        definition.size = size;
         definition.floorTilemap = floorMap;
         definition.wallTilemap = wallMap;
 

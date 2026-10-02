@@ -13,9 +13,13 @@ using UnityEditor; // Selectionクラスを使うために必要
 public class BSPDungeonMaster : MonoBehaviour
 {
     public static event Action OnGenerationComplete;
+    public static bool HasCompletedGeneration { get; private set; }
+    public static int GenerationVersion { get; private set; }
 
     [Header("Current Stage")]
     public StageData currentStageData;
+    private StageData firstStageData;
+    public StageData StartingStageData => firstStageData != null ? firstStageData : currentStageData;
 
     [Header("Cleaning Settings")]
     public List<string> tagsToClear = new List<string> { "Enemy", "Item", "Projectile" };
@@ -43,9 +47,6 @@ public class BSPDungeonMaster : MonoBehaviour
     [Min(2)] public int roomCount = 18;
     [Tooltip("部屋が占める面積の上限割合。配置に余裕がない場合は部屋数が減ります。")]
     [Range(0.05f, 0.8f)] public float maxRoomDensity = 0.32f;
-    [Tooltip("通常部屋から小部屋を選ぶ確率。残りは大部屋になります。")]
-    [Range(0f, 1f)] public float smallRoomChance = 0.65f;
-    [Range(0f, 1f)] public float specialRoomChance = 0.08f;
     [Tooltip("部屋同士の最低間隔。大きくすると通路が長くなり、配置数は減ります。")]
     [Min(1)] public int roomPlacementPadding = 3;
 
@@ -67,12 +68,26 @@ public class BSPDungeonMaster : MonoBehaviour
     [Header("Reproducibility")]
     [Tooltip("-1で毎回ランダム。0以上なら同じレイアウトを再現します。")]
     public int layoutSeed = -1;
+
+    [Header("Generation Safety")]
+    [Min(0), Tooltip("削除される通常部屋がこの数以下なら配置を再試行しません。保証部屋の接続失敗時は常に再試行します。")]
+    public int removedRoomRetryThreshold = 3;
     private readonly List<GameObject> manualMapObjects = new List<GameObject>();
     private readonly List<GameObject> generatedRoomObjects = new List<GameObject>();
     private readonly List<RandomTeleporter> pausedManualMapTeleporters = new List<RandomTeleporter>();
     private bool isTransitioning = false;
     public static bool IsPlayerInputLocked { get; private set; }
     public bool IsUsingManualMap => currentStageData != null && currentStageData.manualMapPrefab != null;
+
+    public float GetCurrentDropPosition(int playerLevel)
+    {
+        StageData start = StartingStageData;
+        StageData current = currentStageData != null ? currentStageData : start;
+        List<StageData> chain = NormalItemDropCalculator.GetStageChain(start);
+        float stagePosition = NormalItemDropCalculator.GetPosition(current, chain);
+        float perLevel = start != null ? start.playerLevelPositionPerLevel : 0f;
+        return stagePosition + Mathf.Max(0, playerLevel - 1) * perLevel;
+    }
 
     public void GetEnemySpawnRange(out Vector2 min, out Vector2 max)
     {
@@ -98,7 +113,7 @@ public class BSPDungeonMaster : MonoBehaviour
 
         // 1. 最初は真っ暗＆文字が表示された状態にする
         if (fadePanel != null) fadePanel.color = Color.black;
-        if (stageText != null) 
+        if (stageText != null)
         {
             stageText.text = currentStageData.stageName;
             stageText.color = Color.white;
@@ -111,9 +126,9 @@ public class BSPDungeonMaster : MonoBehaviour
         GenerateDungeon();
 
         // 3. 画面が真っ暗な状態で少し待機（ロード待ちやプレイヤーに心の準備をさせる）
-        yield return new WaitForSecondsRealtime(3.5f); 
+        yield return new WaitForSecondsRealtime(3.5f);
 
-        
+
 
         // 4. 徐々に透明にしていく（fadeDuration秒かけて消える）
         yield return StartCoroutine(Fade(0));
@@ -127,6 +142,7 @@ public class BSPDungeonMaster : MonoBehaviour
 
     private void Awake()
     {
+        HasCompletedGeneration = false;
         if (Instance != null && Instance != this)
         {
             Debug.LogError("BSPDungeonMaster が複数存在しています。");
@@ -135,6 +151,7 @@ public class BSPDungeonMaster : MonoBehaviour
         }
 
         if (wallTilemap == null) wallTilemap = tilemap;
+        firstStageData = currentStageData;
         Instance = this;
     }
 
@@ -155,7 +172,7 @@ public class BSPDungeonMaster : MonoBehaviour
         Selection.activeGameObject = null;
         #endif
 
-        Time.timeScale = 0; 
+        Time.timeScale = 0;
         IsPlayerInputLocked = true;
 
         if (currentStageData.nextStage != null)
@@ -163,7 +180,7 @@ public class BSPDungeonMaster : MonoBehaviour
         else
             stageText.text = "Final Stage Clear!";
 
-        yield return StartCoroutine(Fade(1)); 
+        yield return StartCoroutine(Fade(1));
 
         if (currentStageData.nextStage != null)
         {
@@ -172,11 +189,11 @@ public class BSPDungeonMaster : MonoBehaviour
             GenerateDungeon();
         }
 
-        yield return new WaitForSecondsRealtime(3.5f); 
+        yield return new WaitForSecondsRealtime(3.5f);
 
         yield return StartCoroutine(Fade(0));
 
-        Time.timeScale = 1; 
+        Time.timeScale = 1;
         IsPlayerInputLocked = false;
         IsTransitioning = false;
     }
@@ -190,19 +207,20 @@ public class BSPDungeonMaster : MonoBehaviour
 
         while (timer < fadeDuration)
         {
-            timer += Time.unscaledDeltaTime; 
+            timer += Time.unscaledDeltaTime;
             float a = Mathf.Lerp(startAlpha, targetAlpha, timer / fadeDuration);
             fadePanel.color = new Color(0, 0, 0, a);
             stageText.color = new Color(1, 1, 1, a);
             yield return null;
         }
-        
+
         fadePanel.color = new Color(0, 0, 0, targetAlpha);
         stageText.color = new Color(1, 1, 1, targetAlpha);
     }
 
     public void GenerateDungeon()
     {
+        HasCompletedGeneration = false;
         AlignOutputTilemaps();
         ClearManualMapObjects();
         ClearGeneratedRoomObjects();
@@ -221,6 +239,8 @@ public class BSPDungeonMaster : MonoBehaviour
         if (col != null) col.ProcessTilemapChanges();
 
         Physics2D.SyncTransforms();
+        GenerationVersion++;
+        HasCompletedGeneration = true;
         OnGenerationComplete?.Invoke();
 
         if (IsUsingManualMap)
@@ -274,9 +294,9 @@ public class BSPDungeonMaster : MonoBehaviour
                 currentStageData.roomLibrary, roomPlacementPadding, floorTilemap, wallTilemap,
                 stageFloor, currentStageData.groundTileWeights, currentStageData.randomizeRoomFloors,
                 stageWall, seed, transform, generatedRoomObjects, roomCount, maxRoomDensity,
-                smallRoomChance, Mathf.Max(3, corridorWidth), extraBranchCount, branchChance,
+                Mathf.Max(3, corridorWidth), extraBranchCount, branchChance,
                 maxRoomLinkDistance, maxCorridorTurns, windingCorridorChance,
-                specialRoomChance, outsideFloorPadding))
+                outsideFloorPadding, removedRoomRetryThreshold))
             Debug.LogError("ダンジョン生成に失敗しました。Room Libraryと部屋Prefabを確認してください。", currentStageData);
     }
 

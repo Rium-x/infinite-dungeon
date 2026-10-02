@@ -5,7 +5,12 @@ using System.Collections.Generic;
 
 public class PlayerHealth : MonoBehaviour
 {
+    public static PlayerHealth Instance { get; private set; }
+
     [SerializeField] private float maxHealth = 100f;
+    [SerializeField, Min(1), Tooltip("ドロップ抽選に使うレベル。レベル進行を追加したら SetPlayerLevel で更新してください。")]
+    private int playerLevel = 1;
+    public int PlayerLevel => Mathf.Max(1, playerLevel);
 
     public bool IsAtFullHealth => currentHealth >= maxHealth;
     
@@ -46,6 +51,7 @@ public class PlayerHealth : MonoBehaviour
 
     void OnEnable()
     {
+        Instance = this;
         BSPDungeonMaster.OnGenerationComplete -= HandleDungeonGenerated;
         BSPDungeonMaster.OnGenerationComplete += HandleDungeonGenerated;
     }
@@ -53,6 +59,13 @@ public class PlayerHealth : MonoBehaviour
     void OnDisable()
     {
         BSPDungeonMaster.OnGenerationComplete -= HandleDungeonGenerated;
+        if (Instance == this)
+            Instance = null;
+    }
+
+    public void SetPlayerLevel(int level)
+    {
+        playerLevel = Mathf.Max(1, level);
     }
 
     void HandleDungeonGenerated()

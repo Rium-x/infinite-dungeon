@@ -71,27 +71,42 @@ MonoBehaviour:
   fadeInDuration: 1
   fadeOutDuration: 1
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
-  dropList:
-  - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
-    dropProbability: 25
-  - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
-    dropProbability: 25
-  - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
-    dropProbability: 5
-  - itemData: {fileID: 11400000, guid: 006f69b06d70db94d8742d0977231488, type: 2}
-    dropProbability: 5
-  - itemData: {fileID: 11400000, guid: 409456caa896f16459076eb42a8c1c8b, type: 2}
-    dropProbability: 0.1
-  - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
-    dropProbability: 10
-  - itemData: {fileID: 11400000, guid: 82316af56353b154388415d0c1914125, type: 2}
-    dropProbability: 5
-  - itemData: {fileID: 11400000, guid: c573c7be79f06a444b5aa5cebf2b259f, type: 2}
-    dropProbability: 5
-  - itemData: {fileID: 11400000, guid: c124b1c58a5c6254882ab855a0074f7a, type: 2}
-    dropProbability: 5
-  - itemData: {fileID: 11400000, guid: cd88976c9c0192c4797b0d983718f611, type: 2}
-    dropProbability: 5
+  normalItemDropChanceByRarity:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0.5966263
+      value: -0.7939
+      inSlope: 0.00616578
+      outSlope: 0.00616578
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.13454717
+    - serializedVersion: 3
+      time: 107.93884
+      value: 31.44942
+      inSlope: 0.1728377
+      outSlope: 0.1728377
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 1
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  normalItemTypeAdjustments:
+  - itemType: 0
+    relativeFrequencyAdjustment: -9
+  - itemType: 1
+    relativeFrequencyAdjustment: -31
+  - itemType: 3
+    relativeFrequencyAdjustment: 15
+  - itemType: 4
+    relativeFrequencyAdjustment: -49
+  - itemType: 5
+    relativeFrequencyAdjustment: 25
+  dropList: []
 --- !u!114 &-5732425892869942870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -118,7 +133,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSorting
   sortingLayerName: Characters
   yToSortingScale: 10
-  extraOffset: 0
+  characterOrderRange: 100
+  characterOffset: 0
 --- !u!1 &514238009033180783
 GameObject:
   m_ObjectHideFlags: 0

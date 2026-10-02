@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class EnemySpawner : MonoBehaviour
 {
     private BSPDungeonMaster dungeonMaster;
+    private int handledGenerationVersion = -1;
     
     // 【重要】設定データ（インスタンス）そのものをキーにして、個別にカウントを管理
     private Dictionary<EnemySpawnSettings, int> activeCounts = new Dictionary<EnemySpawnSettings, int>();
@@ -19,6 +20,13 @@ public class EnemySpawner : MonoBehaviour
         BSPDungeonMaster.OnGenerationComplete += OnDungeonGenerated;
     }
 
+    void Start()
+    {
+        // If this spawner was enabled after the generation event, catch up once.
+        if (BSPDungeonMaster.HasCompletedGeneration)
+            OnDungeonGenerated();
+    }
+
     void OnDisable()
     {
         BSPDungeonMaster.OnGenerationComplete -= OnDungeonGenerated;
@@ -26,6 +34,13 @@ public class EnemySpawner : MonoBehaviour
 
     void OnDungeonGenerated()
     {
+        if (!BSPDungeonMaster.HasCompletedGeneration ||
+            handledGenerationVersion == BSPDungeonMaster.GenerationVersion) return;
+
+        handledGenerationVersion = BSPDungeonMaster.GenerationVersion;
+        if (dungeonMaster == null)
+            dungeonMaster = Object.FindAnyObjectByType<BSPDungeonMaster>();
+
         StopAllCoroutines();
         activeCounts.Clear(); // 辞書をまっさらにリセット
 
@@ -121,7 +136,7 @@ public class EnemySpawner : MonoBehaviour
         {
             dungeonMaster.GetEnemySpawnRange(out Vector2 min, out Vector2 max);
             teleporter.SetSpawnRange(min, max);
-            teleporter.TeleportWithFade(null, false);
+            teleporter.TeleportToRandomPosition();
         }
     }
 }

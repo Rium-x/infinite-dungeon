@@ -38,8 +38,16 @@ public class EnemyHealth : MonoBehaviour
     [SerializeField] private float fadeInDuration = 1.0f;
     [SerializeField] private float fadeOutDuration = 1.0f;
 
-    [Header("Drop Settings")]
+    [Header("通常アイテムのドロップ")]
     public GameObject itemPrefab;
+    [Range(0f, 200f)]
+    [Tooltip("このモンスターの通常ドロップ確率。100%=設定どおり、0%=通常ドロップなし、200%=確率2倍(最大100%)です。モンスター固有ドロップには影響しません。")]
+    public float normalDropRate = 100f;
+    [Tooltip("通常アイテムの種類ごとの倍率補正。0=標準、-100=出ない、+100=2倍です。未登録の種類は標準です。")]
+    public List<MonsterItemTypeAdjustment> normalItemTypeAdjustments = new List<MonsterItemTypeAdjustment>();
+
+    [Header("モンスター固有ドロップ")]
+    [Tooltip("モンスター固有アイテム。レアリティ(%) + 各行のモンスター補正(-100～100)を確率として個別に抽選します。")]
     public List<DropItemSetting> dropList = new List<DropItemSetting>();
 
     private SpriteRenderer[] allRenderers;
@@ -165,13 +173,7 @@ public class EnemyHealth : MonoBehaviour
                 col.enabled = false;
         }
 
-        foreach (var setting in dropList)
-        {
-            float val = Random.Range(0f, 100f);
-
-            if (val <= setting.dropProbability)
-                DropItem(setting.itemData);
-        }
+        DropConfiguredLoot();
 
         AudioClip sound = GetRandomDamageSound();
         if (sound != null)
@@ -282,6 +284,96 @@ public class EnemyHealth : MonoBehaviour
             Vector2 randomDir = Random.insideUnitCircle.normalized;
             rb.AddForce(randomDir * 0.0005f, ForceMode2D.Impulse);
         }
+    }
+
+    private void DropConfiguredLoot()
+    {
+        int playerLevel = PlayerHealth.Instance != null ? PlayerHealth.Instance.PlayerLevel : 1;
+        StageData stage = BSPDungeonMaster.Instance != null
+            ? BSPDungeonMaster.Instance.currentStageData
+            : null;
+        BSPDungeonMaster dungeon = BSPDungeonMaster.Instance;
+
+        // Shared normal drops: rarity + the stage-data probability keyframes.
+        if (stage != null)
+        {
+            StageData first = dungeon != null ? dungeon.StartingStageData : stage;
+            List<StageData> stageChain = NormalItemDropCalculator.GetStageChain(first);
+            float position = dungeon != null
+                ? dungeon.GetCurrentDropPosition(playerLevel)
+                : NormalItemDropCalculator.GetPosition(stage, stageChain);
+            float falloff = stage.normalItemPositionFalloff;
+            float rampDistance = stage.normalItemEntryRampDistance;
+            List<ItemData> candidates = NormalItemDropCalculator.GetCandidateItems(stageChain);
+            foreach (ItemData item in candidates)
+            {
+                float chance = NormalItemDropCalculator.GetStageProbability(
+                    stageChain, item, position, falloff, rampDistance);
+                chance *= GetNormalItemTypeMultiplier(item.itemType);
+                chance *= Mathf.Clamp(normalDropRate, 0f, 200f) / 100f;
+                if (RollDropChance(chance))
+                    DropConfiguredItemAmount(item);
+            }
+        }
+
+        // Monster-specific drops are an independent second roll.
+        if (dropList == null) return;
+        foreach (DropItemSetting setting in dropList)
+        {
+            if (setting == null || setting.itemData == null) continue;
+            float chance = Mathf.Clamp(setting.itemData.rarity, 0f, 100f) +
+                Mathf.Clamp(setting.monsterModifier, -100f, 100f);
+            if (RollDropChance(chance))
+                DropConfiguredItemAmount(setting.itemData);
+        }
+    }
+
+    private void DropConfiguredItemAmount(ItemData item)
+    {
+        if (item == null) return;
+        int count = RollDropCount(item);
+        for (int i = 0; i < count; i++)
+            DropItem(item);
+    }
+
+    private static int RollDropCount(ItemData item)
+    {
+        AnimationCurve curve = item.dropCountProbability;
+        if (curve == null || curve.length == 0) return 1;
+
+        int maxCount = Mathf.Clamp(item.maxDropCount, 1, 100);
+        float totalWeight = 0f;
+        for (int count = 1; count <= maxCount; count++)
+            totalWeight += Mathf.Clamp(curve.Evaluate(count), 0f, 100f);
+
+        if (totalWeight <= Mathf.Epsilon) return 1;
+
+        float roll = Random.Range(0f, totalWeight);
+        for (int count = 1; count <= maxCount; count++)
+        {
+            roll -= Mathf.Clamp(curve.Evaluate(count), 0f, 100f);
+            if (roll < 0f) return count;
+        }
+
+        return maxCount;
+    }
+
+    private float GetNormalItemTypeMultiplier(ItemType itemType)
+    {
+        if (normalItemTypeAdjustments == null) return 1f;
+        for (int i = 0; i < normalItemTypeAdjustments.Count; i++)
+        {
+            MonsterItemTypeAdjustment adjustment = normalItemTypeAdjustments[i];
+            if (adjustment != null && adjustment.itemType == itemType)
+                return Mathf.Max(0f, 1f + Mathf.Clamp(adjustment.modifier, -100f, 100f) / 100f);
+        }
+        return 1f;
+    }
+
+    private static bool RollDropChance(float chancePercent)
+    {
+        float chance = Mathf.Clamp(chancePercent, 0f, 100f);
+        return chance >= 100f || (chance > 0f && Random.Range(0f, 100f) < chance);
     }
 
     public void Heal(float amount)

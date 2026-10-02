@@ -3,6 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 using UnityEditor;
 using UnityEngine;
 
@@ -320,12 +321,16 @@ public class JsonItemDataImporterWindow : EditorWindow
 
         if (!string.IsNullOrWhiteSpace(json.rarity))
         {
-            if (Enum.TryParse(
+            if (float.TryParse(json.rarity, NumberStyles.Float, CultureInfo.InvariantCulture, out float numericRarity))
+            {
+                item.rarity = Mathf.Max(0f, numericRarity);
+            }
+            else if (Enum.TryParse(
                 json.rarity,
                 true,
                 out ItemRarity rarity))
             {
-                item.rarity = rarity;
+                item.rarity = (int)rarity;
             }
             else
             {

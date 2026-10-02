@@ -29,6 +29,34 @@ MonoBehaviour:
     weight: 1
   randomizeRoomFloors: 0
   wallTile: {fileID: 0}
+  hierarchyPosition: 1
+  playerLevelPositionPerLevel: 0.1
+  normalItemPositionFalloff: 0.5
+  normalItemEntryRampDistance: 2
+  normalItemDrops:
+    items:
+    - itemData: {fileID: 11400000, guid: 888cf211361fbbc43a045b2e99125cff, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: 065895ca1990c43ab8e145b92a4ffa08, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: c573c7be79f06a444b5aa5cebf2b259f, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: 595b5e264859043d1a62824469565d6c, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: bcdb77378297fbc4885d775f32b087a4, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: 65b86dfb435a8444193b336181774ce5, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: 409456caa896f16459076eb42a8c1c8b, type: 2}
+      stageModifier: -50
+    - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
+      stageModifier: -50
   spawnList:
   - enemyName: Slime
     prefab: {fileID: 298427082835796845, guid: e3a1c42963b3b284dbb370b274fb5736, type: 3}
@@ -46,14 +74,14 @@ MonoBehaviour:
     maxSpawnDelay: 15
   - enemyName: Chest
     prefab: {fileID: 362433543248169716, guid: 7844ba9a4071fd844bbb0402464a8292, type: 3}
-    maxCount: 15
+    maxCount: 10
     spawnMode: 1
     startDelay: 70
     minSpawnDelay: 5
     maxSpawnDelay: 30
   - enemyName: Chest1
     prefab: {fileID: 362433543248169716, guid: 89910b4ed82320d4b9f0d4c1fc208bb5, type: 3}
-    maxCount: 25
+    maxCount: 16
     spawnMode: 0
     startDelay: 0
     minSpawnDelay: 5
@@ -76,13 +104,6 @@ MonoBehaviour:
     prefab: {fileID: 362433543248169716, guid: f1686296e018f624fab9385ea49b209a, type: 3}
     maxCount: 15
     spawnMode: 3
-    startDelay: 0
-    minSpawnDelay: 5
-    maxSpawnDelay: 20
-  - enemyName: aaaaaaaaa
-    prefab: {fileID: 362433543248169716, guid: cba1a841bdc8d124fa96e730954cb596, type: 3}
-    maxCount: 3
-    spawnMode: 0
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20

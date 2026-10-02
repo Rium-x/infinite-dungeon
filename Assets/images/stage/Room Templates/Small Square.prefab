@@ -1071,7 +1071,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 52d051bc09ed54163a6dd1223c0fa636, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::DungeonRoomDefinition
-  size: 0
+  usableExitCount: 4
   floorTilemap: {fileID: 394078525456682934}
   wallTilemap: {fileID: 656684315004233753}
   exits:
