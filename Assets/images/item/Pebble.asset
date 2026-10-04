@@ -12,22 +12,66 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
   m_Name: Pebble
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: 小石
+  itemName: "\u5C0F\u77F3"
   icon: {fileID: 2049844201211968365, guid: 09ced6244affb4b05a7600a417f63646, type: 3}
-  itemType: 0
-  rarity: 0
+  itemType: 5
+  rarity: 52.8
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2.7063904
+      value: 0.36627197
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   isDefaultItem: 1
   defaultAmount: 1
-  baseLifeTime: 90
+  baseLifeTime: 300
   mass: 2
   collisionRadius: 0.1
   equipOnStart: 0
-  weaponPrefab: {fileID: 0}
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
   handLayer: 1
   equipPositionOffset: {x: 0, y: 0.05, z: 0}
   equipRotationOffset: {x: 0, y: 0, z: 0}
-  visualScale: 4.5
-  equipScale: 2
+  visualScale: 3.5
+  equipScale: 2.1
   canStack: 1
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
@@ -35,4 +79,5 @@ MonoBehaviour:
   useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
   description: "\u3069\u3053\u306B\u3067\u3082\u8EE2\u304C\u3063\u3066\u3044\u308B\u3001\u4F55\u306E\u5909\u54F2\u3082\u306A\u3044\u77F3\u3053\u308D\u3002\u5C0F\u3055\u304F\u786C\u304F\u3001\u7279\u306B\u4FA1\u5024\u306F\u306A\u3055\u305D\u3046\u3060\u3002"
   isConsumable: 0
-  itemEffects: []
+  useEffects: []
+  legacyItemEffects: []

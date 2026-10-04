@@ -494,11 +494,18 @@ public class CraftingWindowUI : MonoBehaviour
 
     private void CraftSelectedItems()
     {
-        List<CraftingRecipe> matchingRecipes =
-            FindMatchingRecipes();
+        List<CraftingRecipe> matchingRecipes = FindMatchingRecipes();
 
         if (matchingRecipes.Count == 0)
         {
+            CraftingRecipe missingToolRecipe = FindInputMatchWithoutTool();
+            if (missingToolRecipe != null)
+            {
+                CraftingProcessDefinition.HasRequiredTool(missingToolRecipe, out ItemData requiredTool);
+                SetStatus("必要な道具がありません: " + requiredTool.itemName, Color.red);
+                return;
+            }
+
             SetStatus(
                 "材料に一致するレシピがありません。",
                 Color.black);
@@ -563,10 +570,7 @@ public class CraftingWindowUI : MonoBehaviour
         string recipeName = string.IsNullOrWhiteSpace(recipe.displayName)
             ? recipe.name
             : recipe.displayName;
-        string action = recipe.recipeType == CraftingRecipeType.Combine
-            ? "合成しました。"
-            : "分解しました。";
-        SetStatus(recipeName + "：" + action, Color.green);
+        SetStatus(recipeName + "：" + CraftingProcessDefinition.GetCompletionText(recipe.processingMethod), Color.green);
 
         RebuildAvailableItems();
         RebuildSelectedItems();
@@ -581,11 +585,23 @@ public class CraftingWindowUI : MonoBehaviour
 
         foreach (CraftingRecipe recipe in recipes)
         {
-            if (RecipeInputsMatchSelectedItems(recipe))
+            if (RecipeInputsMatchSelectedItems(recipe) &&
+                CraftingProcessDefinition.HasRequiredTool(recipe, out _))
                 matches.Add(recipe);
         }
 
         return matches;
+    }
+
+    private CraftingRecipe FindInputMatchWithoutTool()
+    {
+        foreach (CraftingRecipe recipe in recipes)
+        {
+            if (RecipeInputsMatchSelectedItems(recipe) &&
+                !CraftingProcessDefinition.HasRequiredTool(recipe, out _))
+                return recipe;
+        }
+        return null;
     }
 
     private bool RecipeInputsMatchSelectedItems(
@@ -884,6 +900,16 @@ public class CraftingWindowUI : MonoBehaviour
 
         if (matchingRecipes.Count == 0)
         {
+            CraftingRecipe missingToolRecipe = FindInputMatchWithoutTool();
+            if (missingToolRecipe != null)
+            {
+                CraftingProcessDefinition.HasRequiredTool(missingToolRecipe, out ItemData requiredTool);
+                SetStatus("必要な道具がありません: " + requiredTool.itemName, Color.red);
+                selectedOutput = null;
+                RebuildOutputs();
+                return;
+            }
+
             SetStatus(
                 selectedItems.Count == 0
                     ? "アイテムをドラッグしてください。"

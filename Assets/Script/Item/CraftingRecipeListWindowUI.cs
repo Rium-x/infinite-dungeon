@@ -226,12 +226,9 @@ public class CraftingRecipeListWindowUI : MonoBehaviour
         rowLayout.preferredWidth = rowWidth;
 
         string recipeLabel = string.IsNullOrWhiteSpace(recipe.displayName)
-            ? recipe.recipeId
+            ? recipe.name
             : recipe.displayName;
-        if (string.IsNullOrWhiteSpace(recipeLabel))
-            recipeLabel = recipe.name;
-        if (!string.IsNullOrWhiteSpace(recipe.description))
-            recipeLabel += "\n" + recipe.description;
+        recipeLabel += "\n方法: " + CraftingProcessDefinition.GetMethodName(recipe.processingMethod);
 
         TextMeshProUGUI title = CreateLabel(
             recipeLabel,

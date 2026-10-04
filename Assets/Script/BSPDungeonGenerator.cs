@@ -18,8 +18,10 @@ public class BSPDungeonMaster : MonoBehaviour
 
     [Header("Current Stage")]
     public StageData currentStageData;
-    private StageData firstStageData;
-    public StageData StartingStageData => firstStageData != null ? firstStageData : currentStageData;
+    [Tooltip("ダンジョンの進行順。通常アイテムの確率補間にもこの順番を使用します。")]
+    public List<StageData> stageOrder = new List<StageData>();
+    [Tooltip("ONなら順序リストの最後から先頭へ戻ります。")]
+    public bool loopStageOrder;
 
     [Header("Cleaning Settings")]
     public List<string> tagsToClear = new List<string> { "Enemy", "Item", "Projectile" };
@@ -79,14 +81,38 @@ public class BSPDungeonMaster : MonoBehaviour
     public static bool IsPlayerInputLocked { get; private set; }
     public bool IsUsingManualMap => currentStageData != null && currentStageData.manualMapPrefab != null;
 
-    public float GetCurrentDropPosition(int playerLevel)
+    public List<StageData> GetOrderedStages()
     {
-        StageData start = StartingStageData;
-        StageData current = currentStageData != null ? currentStageData : start;
-        List<StageData> chain = NormalItemDropCalculator.GetStageChain(start);
-        float stagePosition = NormalItemDropCalculator.GetPosition(current, chain);
-        float perLevel = start != null ? start.playerLevelPositionPerLevel : 0f;
-        return stagePosition + Mathf.Max(0, playerLevel - 1) * perLevel;
+        var orderedStages = new List<StageData>();
+        if (stageOrder != null)
+        {
+            var seen = new HashSet<StageData>();
+            foreach (StageData stage in stageOrder)
+                if (stage != null && seen.Add(stage))
+                    orderedStages.Add(stage);
+        }
+        if (orderedStages.Count == 0 && currentStageData != null)
+        {
+            var visited = new HashSet<StageData>();
+            StageData stage = currentStageData;
+            while (stage != null && visited.Add(stage))
+            {
+                orderedStages.Add(stage);
+                stage = stage.LegacyNextStage;
+            }
+            if (stage != null)
+                loopStageOrder = true;
+        }
+        return orderedStages;
+    }
+
+    private StageData GetNextStageInOrder()
+    {
+        List<StageData> orderedStages = GetOrderedStages();
+        int currentIndex = orderedStages.IndexOf(currentStageData);
+        if (currentIndex < 0) return null;
+        if (currentIndex + 1 < orderedStages.Count) return orderedStages[currentIndex + 1];
+        return loopStageOrder && orderedStages.Count > 0 ? orderedStages[0] : null;
     }
 
     public void GetEnemySpawnRange(out Vector2 min, out Vector2 max)
@@ -151,9 +177,27 @@ public class BSPDungeonMaster : MonoBehaviour
         }
 
         if (wallTilemap == null) wallTilemap = tilemap;
-        firstStageData = currentStageData;
+        List<StageData> orderedStages = GetOrderedStages();
+        if (stageOrder == null) stageOrder = new List<StageData>();
+        stageOrder.Clear();
+        stageOrder.AddRange(orderedStages);
+        if (stageOrder.Count > 0)
+            currentStageData = stageOrder[0];
         Instance = this;
     }
+
+#if UNITY_EDITOR
+    private void OnValidate()
+    {
+        if (stageOrder != null && stageOrder.Count > 0) return;
+        List<StageData> migratedOrder = GetOrderedStages();
+        if (migratedOrder.Count == 0) return;
+        if (stageOrder == null) stageOrder = new List<StageData>();
+        stageOrder.AddRange(migratedOrder);
+        if (gameObject.scene.IsValid())
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+    }
+#endif
 
     public void GoToNextStage()
 {
@@ -175,16 +219,17 @@ public class BSPDungeonMaster : MonoBehaviour
         Time.timeScale = 0;
         IsPlayerInputLocked = true;
 
-        if (currentStageData.nextStage != null)
-            stageText.text = currentStageData.nextStage.stageName;
+        StageData nextStage = GetNextStageInOrder();
+        if (nextStage != null)
+            stageText.text = nextStage.stageName;
         else
             stageText.text = "Final Stage Clear!";
 
         yield return StartCoroutine(Fade(1));
 
-        if (currentStageData.nextStage != null)
+        if (nextStage != null)
         {
-            currentStageData = currentStageData.nextStage;
+            currentStageData = nextStage;
             ExplorationManager.Instance?.ResetProgress();
             GenerateDungeon();
         }

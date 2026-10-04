@@ -16,18 +16,19 @@ public class StageData : ScriptableObject
 {
     public string stageName;
 
-    [Header("ドロップ位置")]
-    [Tooltip("アイテム出現位置の基準。0ならnextStageの順番を1から数えます。明示する場合は階層ごとに連続した数値を設定します。")]
-    public float hierarchyPosition;
-    [Min(0f), Tooltip("プレイヤーレベルが1上がるごとに進むドロップ位置。0ならプレイヤーレベルでは変化しません。")]
-    public float playerLevelPositionPerLevel = 0.1f;
-    [Range(0f, 1f), Tooltip("最後に設定した階層から離れたとき、位置1つごとに残る通常アイテム補正の割合。0.5なら100, 50, 25...です。")]
-    public float normalItemPositionFalloff = 0.5f;
-    [Min(0.01f), Tooltip("アイテムが初めて登録された階層より手前で、補正を0から登録値まで滑らかに上げる距離。2なら2階層前で0%、1階層前で半分です。")]
-    public float normalItemEntryRampDistance = 2f;
+    [Header("通常アイテムの順序補正")]
+    [Min(0f), Tooltip("プレイヤーレベルが1上がるごとに進むステージ順の量。0ならプレイヤーレベルでは変化しません。")]
+    [UnityEngine.Serialization.FormerlySerializedAs("playerLevelPositionPerLevel")]
+    public float playerLevelOrderPerLevel = 0.1f;
+    [Range(0f, 1f), Tooltip("最後に設定したステージ順から離れたとき、順番1つごとに残る通常アイテム補正の割合。0.5なら100, 50, 25...です。")]
+    [UnityEngine.Serialization.FormerlySerializedAs("normalItemPositionFalloff")]
+    public float normalItemOrderFalloff = 0.5f;
+    [Min(0.01f), Tooltip("アイテムが初めて登録されたステージより前で、補正を0から登録値まで滑らかに上げる順序数。2なら2つ前で0%、1つ前で半分です。")]
+    [UnityEngine.Serialization.FormerlySerializedAs("normalItemEntryRampDistance")]
+    public float normalItemEntryRampStages = 2f;
 
     [Header("通常アイテム")]
-    [Tooltip("この階層での通常アイテム候補と確率補正。アイテム未登録の階層間は滑らかに補間され、全ステージで未登録なら出ません。")]
+    [Tooltip("このステージでの通常アイテム候補と確率補正。未登録ステージ間は順序に沿って滑らかに補間され、全ステージで未登録なら出ません。")]
     public DropItemPool normalItemDrops = new DropItemPool();
 
     [Header("プレイヤースポーン")]
@@ -62,7 +63,9 @@ public class StageData : ScriptableObject
     [Tooltip("手作りマップでも spawnList の敵をランダムにスポーンさせます")]
     public bool spawnEnemiesOnManualMap;
 
-    // 次のステージのデータ（nullなら最終ステージ）
-    public StageData nextStage;
+    // 旧アセットからBSPの順序リストを移行するためだけに保持します。
+    [SerializeField, HideInInspector, UnityEngine.Serialization.FormerlySerializedAs("nextStage")]
+    private StageData legacyNextStage;
+    internal StageData LegacyNextStage => legacyNextStage;
 
 }

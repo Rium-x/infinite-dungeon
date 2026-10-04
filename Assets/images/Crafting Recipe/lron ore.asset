@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 538b36143f03e4769877db7324151c5c, type: 3}
   m_Name: lron ore
   m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
-  recipeType: 1
+  processingMethod: 2
   inputs:
   - itemData: {fileID: 11400000, guid: c124b1c58a5c6254882ab855a0074f7a, type: 2}
     amount: 8

@@ -13,6 +13,33 @@ MonoBehaviour:
   m_Name: 2
   m_EditorClassIdentifier: Assembly-CSharp::StageData
   stageName: "Goblin's lair \\n (\u30B4\u30D6\u30EA\u30F3\u306E\u305D\u3046\u304F\u3064)"
+  playerLevelOrderPerLevel: 0.1
+  normalItemOrderFalloff: 0.5
+  normalItemEntryRampStages: 2
+  normalItemDrops:
+    items:
+    - itemData: {fileID: 11400000, guid: 888cf211361fbbc43a045b2e99125cff, type: 2}
+      stageModifier: 5
+    - itemData: {fileID: 11400000, guid: 065895ca1990c43ab8e145b92a4ffa08, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: c573c7be79f06a444b5aa5cebf2b259f, type: 2}
+      stageModifier: -22
+    - itemData: {fileID: 11400000, guid: 595b5e264859043d1a62824469565d6c, type: 2}
+      stageModifier: -1
+    - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: bcdb77378297fbc4885d775f32b087a4, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
+      stageModifier: 22
+    - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
+      stageModifier: 4
+    - itemData: {fileID: 11400000, guid: e73f5fc267ddd4c20acc51f649e75e75, type: 2}
+      stageModifier: 4
+    - itemData: {fileID: 11400000, guid: c578fd8f94c8ef24a9a18af02b1fc089, type: 2}
+      stageModifier: 4
   randomPlayerSpawn: 1
   playerSpawnPosition: {x: 0, y: 0}
   manualMapPrefab: {fileID: 0}
@@ -108,4 +135,4 @@ MonoBehaviour:
     minSpawnDelay: 5
     maxSpawnDelay: 20
   spawnEnemiesOnManualMap: 0
-  nextStage: {fileID: 11400000, guid: 8cdf45dddeddb3847908676c0fb51886, type: 2}
+  legacyNextStage: {fileID: 11400000, guid: 8cdf45dddeddb3847908676c0fb51886, type: 2}

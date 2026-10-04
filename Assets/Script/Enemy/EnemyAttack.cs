@@ -47,7 +47,7 @@ public class EnemyAttack : MonoBehaviour
 
             if (playerHealth != null)
             {
-                playerHealth.TakeDamage((int)attackDamage, true);
+                playerHealth.TakeDamage(attackDamage, true);
 
                 // プレイヤーのBuffControllerを取得してバフを付与
                 BuffController targetBuffs = other.gameObject.GetComponentInParent<BuffController>();

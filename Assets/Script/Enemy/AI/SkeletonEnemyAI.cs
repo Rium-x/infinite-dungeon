@@ -5,9 +5,9 @@ public class SkeletonEnemyAI : MonoBehaviour
 {
     private MoveStats moveStats;
     enum State { Idle, Chase, Alert, Search }
-    [SerializeField] private State currentState = State.Idle;
+    [SerializeField, HideInInspector] private State currentState = State.Idle;
 
-    [Header("ターゲット設定")]
+    [Header("プレイヤー検出")]
     private Transform player;
     [SerializeField] private float detectRange = 15.0f;
     [SerializeField] private LayerMask detectionMask;

@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Weapon setting
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u6B66\u5668\u30A2\u30A4\u30C6\u30E0"
+  icon: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  itemType: 3
+  rarity: 35
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.9692993
+      value: 100.3666
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2.694336
+      value: -0.5701294
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  isDefaultItem: 0
+  defaultAmount: 0
+  baseLifeTime: 350
+  mass: 3
+  collisionRadius: 0.1
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 3
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u8AAC\u660E\uFF0850\u6587\u5B57\u7A0B\u5EA6\uFF09"
+  isConsumable: 0
+  useEffects:
+  - effectType: 2
+    healAmount: 3
+    buffData: {fileID: 0}
+    randomEffects:
+    - effectType: 0
+      chance: 75
+      healAmount: 3
+      buffData: {fileID: 0}
+      replacementItem: {fileID: 0}
+    - effectType: 1
+      chance: 25
+      healAmount: 3
+      buffData: {fileID: 11400000, guid: 20ace017b8f62264badc937e6a732811, type: 2}
+      replacementItem: {fileID: 0}
+    replacementItem: {fileID: 0}
+  - effectType: 3
+    healAmount: 5
+    buffData: {fileID: 0}
+    randomEffects: []
+    replacementItem: {fileID: 11400000, guid: 96c9cdaa624ea41438bcb3adf3f785d5, type: 2}
+  legacyItemEffects: []

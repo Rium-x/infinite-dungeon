@@ -224,6 +224,9 @@ public class Inventory : MonoBehaviour
         if (recipe == null || recipe.inputs == null || outputs == null)
             return false;
 
+        if (!CraftingProcessDefinition.HasRequiredTool(recipe, out _))
+            return false;
+
         if (recipe.successChance < 100f &&
             UnityEngine.Random.Range(0f, 100f) > recipe.successChance)
         {
@@ -416,21 +419,122 @@ public class Inventory : MonoBehaviour
         if (playerHealth.IsAtFullHealth && ContainsHealEffect(data))
             return;
 
+        ItemStack usedStack = items[index];
+        if (data.IsConsumable && usedStack.amount > 1 && !CanStoreAnyReplacement(data, index))
+        {
+            NotificationManager.Instance.Show("変化先アイテムを入れる空きがありません。", Color.red, NotificationManager.NotificationSound.Warning);
+            return;
+        }
+
         if (data.useSound != null)
         {
             AudioSource.PlayClipAtPoint(data.useSound, Camera.main.transform.position);
         }
 
-        data.Use(playerHealth.gameObject);
+        ItemData replacementItem = data.Use(playerHealth.gameObject);
         NotificationManager.Instance.Show($"{data.itemName} を使用しました。");
 
-        if (data.isConsumable)
+        if (data.IsConsumable)
         {
-            items[index].amount--;
-            if (items[index].amount <= 0) items[index] = null;
+            if (replacementItem != null)
+            {
+                if (usedStack.amount == 1)
+                {
+                    items[index] = new ItemStack(replacementItem, 1);
+                }
+                else
+                {
+                    usedStack.amount--;
+                    AddItem(replacementItem);
+                }
+
+                RefreshEquippedItemAtSlot(index);
+            }
+            else
+            {
+                usedStack.amount--;
+                if (usedStack.amount <= 0)
+                {
+                    items[index] = null;
+                    RefreshEquippedItemAtSlot(index);
+                }
+            }
         }
 
         UpdateUI();
+    }
+
+    private bool CanStoreAnyReplacement(ItemData data, int sourceIndex)
+    {
+        if (data.useEffects == null)
+            return true;
+
+        foreach (ItemEffectData effect in data.useEffects)
+        {
+            if (effect == null)
+                continue;
+
+            if (effect.effectType == ItemEffectType.TransformItem &&
+                effect.replacementItem != null && !CanStoreReplacement(effect.replacementItem, sourceIndex, data))
+                return false;
+
+            if (effect.effectType == ItemEffectType.Random && effect.randomEffects != null)
+            {
+                foreach (ItemRandomEffectData entry in effect.randomEffects)
+                {
+                    if (entry != null && entry.effectType == ItemEffectType.TransformItem &&
+                        entry.replacementItem != null && !CanStoreReplacement(entry.replacementItem, sourceIndex, data))
+                        return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    private bool CanStoreReplacement(ItemData replacement, int sourceIndex, ItemData sourceData)
+    {
+        if (replacement == sourceData)
+            return true;
+
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (i == sourceIndex)
+                continue;
+
+            ItemStack stack = items[i];
+            if (stack == null || stack.itemData == null)
+                return true;
+
+            if (replacement.canStack && stack.itemData == replacement && stack.amount < replacement.maxStackSize)
+                return true;
+        }
+
+        return false;
+    }
+
+    private void RefreshEquippedItemAtSlot(int slotIndex)
+    {
+        EquipmentManager equipment = EquipmentManager.Instance;
+        if (equipment == null)
+            return;
+
+        ItemData newData = items[slotIndex] != null ? items[slotIndex].itemData : null;
+        if (equipment.currentRightSlot == slotIndex)
+        {
+            if (newData != null)
+                equipment.EquipItem(newData, false, slotIndex);
+            else
+                equipment.UnequipItem(false);
+        }
+
+        if (equipment.currentLeftSlot == slotIndex)
+        {
+            if (newData != null)
+                equipment.EquipItem(newData, true, slotIndex);
+            else
+                equipment.UnequipItem(true);
+        }
     }
 
     public bool MoveItem(int sourceIndex, int destinationIndex)
@@ -457,10 +561,25 @@ public class Inventory : MonoBehaviour
 
     private bool ContainsHealEffect(ItemData data)
     {
-        foreach (ItemEffect effect in data.itemEffects)
+        if (data.useEffects == null)
+            return false;
+
+        foreach (ItemEffectData effect in data.useEffects)
         {
-            if (effect is HealEffect)
+            if (effect == null)
+                continue;
+
+            if (effect.effectType == ItemEffectType.Heal)
                 return true;
+
+            if (effect.effectType == ItemEffectType.Random && effect.randomEffects != null)
+            {
+                foreach (ItemRandomEffectData entry in effect.randomEffects)
+                {
+                    if (entry != null && entry.effectType == ItemEffectType.Heal)
+                        return true;
+                }
+            }
         }
 
         return false;

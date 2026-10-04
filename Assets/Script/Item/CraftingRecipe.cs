@@ -1,10 +1,16 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public enum CraftingRecipeType
+public enum CraftingProcessMethod
 {
-    Combine,
-    Dismantle
+    Crafting,
+    Baking,
+    Dismantling,
+    Alchemy,
+    Smelting,
+    Cooking,
+    Carpentry,
+    Other
 }
 
 [System.Serializable]
@@ -19,12 +25,9 @@ public class CraftingItemAmount
 [CreateAssetMenu(fileName = "NewCraftingRecipe", menuName = "Inventory/Crafting Recipe")]
 public class CraftingRecipe : ScriptableObject
 {
-    public string recipeId;
     public string displayName;
-    [TextArea]
-    public string description;
     public string category;
-    public CraftingRecipeType recipeType = CraftingRecipeType.Combine;
+    public CraftingProcessMethod processingMethod = CraftingProcessMethod.Crafting;
     [Range(0f, 100f)]
     public float successChance = 100f;
     public bool consumeInputs = true;

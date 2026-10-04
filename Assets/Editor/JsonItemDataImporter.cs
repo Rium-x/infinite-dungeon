@@ -311,6 +311,11 @@ public class JsonItemDataImporterWindow : EditorWindow
                 );
             }
         }
+        else if (json.isConsumable)
+        {
+            // 旧JSONの互換対応。itemTypeが指定されていればそちらを優先します。
+            item.itemType = ItemType.Consumable;
+        }
 
 
         /*
@@ -512,27 +517,25 @@ public class JsonItemDataImporterWindow : EditorWindow
          * =========================
          */
 
-        item.isConsumable = json.isConsumable;
-
         if (json.effects != null)
         {
-            if (item.itemEffects == null)
-                item.itemEffects = new List<ItemEffect>();
+            if (item.useEffects == null)
+                item.useEffects = new List<ItemEffectData>();
             else
-                item.itemEffects.Clear();
+                item.useEffects.Clear();
 
             for (int i = 0; i < json.effects.Count; i++)
             {
-                ItemEffect effect =
+                ItemEffectData effect =
                     CreateEffect(json.effects[i], item, i);
 
                 if (effect != null)
-                    item.itemEffects.Add(effect);
+                    item.useEffects.Add(effect);
             }
         }
     }
 
-    private static ItemEffect CreateEffect(
+    private static ItemEffectData CreateEffect(
         JsonEffect json,
         ItemData item,
         int index
@@ -542,40 +545,31 @@ public class JsonItemDataImporterWindow : EditorWindow
             return null;
 
         string type = json.type.ToLowerInvariant();
-        ItemEffect effect = null;
+        ItemEffectData effect = null;
 
         if (type == "heal" || type == "healeffect")
         {
-            HealEffect healEffect =
-                ScriptableObject.CreateInstance<HealEffect>();
-
-            healEffect.healAmount = json.healAmount;
-
-            effect = healEffect;
+            effect = new ItemEffectData
+            {
+                effectType = ItemEffectType.Heal,
+                healAmount = json.healAmount
+            };
         }
         else if (type == "buff" || type == "buffeffect")
         {
-            BuffEffect buffEffect =
-                ScriptableObject.CreateInstance<BuffEffect>();
-
+            effect = new ItemEffectData { effectType = ItemEffectType.Buff };
             if (!string.IsNullOrWhiteSpace(json.buffData))
             {
-                buffEffect.buffData =
-                    FindAsset<BuffData>(json.buffData);
+                effect.buffData = FindAsset<BuffData>(json.buffData);
             }
             else if (json.buff != null)
             {
-                buffEffect.buffData =
-                    CreateBuffData(json.buff, item, index);
+                effect.buffData = CreateBuffData(json.buff, item, index);
             }
-
-            effect = buffEffect;
         }
         else if (type == "random" || type == "randomeffect")
         {
-            RandomEffect randomEffect =
-                ScriptableObject.CreateInstance<RandomEffect>();
-
+            effect = new ItemEffectData { effectType = ItemEffectType.Random };
             if (json.randomEffects != null)
             {
                 foreach (JsonRandomEntry jsonEntry in json.randomEffects)
@@ -583,25 +577,13 @@ public class JsonItemDataImporterWindow : EditorWindow
                     if (jsonEntry == null || jsonEntry.effect == null)
                         continue;
 
-                    ItemEffect childEffect =
-                        CreateEffect(
-                            jsonEntry.effect,
-                            item,
-                            index
-                        );
-
-                    if (childEffect == null)
+                    ItemRandomEffectData entry = CreateRandomEffect(jsonEntry, item, index);
+                    if (entry == null)
                         continue;
 
-                    RandomEffect.RandomEntry entry =
-                        new RandomEffect.RandomEntry();
-                    entry.effect = childEffect;
-                    entry.chance = jsonEntry.chance;
-                    randomEffect.randomEffects.Add(entry);
+                    effect.randomEffects.Add(entry);
                 }
             }
-
-            effect = randomEffect;
         }
         else
         {
@@ -611,11 +593,40 @@ public class JsonItemDataImporterWindow : EditorWindow
             return null;
         }
 
-        effect.uniqueEffectType = json.uniqueEffectType;
-
-        AssetDatabase.AddObjectToAsset(effect, item);
-        effect.name = $"{item.name}_{type}_{index}";
         return effect;
+    }
+
+    private static ItemRandomEffectData CreateRandomEffect(
+        JsonRandomEntry jsonEntry,
+        ItemData item,
+        int index
+    )
+    {
+        JsonEffect json = jsonEntry.effect;
+        if (json == null || string.IsNullOrWhiteSpace(json.type))
+            return null;
+
+        string type = json.type.ToLowerInvariant();
+        ItemRandomEffectData entry = new ItemRandomEffectData { chance = jsonEntry.chance };
+        if (type == "heal" || type == "healeffect")
+        {
+            entry.effectType = ItemEffectType.Heal;
+            entry.healAmount = json.healAmount;
+            return entry;
+        }
+
+        if (type == "buff" || type == "buffeffect")
+        {
+            entry.effectType = ItemEffectType.Buff;
+            if (!string.IsNullOrWhiteSpace(json.buffData))
+                entry.buffData = FindAsset<BuffData>(json.buffData);
+            else if (json.buff != null)
+                entry.buffData = CreateBuffData(json.buff, item, index);
+            return entry;
+        }
+
+        Debug.LogWarning($"[ItemData Importer] 抽選効果に指定できない効果種類：{json.type}");
+        return null;
     }
 
     private static BuffData CreateBuffData(
@@ -882,7 +893,6 @@ public class JsonItemDataImporterWindow : EditorWindow
     private class JsonEffect
     {
         public string type;
-        public bool uniqueEffectType;
 
         public int healAmount;
         public string buffData;

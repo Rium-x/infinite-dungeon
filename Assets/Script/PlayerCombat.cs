@@ -146,7 +146,7 @@ public class PlayerCombat : MonoBehaviour
             ? EquipmentManager.Instance.currentRightItem
             : EquipmentManager.Instance.currentLeftItem;
 
-        if (item == null || !item.isConsumable || slotIndex < 0) return false;
+        if (item == null || !item.IsConsumable || slotIndex < 0) return false;
 
         if (Time.time < nextConsumableUseTime) return true;
 

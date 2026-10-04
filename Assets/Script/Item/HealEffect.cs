@@ -1,6 +1,5 @@
 using UnityEngine;
 
-[CreateAssetMenu(fileName = "HealEffect", menuName = "Inventory/Effects/Heal")]
 public class HealEffect : ItemEffect
 {
     [Header("回復設定")]

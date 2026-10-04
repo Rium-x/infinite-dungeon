@@ -4,11 +4,11 @@ using UnityEngine;
 [RequireComponent(typeof(SlimeItemEater))]
 public class SlimeEnemyAI : MonoBehaviour
 {
-[Header("アイテム探索")]
+[Header("探索対象")]
 [SerializeField] private float searchRadius = 8f;
 [SerializeField] private LayerMask itemLayer;
 
-[Header("植物探索")]
+[Tooltip("植物系エネミーを探す半径")]
 [SerializeField] private float enemySearchRadius = 8f;
 
 [Header("探索間隔")]
@@ -18,7 +18,7 @@ public class SlimeEnemyAI : MonoBehaviour
 [SerializeField] private float moveSpeed = 2f;
 [SerializeField] private float acceleration = 8f;
 
-[Header("捕食")]
+[Header("捕食・移動")]
 [SerializeField] private float eatDistance = 0.5f;
 
 private Rigidbody2D rb;

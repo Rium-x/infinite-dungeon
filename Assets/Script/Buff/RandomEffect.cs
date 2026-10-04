@@ -1,10 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-[CreateAssetMenu(
-    fileName = "RandomEffect",
-    menuName = "ItemEffects/Random Effect"
-)]
 public class RandomEffect : ItemEffect
 {
     [System.Serializable]

@@ -7,7 +7,7 @@ public class HarpyAI : MonoBehaviour
     // 状態はランタイムで管理し、Inspectorには表示しない
     private State state = State.Orbit;
 
-    [Header("Target")] 
+    [Header("プレイヤー検出")]
     // プレイヤー参照（自動検出される。Inspectorには表示しない）
     private Transform player;
     // プレイヤー検出レンジ
@@ -15,7 +15,7 @@ public class HarpyAI : MonoBehaviour
     // 壁判定用のレイヤーマスク（Inspectorで設定）
     [SerializeField] private LayerMask wallLayerMask;
 
-    [Header("Center / Prediction")]
+    [Header("追従と予測")]
     // 軌道の中心（ランタイムで更新されるためInspectorには表示しない）
     private Vector2 center = Vector2.zero;
     // 中心追従速度（プレイヤーへの追従の速さ）
@@ -27,7 +27,7 @@ public class HarpyAI : MonoBehaviour
     // ランタイム - プレイヤー速度（予測用）
     private Vector2 playerVelocity;
 
-    [Header("Angular motion")]
+    [Header("旋回")]
     // 基本角速度（度/秒）
     [SerializeField] private float baseAngularSpeed = 60f; // deg/s
     // 角度オフセット追従速度（揺らぎの追従速さ）
@@ -43,7 +43,7 @@ public class HarpyAI : MonoBehaviour
     // 回転方向（+1: 時計回り, -1: 反時計回り）
     [SerializeField] private int rotationDirection = 1; // +1 cw, -1 ccw
 
-    [Header("Radius")]
+    [Header("旋回半径")]
     // 基本半径（軌道の基準距離）
     [SerializeField] private float baseRadius = 3f;
     // 半径追従速度
@@ -51,7 +51,7 @@ public class HarpyAI : MonoBehaviour
     // ランタイム - 現在の半径（表示不要）
     private float radius;
 
-    [Header("Orbit movement")]
+    [Header("旋回中の移動")]
     // 軌道追従の応答速度（位置に対して）
     [SerializeField] private float orbitFollowSpeed = 6f;
     // 回復時にOrbitWeightを増やす速度
@@ -64,13 +64,13 @@ public class HarpyAI : MonoBehaviour
     [SerializeField] private float movementAcceleration = 20f; // how quickly velocity approaches target
 
 
-    [Header("Hover (bird feel)")]
+    [Header("ホバリング")]
     // ホバリングの周波数（Hz）
     [SerializeField] private float hoverFrequency = 2f;
     // ホバリングの振幅（世界単位）
     [SerializeField] private float hoverAmplitude = 0.15f;
 
-    [Header("Attack")]
+    [Header("突進攻撃")]
     // 突進までの待機時間
     [SerializeField] private float attackWaitTime = 0.6f;
     // 攻撃開始確率（プレイヤーが検出範囲にいるとき、毎秒の確率）
@@ -88,11 +88,11 @@ public class HarpyAI : MonoBehaviour
     // 攻撃終了時に回転方向を反転する確率
     [SerializeField] [Range(0f,1f)] private float reverseProbability = 0.25f;
 
-    [Header("Smooth radius recover")]
+    [Header("攻撃後の復帰")]
     // 半径を基準値に戻す速度
     [SerializeField] private float radiusRecoverSpeed = 2f;
 
-    [Header("Misc")]
+    [Header("予測・デバッグ")]
     // プレイヤー予測を使うか
     [SerializeField] private bool usePrediction = true;
     // デバッグ表示を行うか

@@ -12,17 +12,61 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
   m_Name: Iron Shield
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: 鉄の盾
+  itemName: "\u9244\u306E\u76FE"
   icon: {fileID: 21300000, guid: a6f70f33958436a4daac3103a704ca8f, type: 3}
   itemType: 1
-  rarity: 0
+  rarity: 18.8
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   isDefaultItem: 1
   defaultAmount: 1
   baseLifeTime: 30
   mass: 5
   collisionRadius: 0.1
   equipOnStart: 1
-  weaponPrefab: {fileID: 555737676813804302, guid: 61083cd236e7147b28c6c28910b9b676, type: 3}
+  equipmentPrefab: {fileID: 555737676813804302, guid: 61083cd236e7147b28c6c28910b9b676, type: 3}
+  armorSlot: 1
   handLayer: 1
   equipPositionOffset: {x: 0, y: 0.05, z: 0}
   equipRotationOffset: {x: 0.2, y: 0.5, z: 0}

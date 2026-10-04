@@ -4,30 +4,30 @@ using UnityEngine.InputSystem; // 1. Input Systemの導入
 // IWeaponインターフェースを実装しつつ、元のロジックを完全維持＋マルチデバイス対応
 public class  NewSwordAction: MonoBehaviour, IWeapon
 {
-    [Header("支配対象設定（ここが重要）")]
+    [Header("対象参照")]
     [SerializeField] private Transform targetHand; // ここに「右手」をアサイン
     [SerializeField] private MonoBehaviour followScript; 
     [SerializeField] private Transform player;
 
-    [Header("基準位置の調整")]
+    [Header("構え位置")]
     [SerializeField] private Vector3 followOffset = new Vector3(0.6f, 0.4f, 0);
 
-    [Header("攻撃射程・感度の設定")]
+    [Header("攻撃距離・入力")]
     [SerializeField] private float maxAttackDistance = 5.0f;
     [SerializeField] private float sensitivity = 1.2f;
     [SerializeField, Range(0f, 1f)] private float stickDirectionSaveThreshold = 4.0f;
 
-    [Header("移動速度と時間の調整")]
+    [Header("攻撃動作")]
     [SerializeField] private float attackSmoothTime = 0.05f;
     [SerializeField] private float attackDuration = 0.2f;
     [SerializeField] private float initialReturnSmoothTime = 0.2f;
     [SerializeField] private float stopThreshold = 0.5f;
 
-    [Header("滑らかさの補強")]
+    [Header("追従・回転")]
     [SerializeField] private float rotationSmoothTime = 0.05f;
     [SerializeField] private float targetLerpSpeed = 15f; 
 
-    [Header("オーディオ設定")]
+    [Header("サウンド")]
     [SerializeField] private AudioSource audioSource;
     [SerializeField] private AudioClip attackSound;
 

@@ -12,19 +12,63 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
   m_Name: empty bottle
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: 空の瓶
-  icon: {fileID: 8707038710904442192, guid: a6006415042ea11498640cfb9a10aec4, type: 3}
-  itemType: 0
-  rarity: 0
+  itemName: "\u7A7A\u306E\u74F6"
+  icon: {fileID: -3117292592472207382, guid: eb8dcf5f88b5048cbafe5357143380b7, type: 3}
+  itemType: 3
+  rarity: 63.9
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   isDefaultItem: 1
   defaultAmount: 1
   baseLifeTime: 50
   mass: 2
   collisionRadius: 0.1
   equipOnStart: 0
-  weaponPrefab: {fileID: 0}
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
   handLayer: 1
-  equipPositionOffset: {x: 0, y: 0, z: 0}
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
   equipRotationOffset: {x: 0, y: 0, z: 0}
   visualScale: 4.5
   equipScale: 3
@@ -35,4 +79,5 @@ MonoBehaviour:
   useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
   description: "\u4E2D\u304C\u7A7A\u306E\u5C0F\u74F6\u3002\u6295\u3052\u308B\u3068\u97F3\u304C\u51FA\u308B\u3002"
   isConsumable: 0
-  itemEffects: []
+  useEffects: []
+  legacyItemEffects: []

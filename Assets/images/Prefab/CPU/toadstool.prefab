@@ -64,7 +64,6 @@ MonoBehaviour:
   fadeInDuration: 1
   fadeOutDuration: 1
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
-  normalDropRate: 0
   normalItemTypeAdjustments:
   - itemType: 0
     modifier: -9
@@ -76,9 +75,55 @@ MonoBehaviour:
     modifier: -49
   - itemType: 5
     modifier: 25
+  - itemType: 2
+    modifier: 25
+  normalDropRatioPercent: 0
+  maxTotalDropCount: 20
+  totalDropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 1.0307388
+      value: 85.85919
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1.5750146
+      value: 50.29925
+      inSlope: 0.18369548
+      outSlope: 0.18369548
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.42032263
+      outWeight: 0.21756737
+    - serializedVersion: 3
+      time: 3.6310425
+      value: 1.871582
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   dropList:
   - itemData: {fileID: 11400000, guid: c578fd8f94c8ef24a9a18af02b1fc089, type: 2}
-    monsterModifier: 3
+    monsterModifier: 100
 --- !u!114 &-5721100537685904097
 MonoBehaviour:
   m_ObjectHideFlags: 0

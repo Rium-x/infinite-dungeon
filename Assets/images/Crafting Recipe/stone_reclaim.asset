@@ -12,11 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 538b36143f03e4769877db7324151c5c, type: 3}
   m_Name: stone_reclaim
   m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
-  recipeId: stone_reclaim
   displayName: "\u77F3\u6750\u3092\u5206\u89E3\u3059\u308B"
-  description: 
   category: 
-  recipeType: 1
+  processingMethod: 2
   successChance: 100
   consumeInputs: 1
   outputMultiplier: 1

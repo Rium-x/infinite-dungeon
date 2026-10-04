@@ -54,7 +54,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b15625a2badbdbd489edc0979c8df229, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 5
+  maxHealth: 3
   currentHealth: 0
   enableAutoHeal: 1
   healStartDelay: 15
@@ -71,12 +71,27 @@ MonoBehaviour:
   fadeInDuration: 1
   fadeOutDuration: 1
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
-  normalItemDropChanceByRarity:
+  normalItemTypeAdjustments:
+  - itemType: 0
+    modifier: 34
+  - itemType: 1
+    modifier: -100
+  - itemType: 3
+    modifier: -27
+  - itemType: 4
+    modifier: -100
+  - itemType: 5
+    modifier: 100
+  - itemType: 2
+    modifier: 25
+  normalDropRatioPercent: 50
+  maxTotalDropCount: 20
+  totalDropCountProbability:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 10
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -84,8 +99,26 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 5
-      value: 10
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -95,18 +128,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  normalItemTypeAdjustments:
-  - itemType: 0
-    relativeFrequencyAdjustment: -9
-  - itemType: 1
-    relativeFrequencyAdjustment: -31
-  - itemType: 3
-    relativeFrequencyAdjustment: 15
-  - itemType: 4
-    relativeFrequencyAdjustment: -49
-  - itemType: 5
-    relativeFrequencyAdjustment: 25
-  dropList: []
+  dropList:
+  - itemData: {fileID: 11400000, guid: 82316af56353b154388415d0c1914125, type: 2}
+    monsterModifier: 37
 --- !u!114 &-5732425892869942870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -226,8 +250,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b89251a054473842945f31a73548fd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack
-  attackDamage: 1
-  attackCooldown: 0.3
+  attackDamage: 0.5
+  attackCooldown: 0.5
   buffsToApply: []
 --- !u!1 &3904842073167903681
 GameObject:

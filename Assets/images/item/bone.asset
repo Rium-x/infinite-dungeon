@@ -12,17 +12,61 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
   m_Name: bone
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: 骨
+  itemName: "\u9AA8"
   icon: {fileID: -2610605529692084527, guid: cb2c0d91bbbfa2a47a12415a82887e27, type: 3}
-  itemType: 0
-  rarity: 0
+  itemType: 5
+  rarity: 45
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1.9828033
+      value: 99.389496
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 3.9656067
+      value: 0.24420166
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   isDefaultItem: 1
   defaultAmount: 1
-  baseLifeTime: 60
+  baseLifeTime: 300
   mass: 2
   collisionRadius: 0.1
   equipOnStart: 0
-  weaponPrefab: {fileID: 0}
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
   handLayer: 1
   equipPositionOffset: {x: 0, y: 0, z: 0}
   equipRotationOffset: {x: 0, y: 0, z: 0}
@@ -35,4 +79,5 @@ MonoBehaviour:
   useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
   description: "\u3072\u3073\u306E\u5165\u3063\u305F\u767D\u3044\u9AA8\u3002\u304B\u306A\u308A\u53E4\u305D\u3046\u3060\u3002"
   isConsumable: 0
-  itemEffects: []
+  useEffects: []
+  legacyItemEffects: []

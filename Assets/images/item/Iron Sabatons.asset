@@ -13,9 +13,52 @@ MonoBehaviour:
   m_Name: Iron Sabatons
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemName: "\u9244\u306E\u9244\u9774"
-  icon: {fileID: -4378151073070391028, guid: f4b227c862c8048519c2d7965dbb1b60, type: 3}
+  icon: {fileID: -8698283177158829608, guid: b88689b5235454a5b9c14be75219fc89, type: 3}
   itemType: 4
-  rarity: 0
+  rarity: 16.7
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   isDefaultItem: 1
   defaultAmount: 1
   baseLifeTime: 90
@@ -36,4 +79,5 @@ MonoBehaviour:
   useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
   description: "\u9244\u3067\u4F5C\u3089\u308C\u305F\u3059\u306D\u5F53\u3066\u3002\u811A\u3092\u8986\u3044\u3001\u6575\u306E\u653B\u6483\u304B\u3089\u8EAB\u3092\u5B88\u308B\u3002\u8DB3\u304C\u56FA\u5B9A\u3055\u308C\u3066\u3080\u305A\u3080\u305A\u3059\u308B\u3002"
   isConsumable: 0
-  itemEffects: []
+  useEffects: []
+  legacyItemEffects: []

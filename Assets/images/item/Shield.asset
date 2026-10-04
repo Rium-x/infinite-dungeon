@@ -15,14 +15,58 @@ MonoBehaviour:
   itemName: "\u6728\u306E\u76FE"
   icon: {fileID: -7469855268645434294, guid: 6e2841accb801254587587672c2ba330, type: 3}
   itemType: 1
-  rarity: 0
+  rarity: 19.5
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   isDefaultItem: 1
   defaultAmount: 1
-  baseLifeTime: 180
+  baseLifeTime: 450
   mass: 5
   collisionRadius: 0.1
   equipOnStart: 1
-  weaponPrefab: {fileID: 555737676813804302, guid: 44d7c0612f07541d3bb91a071f029064, type: 3}
+  equipmentPrefab: {fileID: 555737676813804302, guid: 44d7c0612f07541d3bb91a071f029064, type: 3}
+  armorSlot: 1
   handLayer: 1
   equipPositionOffset: {x: 0, y: 0.1, z: 0}
   equipRotationOffset: {x: 0.2, y: 0.5, z: 0}
@@ -35,4 +79,5 @@ MonoBehaviour:
   useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
   description: "\u767D\u3044\u5341\u5B57\u306E\u6A21\u69D8\u304C\u63CF\u304B\u308C\u305F\u3001\u6728\u306E\u76FE\u3002"
   isConsumable: 0
-  itemEffects: []
+  useEffects: []
+  legacyItemEffects: []

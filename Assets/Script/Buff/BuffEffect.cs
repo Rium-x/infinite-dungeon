@@ -1,9 +1,5 @@
 using UnityEngine;
 
-[CreateAssetMenu(
-    fileName = "NewBuffEffect",
-    menuName = "ItemEffects/Buff Effect"
-)]
 public class BuffEffect : ItemEffect
 {
     [Header("付与するバフ")]

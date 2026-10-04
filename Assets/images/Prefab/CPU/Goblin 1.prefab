@@ -71,42 +71,23 @@ MonoBehaviour:
   fadeInDuration: 1
   fadeOutDuration: 1
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
-  normalItemDropChanceByRarity:
-    serializedVersion: 2
-    m_Curve:
-    - serializedVersion: 3
-      time: 0.5966263
-      value: -0.7939
-      inSlope: 0.00616578
-      outSlope: 0.00616578
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0
-      outWeight: 0.13454717
-    - serializedVersion: 3
-      time: 107.93884
-      value: 31.44942
-      inSlope: 0.1728377
-      outSlope: 0.1728377
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 1
-      outWeight: 0
-    m_PreInfinity: 2
-    m_PostInfinity: 2
-    m_RotationOrder: 4
+  normalDropRate: 39
   normalItemTypeAdjustments:
   - itemType: 0
-    relativeFrequencyAdjustment: -9
+    modifier: -9
   - itemType: 1
-    relativeFrequencyAdjustment: -31
+    modifier: -31
   - itemType: 3
-    relativeFrequencyAdjustment: 15
+    modifier: 15
   - itemType: 4
-    relativeFrequencyAdjustment: -49
+    modifier: -49
   - itemType: 5
-    relativeFrequencyAdjustment: 25
-  dropList: []
+    modifier: 25
+  - itemType: 2
+    modifier: 25
+  dropList:
+  - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
+    monsterModifier: -6
 --- !u!114 &-5732425892869942870
 MonoBehaviour:
   m_ObjectHideFlags: 0

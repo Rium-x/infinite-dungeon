@@ -64,12 +64,27 @@ MonoBehaviour:
   fadeInDuration: 1
   fadeOutDuration: 1
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
-  normalItemDropChanceByRarity:
+  normalItemTypeAdjustments:
+  - itemType: 0
+    modifier: 28
+  - itemType: 1
+    modifier: 5
+  - itemType: 3
+    modifier: 59
+  - itemType: 4
+    modifier: -10
+  - itemType: 5
+    modifier: 21
+  - itemType: 2
+    modifier: 53
+  normalDropRatioPercent: 50
+  maxTotalDropCount: 20
+  totalDropCountProbability:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 10
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -77,8 +92,44 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 5
-      value: 10
+      time: 2.41156
+      value: -0.24420166
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 4.5705414
+      value: 100.6105
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 5.4950376
+      value: 58.741856
+      inSlope: 0.39868116
+      outSlope: 0.39868116
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.5539385
+      outWeight: 0.2521267
+    - serializedVersion: 3
+      time: 7.039455
+      value: -0.09060152
+      inSlope: -0.22587828
+      outSlope: -0.22587828
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.35106078
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 10
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -88,17 +139,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  normalItemTypeAdjustments:
-  - itemType: 0
-    relativeFrequencyAdjustment: 10
-  - itemType: 1
-    relativeFrequencyAdjustment: 29
-  - itemType: 3
-    relativeFrequencyAdjustment: 45
-  - itemType: 4
-    relativeFrequencyAdjustment: 5
-  - itemType: 5
-    relativeFrequencyAdjustment: 79
   dropList: []
 --- !u!114 &-1180445799921531755
 MonoBehaviour:

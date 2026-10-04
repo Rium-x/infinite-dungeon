@@ -12,7 +12,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 538b36143f03e4769877db7324151c5c, type: 3}
   m_Name: MHsoup
   m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
-  recipeType: 0
+  displayName: "\u30AD\u30CE\u30B3\u30B9\u30FC\u30D7"
+  category: 
+  processingMethod: 5
+  successChance: 100
+  consumeInputs: 1
+  outputMultiplier: 1
   inputs:
   - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
     amount: 1

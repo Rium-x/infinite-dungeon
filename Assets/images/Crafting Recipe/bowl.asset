@@ -12,11 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 538b36143f03e4769877db7324151c5c, type: 3}
   m_Name: bowl
   m_EditorClassIdentifier: Assembly-CSharp::CraftingRecipe
-  recipeId: 
   displayName: "\u30DC\u30A6\u30EB"
-  description: 
   category: 
-  recipeType: 0
+  processingMethod: 0
   successChance: 100
   consumeInputs: 1
   outputMultiplier: 1

@@ -45,6 +45,7 @@ public class JsonCraftingRecipeImporterWindow : EditorWindow
         EditorGUILayout.HelpBox(
             "recipes の中にレシピを並べます。inputs/outputs の代わりに " +
             "ingredients/results も使えます。\n" +
+            "processingMethod に加工方法を指定します。道具はレシピではなく、Crafting Processes の定義アセットで設定します。\n" +
             "アイテムは item、itemId、id のいずれか、数量は amount、quantity、count のいずれかで指定できます。",
             MessageType.Info);
 
@@ -150,11 +151,9 @@ public class JsonCraftingRecipeImporterWindow : EditorWindow
 
     private static void ApplyJson(CraftingRecipe recipe, JsonRecipe json)
     {
-        recipe.recipeId = json.id;
         recipe.displayName = FirstNonEmpty(json.displayName, json.name, json.id);
-        recipe.description = json.description;
         recipe.category = json.category;
-        recipe.recipeType = ParseRecipeType(FirstNonEmpty(json.recipeType, json.type));
+        recipe.processingMethod = ParseProcessingMethod(json.processingMethod);
         recipe.successChance = Mathf.Clamp(
             json.successChance,
             0f,
@@ -167,11 +166,11 @@ public class JsonCraftingRecipeImporterWindow : EditorWindow
             recipe.outputMultiplier = json.multiplier;
         recipe.inputs = ConvertItems(
             json.inputs != null ? json.inputs : json.ingredients,
-            recipe.recipeId,
+            json.id,
             "入力");
         recipe.outputs = ConvertItems(
             json.outputs != null ? json.outputs : json.results,
-            recipe.recipeId,
+            json.id,
             "出力");
     }
 
@@ -186,15 +185,9 @@ public class JsonCraftingRecipeImporterWindow : EditorWindow
         return "";
     }
 
-    private static CraftingRecipeType ParseRecipeType(string value)
+    private static CraftingProcessMethod ParseProcessingMethod(string value)
     {
-        CraftingRecipeType result;
-        if (string.Equals(value, "craft", StringComparison.OrdinalIgnoreCase))
-            return CraftingRecipeType.Combine;
-
-        if (Enum.TryParse(value, true, out result))
-            return result;
-        return CraftingRecipeType.Combine;
+        return CraftingProcessDefinition.ParseMethod(value);
     }
 
     private static List<CraftingItemAmount> ConvertItems(
@@ -295,11 +288,9 @@ public class JsonCraftingRecipeImporterWindow : EditorWindow
     {
         public string id;
         public string displayName;
-        public string description;
         public string category;
         public string name;
-        public string type;
-        public string recipeType;
+        public string processingMethod;
         public float successChance = 100f;
         public bool consumeInputs = true;
         public bool consume = true;

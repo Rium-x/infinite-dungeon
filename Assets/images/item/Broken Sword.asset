@@ -15,10 +15,53 @@ MonoBehaviour:
   itemName: "\u6298\u308C\u305F\u5263"
   icon: {fileID: 21300000, guid: cc803e33f282fd44f8d9fe2f7c3cc185, type: 3}
   itemType: 1
-  rarity: 0
+  rarity: 17.7
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   isDefaultItem: 1
   defaultAmount: 1
-  baseLifeTime: 180
+  baseLifeTime: 450
   mass: 5
   collisionRadius: 0.1
   equipOnStart: 0
@@ -36,4 +79,5 @@ MonoBehaviour:
   useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
   description: "\u8D64\u304F\u3055\u3073\u305F\u53E4\u3044\u5263\u3002\u307E\u3060\u5207\u308C\u308B\u3002\u3054\u3081\u3093\u3084\u3063\u3071\u304D\u308C\u306A\u3044\u304B\u3082"
   isConsumable: 0
-  itemEffects: []
+  useEffects: []
+  legacyItemEffects: []

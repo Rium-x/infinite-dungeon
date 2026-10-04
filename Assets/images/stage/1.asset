@@ -13,6 +13,33 @@ MonoBehaviour:
   m_Name: 1
   m_EditorClassIdentifier: Assembly-CSharp::StageData
   stageName: "Ancient Entrance \\n (\u907A\u8DE1\u306E\u5165\u308A\u53E3)"
+  playerLevelOrderPerLevel: 0.1
+  normalItemOrderFalloff: 0.5
+  normalItemEntryRampStages: 2
+  normalItemDrops:
+    items:
+    - itemData: {fileID: 11400000, guid: 888cf211361fbbc43a045b2e99125cff, type: 2}
+      stageModifier: 5
+    - itemData: {fileID: 11400000, guid: 065895ca1990c43ab8e145b92a4ffa08, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: c573c7be79f06a444b5aa5cebf2b259f, type: 2}
+      stageModifier: -22
+    - itemData: {fileID: 11400000, guid: 595b5e264859043d1a62824469565d6c, type: 2}
+      stageModifier: -1
+    - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: bcdb77378297fbc4885d775f32b087a4, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
+      stageModifier: 22
+    - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
+      stageModifier: 0
+    - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
+      stageModifier: 4
+    - itemData: {fileID: 11400000, guid: e73f5fc267ddd4c20acc51f649e75e75, type: 2}
+      stageModifier: 4
+    - itemData: {fileID: 11400000, guid: c578fd8f94c8ef24a9a18af02b1fc089, type: 2}
+      stageModifier: 4
   randomPlayerSpawn: 0
   playerSpawnPosition: {x: 0, y: 0}
   manualMapPrefab: {fileID: 0}
@@ -29,83 +56,55 @@ MonoBehaviour:
     weight: 1
   randomizeRoomFloors: 0
   wallTile: {fileID: 0}
-  hierarchyPosition: 1
-  playerLevelPositionPerLevel: 0.1
-  normalItemPositionFalloff: 0.5
-  normalItemEntryRampDistance: 2
-  normalItemDrops:
-    items:
-    - itemData: {fileID: 11400000, guid: 888cf211361fbbc43a045b2e99125cff, type: 2}
-      stageModifier: 0
-    - itemData: {fileID: 11400000, guid: 065895ca1990c43ab8e145b92a4ffa08, type: 2}
-      stageModifier: 0
-    - itemData: {fileID: 11400000, guid: c573c7be79f06a444b5aa5cebf2b259f, type: 2}
-      stageModifier: 0
-    - itemData: {fileID: 11400000, guid: 595b5e264859043d1a62824469565d6c, type: 2}
-      stageModifier: 0
-    - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
-      stageModifier: 0
-    - itemData: {fileID: 11400000, guid: bcdb77378297fbc4885d775f32b087a4, type: 2}
-      stageModifier: 0
-    - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
-      stageModifier: 0
-    - itemData: {fileID: 11400000, guid: 65b86dfb435a8444193b336181774ce5, type: 2}
-      stageModifier: 0
-    - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
-      stageModifier: 0
-    - itemData: {fileID: 11400000, guid: 409456caa896f16459076eb42a8c1c8b, type: 2}
-      stageModifier: -50
-    - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
-      stageModifier: -50
   spawnList:
   - enemyName: Slime
     prefab: {fileID: 298427082835796845, guid: e3a1c42963b3b284dbb370b274fb5736, type: 3}
-    maxCount: 50
+    maxCount: 75
     spawnMode: 3
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
   - enemyName: Goblin
     prefab: {fileID: 298427082835796845, guid: 8aa4bf6ebfd815446b4c41a2bd2c7887, type: 3}
-    maxCount: 20
+    maxCount: 25
     spawnMode: 2
     startDelay: 90
     minSpawnDelay: 5
     maxSpawnDelay: 15
   - enemyName: Chest
     prefab: {fileID: 362433543248169716, guid: 7844ba9a4071fd844bbb0402464a8292, type: 3}
-    maxCount: 10
+    maxCount: 12
     spawnMode: 1
     startDelay: 70
     minSpawnDelay: 5
     maxSpawnDelay: 30
   - enemyName: Chest1
     prefab: {fileID: 362433543248169716, guid: 89910b4ed82320d4b9f0d4c1fc208bb5, type: 3}
-    maxCount: 16
+    maxCount: 20
     spawnMode: 0
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 30
   - enemyName: Slime aaa
     prefab: {fileID: 298427082835796845, guid: e3a1c42963b3b284dbb370b274fb5736, type: 3}
-    maxCount: 25
+    maxCount: 30
     spawnMode: 0
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 30
   - enemyName: mushroom
     prefab: {fileID: 362433543248169716, guid: 4cdd271c995133547a07599c27d4b0dd, type: 3}
-    maxCount: 25
+    maxCount: 20
     spawnMode: 3
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
   - enemyName: mushroom01
     prefab: {fileID: 362433543248169716, guid: f1686296e018f624fab9385ea49b209a, type: 3}
-    maxCount: 15
+    maxCount: 20
     spawnMode: 3
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
   spawnEnemiesOnManualMap: 0
-  nextStage: {fileID: 11400000, guid: 93c67ef069898ec4e8cb3c094979812d, type: 2}
+  legacyNextStage: {fileID: 11400000, guid: 93c67ef069898ec4e8cb3c094979812d, type: 2}

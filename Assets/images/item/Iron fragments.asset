@@ -12,17 +12,61 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
   m_Name: Iron fragments
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: 鉄片
+  itemName: "\u9244\u7247"
   icon: {fileID: 3897395226324045635, guid: a8a909abe7a36684bae64b1197a0819d, type: 3}
-  itemType: 0
-  rarity: 0
+  itemType: 3
+  rarity: 71.7
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   isDefaultItem: 1
   defaultAmount: 1
   baseLifeTime: 10
   mass: 2
   collisionRadius: 0.1
   equipOnStart: 0
-  weaponPrefab: {fileID: 0}
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
   handLayer: 1
   equipPositionOffset: {x: 0, y: 0, z: 0}
   equipRotationOffset: {x: 0, y: 0, z: 0}

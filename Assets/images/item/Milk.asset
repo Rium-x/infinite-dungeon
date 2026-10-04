@@ -1,0 +1,103 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Milk
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u30DF\u30EB\u30AF"
+  icon: {fileID: -588871066896343580, guid: 7a80a1c4fe35a4227bf50d0a3ea246b2, type: 3}
+  itemType: 2
+  rarity: 16.1
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 300
+  mass: 2
+  collisionRadius: 0.1
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 3
+  canStack: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u725B\u4E73\u3002\u9B54\u7269\u304B\u3089\u53D6\u308C\u305F\u306E\u3067\u3001\u751F\u3067\u5927\u4E08\u592B\u304B\u306F\u308F\u304B\u3089\u306A\u3044\u3002\u591A\u5206\u3084\u3070\u3044\u3002"
+  isConsumable: 0
+  useEffects:
+  - effectType: 2
+    healAmount: 3
+    buffData: {fileID: 0}
+    randomEffects:
+    - effectType: 0
+      chance: 75
+      healAmount: 3
+      buffData: {fileID: 0}
+      replacementItem: {fileID: 0}
+    - effectType: 1
+      chance: 25
+      healAmount: 3
+      buffData: {fileID: 11400000, guid: 20ace017b8f62264badc937e6a732811, type: 2}
+      replacementItem: {fileID: 0}
+    replacementItem: {fileID: 0}
+  - effectType: 3
+    healAmount: 5
+    buffData: {fileID: 0}
+    randomEffects: []
+    replacementItem: {fileID: 11400000, guid: 96c9cdaa624ea41438bcb3adf3f785d5, type: 2}
+  legacyItemEffects: []

@@ -64,12 +64,45 @@ MonoBehaviour:
   fadeInDuration: 1
   fadeOutDuration: 1
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
-  normalItemDropChanceByRarity:
+  normalItemTypeAdjustments:
+  - itemType: 0
+    modifier: 1
+  - itemType: 1
+    modifier: -34
+  - itemType: 3
+    modifier: 49
+  - itemType: 4
+    modifier: -55
+  - itemType: 5
+    modifier: 50
+  - itemType: 2
+    modifier: 3
+  normalDropRatioPercent: 100
+  maxTotalDropCount: 20
+  totalDropCountProbability:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 10
+      value: 0
+      inSlope: Infinity
+      outSlope: -0.09677906
+      tangentMode: 7
+      weightedMode: 2
+      inWeight: 0
+      outWeight: 1
+    - serializedVersion: 3
+      time: 3.9624364
+      value: 90.26282
+      inSlope: 1.7799139
+      outSlope: 0.13213433
+      tangentMode: 1
+      weightedMode: 0
+      inWeight: 0.151167
+      outWeight: 0.2913533
+    - serializedVersion: 3
+      time: 6.6671143
+      value: 0.14074707
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -77,8 +110,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 5
-      value: 10
+      time: 10
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -88,17 +121,6 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  normalItemTypeAdjustments:
-  - itemType: 0
-    relativeFrequencyAdjustment: 10
-  - itemType: 1
-    relativeFrequencyAdjustment: 29
-  - itemType: 3
-    relativeFrequencyAdjustment: 45
-  - itemType: 4
-    relativeFrequencyAdjustment: 5
-  - itemType: 5
-    relativeFrequencyAdjustment: 79
   dropList: []
 --- !u!114 &-71600538398874953
 MonoBehaviour:
