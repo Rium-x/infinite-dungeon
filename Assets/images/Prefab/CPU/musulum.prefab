@@ -78,13 +78,13 @@ MonoBehaviour:
   - itemType: 2
     modifier: 25
   normalDropRatioPercent: 0
-  maxTotalDropCount: 20
+  maxTotalDropCount: 5
   totalDropCountProbability:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 1.2986766
-      value: 101.01177
+      time: 1.0599923
+      value: -18.212305
       inSlope: -0.28487262
       outSlope: -0.28487262
       tangentMode: 0
@@ -92,23 +92,32 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0.62578857
     - serializedVersion: 3
-      time: 3.0114136
-      value: 0.0012969971
-      inSlope: 0
-      outSlope: 0
+      time: 1.077029
+      value: 96.92278
+      inSlope: -0.8715511
+      outSlope: -0.8715511
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
-      outWeight: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
     - serializedVersion: 3
-      time: 10
-      value: 0
-      inSlope: 0
-      outSlope: 0
+      time: 1.1674932
+      value: 96.58048
+      inSlope: 0.013744844
+      outSlope: 0.013744844
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
-      outWeight: 0
+      inWeight: 1
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1.9924742
+      value: -1.195838
+      inSlope: -0.5999149
+      outSlope: -0.5999149
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.24966168
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
@@ -130,7 +139,7 @@ MonoBehaviour:
   sortingLayerName: Characters
   yToSortingScale: 10
   characterOrderRange: 100
-  characterOffset: -199
+  characterOffset: 0
 --- !u!1 &5723949514176499206
 GameObject:
   m_ObjectHideFlags: 0
@@ -158,7 +167,7 @@ Transform:
   m_GameObject: {fileID: 5723949514176499206}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.13, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -250,7 +259,7 @@ Transform:
   m_GameObject: {fileID: 5842833451371034980}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.7, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 4.5, y: 4.5, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -330,7 +339,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 3031044012346996847}
   smoothTime: 0.022
-  offset: {x: 0, y: 0.7, z: 0}
+  offset: {x: 0, y: 0, z: 0}
   playerRb: {fileID: 372178184396956504}
   bobAmount: 0
   phaseOffset: 0
@@ -567,7 +576,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0.11}
+  m_Offset: {x: 0, y: -0.1}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}

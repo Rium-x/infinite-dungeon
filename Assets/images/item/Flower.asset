@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
   m_Name: Flower
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
-  itemName: "\u5C0F\u77F3"
+  itemName: "\u30CD\u30E2\u30D5\u30A3\u30E9"
   icon: {fileID: -6029767554297699322, guid: 0096bae925e9144b093c5dfeffdff53c, type: 3}
   itemType: 5
   rarity: 52.8
@@ -70,14 +70,17 @@ MonoBehaviour:
   handLayer: 1
   equipPositionOffset: {x: 0, y: 0.05, z: 0}
   equipRotationOffset: {x: 0, y: 0, z: 0}
-  visualScale: 3.5
-  equipScale: 2.1
+  visualScale: 4.5
+  equipScale: 3
   canStack: 1
+  maxDurability: 100
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
   dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
   useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
-  description: "\u3069\u3053\u306B\u3067\u3082\u8EE2\u304C\u3063\u3066\u3044\u308B\u3001\u4F55\u306E\u5909\u54F2\u3082\u306A\u3044\u77F3\u3053\u308D\u3002\u5C0F\u3055\u304F\u786C\u304F\u3001\u7279\u306B\u4FA1\u5024\u306F\u306A\u3055\u305D\u3046\u3060\u3002"
+  description: "\u9752\u7A7A\u306E\u3088\u3046\u306A\u9752\u3044\u82B1\u3092\u54B2\u304B\u305B\u308B\u690D\u7269\u3002\n\u5473\u3082\u898B\u3066\u304A\u3053\u3046....\u30DE\u30C3\u30BA\u3002\u9752\u30AF\u30BB\u30A7"
   isConsumable: 0
   useEffects: []
   legacyItemEffects: []

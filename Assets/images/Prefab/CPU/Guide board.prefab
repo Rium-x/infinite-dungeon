@@ -48,7 +48,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSorting
   sortingLayerName: Characters
   yToSortingScale: 10
-  extraOffset: 0
+  characterOrderRange: 100
+  characterOffset: 0
 --- !u!1 &2230660333108213611
 GameObject:
   m_ObjectHideFlags: 0

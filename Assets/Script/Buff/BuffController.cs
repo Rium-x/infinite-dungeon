@@ -5,11 +5,15 @@ public class BuffController : MonoBehaviour
 {
     private List<BuffInstance> activeBuffs =
         new List<BuffInstance>();
+    private HashSet<BuffData> temporaryBuffData = new HashSet<BuffData>();
 
-    public void AddBuff(BuffData data)
+    public void AddBuff(BuffData data) => AddBuff(data, false);
+
+    public void AddBuff(BuffData data, bool isTemporary)
     {
         if (data == null)
             return;
+        if (isTemporary) temporaryBuffData.Add(data);
 
         // ===== 同種類チェック =====
 
@@ -37,6 +41,7 @@ public class BuffController : MonoBehaviour
                     active.OnRemove();
 
                     activeBuffs.RemoveAt(i);
+                    ReleaseTemporaryData(active.Data);
 
                     break;
                 }
@@ -48,6 +53,7 @@ public class BuffController : MonoBehaviour
                     active.OnRemove();
 
                     activeBuffs.RemoveAt(i);
+                    ReleaseTemporaryData(active.Data);
 
                     break;
                 }
@@ -56,6 +62,7 @@ public class BuffController : MonoBehaviour
 
                 if (newLevel < currentLevel)
                 {
+                    ReleaseTemporaryData(data);
                     return;
                 }
             }
@@ -91,6 +98,7 @@ public class BuffController : MonoBehaviour
                 buff.OnRemove();
 
                 activeBuffs.RemoveAt(i);
+                ReleaseTemporaryData(buff.Data);
             }
         }
     }
@@ -107,9 +115,16 @@ public class BuffController : MonoBehaviour
         if (buff != null)
         {
             buff.OnRemove();
+            ReleaseTemporaryData(buff.Data);
         }
     }
 
     activeBuffs.Clear();
 }
+
+    private void ReleaseTemporaryData(BuffData data)
+    {
+        if (data != null && temporaryBuffData.Remove(data))
+            Destroy(data);
+    }
 }

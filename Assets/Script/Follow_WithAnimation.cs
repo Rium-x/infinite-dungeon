@@ -7,6 +7,15 @@ public class Follow_WithAnimation : MonoBehaviour
     [SerializeField] private float smoothTime = 0.1f;
     [SerializeField] private Vector3 offset = Vector3.zero;
 
+    public Transform FollowTarget => target;
+
+    /// <summary>水などの外部効果が追従先アンカーを切り替えます。</summary>
+    public void SetFollowTarget(Transform newTarget)
+    {
+        if (newTarget != null)
+            target = newTarget;
+    }
+
     [Header("歩行アニメーション設定")]
     [SerializeField] private Rigidbody2D playerRb;
     [SerializeField] private float bobAmount = 0.2f; 

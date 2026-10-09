@@ -9,23 +9,56 @@ public enum ItemType { Coin, Weapon, Consumable, Material, Armor, Garbage }
 public enum HandLayer { BehindHand, InFrontOfHand }
 public enum ArmorSlot { Hands, Body, Face, Feet }
 public enum ItemEffectType { Heal, Buff, Random, TransformItem }
+public enum TemporaryBuffType { Heal, Poison, Speed }
+
+[Serializable]
+public class TemporaryBuffSettings
+{
+    public TemporaryBuffType buffType;
+    public string buffName = "一時バフ";
+    [Min(0f)] public float duration = 10f;
+    public bool isDebuff;
+    [Min(1)] public int level = 1;
+    public float healPerTick = 1f;
+    [Min(0.01f)] public float tickInterval = 1f;
+    public float damagePerTick = 1f;
+    public float speedMultiplier = 1.5f;
+
+    public BuffData CreateRuntimeData()
+    {
+        BuffData data;
+        switch (buffType)
+        {
+            case TemporaryBuffType.Heal: data = ScriptableObject.CreateInstance<HealBuffData>(); break;
+            case TemporaryBuffType.Poison: data = ScriptableObject.CreateInstance<PoisonBuffData>(); break;
+            case TemporaryBuffType.Speed: data = ScriptableObject.CreateInstance<SpeedBuffData>(); break;
+            default: return null;
+        }
+        data.name = buffName;
+        data.buffName = buffName;
+        data.duration = duration;
+        data.isDebuff = isDebuff;
+        data.level = level;
+        if (data is HealBuffData heal) { heal.healPerTick = healPerTick; heal.tickInterval = tickInterval; }
+        if (data is PoisonBuffData poison) { poison.damagePerTick = damagePerTick; poison.tickInterval = tickInterval; }
+        if (data is SpeedBuffData speed) speed.speedMultiplier = speedMultiplier;
+        return data;
+    }
+}
 
 [Serializable]
 public class ItemEffectData
 {
-    [Header("効果")]
     public ItemEffectType effectType;
 
-    [Header("回復")]
     public int healAmount = 20;
 
-    [Header("バフ")]
     public BuffData buffData;
+    public bool createTemporaryBuff;
+    public TemporaryBuffSettings temporaryBuff = new TemporaryBuffSettings();
 
-    [Header("ランダム効果")]
     public List<ItemRandomEffectData> randomEffects = new List<ItemRandomEffectData>();
 
-    [Header("変化先")]
     public ItemData replacementItem;
 
     public ItemData Execute(GameObject user)
@@ -36,7 +69,8 @@ public class ItemEffectData
                 ItemEffectDataUtility.Heal(user, healAmount);
                 return null;
             case ItemEffectType.Buff:
-                ItemEffectDataUtility.ApplyBuff(user, buffData);
+                ItemEffectDataUtility.ApplyBuff(user, createTemporaryBuff && temporaryBuff != null
+                    ? temporaryBuff.CreateRuntimeData() : buffData, createTemporaryBuff);
                 return null;
             case ItemEffectType.Random:
                 if (randomEffects == null)
@@ -65,17 +99,15 @@ public class ItemEffectData
 [Serializable]
 public class ItemRandomEffectData
 {
-    [Header("抽選")]
     public ItemEffectType effectType;
     [Range(0f, 100f)] public float chance = 100f;
 
-    [Header("回復")]
     public int healAmount = 20;
 
-    [Header("バフ")]
     public BuffData buffData;
+    public bool createTemporaryBuff;
+    public TemporaryBuffSettings temporaryBuff = new TemporaryBuffSettings();
 
-    [Header("変化先")]
     public ItemData replacementItem;
 
     public ItemData Execute(GameObject user)
@@ -87,7 +119,8 @@ public class ItemRandomEffectData
         }
         else if (effectType == ItemEffectType.Buff)
         {
-            ItemEffectDataUtility.ApplyBuff(user, buffData);
+            ItemEffectDataUtility.ApplyBuff(user, createTemporaryBuff && temporaryBuff != null
+                ? temporaryBuff.CreateRuntimeData() : buffData, createTemporaryBuff);
             return null;
         }
         else if (effectType == ItemEffectType.TransformItem)
@@ -116,7 +149,7 @@ internal static class ItemEffectDataUtility
         }
     }
 
-    public static void ApplyBuff(GameObject user, BuffData buffData)
+    public static void ApplyBuff(GameObject user, BuffData buffData, bool temporary = false)
     {
         if (buffData == null)
         {
@@ -126,9 +159,12 @@ internal static class ItemEffectDataUtility
 
         BuffController buffController = user != null ? user.GetComponent<BuffController>() : null;
         if (buffController != null)
-            buffController.AddBuff(buffData);
+            buffController.AddBuff(buffData, temporary);
         else
+        {
+            if (temporary) UnityEngine.Object.Destroy(buffData);
             Debug.LogWarning($"{user?.name ?? "使用者"} に BuffController がありません。");
+        }
     }
 }
 
@@ -178,6 +214,15 @@ public class ItemData : ScriptableObject
 
     [Header("スタック設定")]
     public bool canStack = true; // ★ここをチェックすると重なる
+
+    [Header("耐久度")]
+    [Min(1)] public int maxDurability = 100;
+    public AudioClip breakSound;
+    [Header("消費設定")]
+    public bool consumeOnUse = true;
+    public int DurabilityLimit => maxDurability > 0 ? maxDurability : 100;
+    public bool HasDurability => itemType == ItemType.Weapon || itemType == ItemType.Armor ||
+        (itemType == ItemType.Consumable && !consumeOnUse);
 
     [Min(1)]
     public int maxStackSize = 99;

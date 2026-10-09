@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemName: "\u6B66\u5668\u30A2\u30A4\u30C6\u30E0"
   icon: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  itemType: 3
+  itemType: 1
   rarity: 35
   maxDropCount: 10
   dropCountProbability:
@@ -39,8 +39,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 2.694336
-      value: -0.5701294
+      time: 1.8773804
+      value: -0.81658936
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -72,7 +72,7 @@ MonoBehaviour:
   equipRotationOffset: {x: 0, y: 0, z: 0}
   visualScale: 4.5
   equipScale: 3
-  canStack: 1
+  canStack: 0
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
   dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}

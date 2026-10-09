@@ -54,7 +54,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b15625a2badbdbd489edc0979c8df229, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 17
+  maxHealth: 14
   currentHealth: 0
   enableAutoHeal: 1
   healStartDelay: 15
@@ -75,7 +75,7 @@ MonoBehaviour:
   - itemType: 0
     modifier: 5
   - itemType: 1
-    modifier: -31
+    modifier: -35.2
   - itemType: 3
     modifier: 15
   - itemType: 4
@@ -1250,7 +1250,7 @@ MonoBehaviour:
   rayCount: 16
   scanInterval: 0.3
   fastScanInterval: 0.2
-  forwardBias: 8
+  forwardBias: 11
   rayLaunchRadius: 0.7
   chestBonus: 30
   separationRadius: 3

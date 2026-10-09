@@ -142,11 +142,11 @@ public class PlayerCombat : MonoBehaviour
         int slotIndex = isRightHand
             ? EquipmentManager.Instance.currentRightSlot
             : EquipmentManager.Instance.currentLeftSlot;
-        ItemData item = isRightHand
-            ? EquipmentManager.Instance.currentRightItem
-            : EquipmentManager.Instance.currentLeftItem;
+        if (slotIndex < 0 || slotIndex >= Inventory.Instance.items.Count) return false;
 
-        if (item == null || !item.IsConsumable || slotIndex < 0) return false;
+        ItemStack heldStack = Inventory.Instance.items[slotIndex];
+        if (heldStack == null || heldStack.itemData == null || !heldStack.itemData.IsConsumable)
+            return false;
 
         if (Time.time < nextConsumableUseTime) return true;
 
@@ -189,6 +189,21 @@ public class PlayerCombat : MonoBehaviour
         {
             Debug.Log(hand.name + " に武器が装備されていません。");
         }
+    }
+
+    public void DamageWeaponDurability(Transform weaponTransform)
+    {
+        if (weaponTransform == null || Inventory.Instance == null || EquipmentManager.Instance == null) return;
+
+        int slot;
+        if (rightHand != null && weaponTransform.IsChildOf(rightHand))
+            slot = EquipmentManager.Instance.currentRightSlot;
+        else if (leftHand != null && weaponTransform.IsChildOf(leftHand))
+            slot = EquipmentManager.Instance.currentLeftSlot;
+        else
+            return;
+
+        Inventory.Instance.DamageDurability(slot);
     }
 
     private IEnumerator MonitorWeaponUntilIdle(IWeapon weapon, HandSide hand)

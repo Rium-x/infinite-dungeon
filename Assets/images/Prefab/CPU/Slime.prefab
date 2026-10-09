@@ -46,7 +46,7 @@ AudioSource:
   m_Resource: {fileID: 8300000, guid: 7ce541d1bf0f244478ae1e989b633c34, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
-  m_Pitch: 1
+  m_Pitch: 2.5
   Loop: 0
   Mute: 0
   Spatialize: 0
@@ -186,10 +186,7 @@ MonoBehaviour:
   progressPoint: 1
   audioSource: {fileID: 413102963026780021}
   damageSounds:
-  - {fileID: 8300000, guid: 274ee60ab733ff74382ece0ef20db20e, type: 3}
-  - {fileID: 8300000, guid: 7a471f048acbaeb4e8d48d5daeb0c4f1, type: 3}
-  - {fileID: 8300000, guid: c4aefe99e68646d4d8f405a22464640c, type: 3}
-  - {fileID: 8300000, guid: 66fe1b8d429057241b85aa91b62a8480, type: 3}
+  - {fileID: 8300000, guid: 8ca2e0be728094ce29a0b0510840bc86, type: 3}
   legacyDamageSound: {fileID: 8300000, guid: 66fe1b8d429057241b85aa91b62a8480, type: 3}
   legacyDeathSound: {fileID: 8300000, guid: 7a471f048acbaeb4e8d48d5daeb0c4f1, type: 3}
   damageColor: {r: 0.6981132, g: 0.023640784, b: 0.009878943, a: 1}
@@ -429,7 +426,7 @@ MonoBehaviour:
   rayCount: 8
   scanInterval: 0.3
   fastScanInterval: 0.2
-  forwardBias: 8
+  forwardBias: 11
   rayLaunchRadius: 0.7
   chestBonus: 30
   separationRadius: 3

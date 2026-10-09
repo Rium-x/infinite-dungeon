@@ -68,11 +68,11 @@ MonoBehaviour:
   - itemType: 0
     modifier: 1
   - itemType: 1
-    modifier: -34
+    modifier: -27.9
   - itemType: 3
     modifier: 49
   - itemType: 4
-    modifier: -55
+    modifier: -45.7
   - itemType: 5
     modifier: 50
   - itemType: 2
@@ -92,8 +92,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 1
     - serializedVersion: 3
-      time: 3.9624364
-      value: 90.26282
+      time: 4.128269
+      value: 90.48324
       inSlope: 1.7799139
       outSlope: 0.13213433
       tangentMode: 1
@@ -137,7 +137,7 @@ MonoBehaviour:
   sortingLayerName: Characters
   yToSortingScale: 10
   characterOrderRange: 100
-  characterOffset: -305
+  characterOffset: 0
 --- !u!1 &5723949514176499206
 GameObject:
   m_ObjectHideFlags: 0
@@ -164,7 +164,7 @@ Transform:
   m_GameObject: {fileID: 5723949514176499206}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.13, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -243,7 +243,7 @@ Transform:
   m_GameObject: {fileID: 5842833451371034980}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.5, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -323,7 +323,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   target: {fileID: 3031044012346996847}
   smoothTime: 0.022
-  offset: {x: 0, y: 0.5, z: 0}
+  offset: {x: 0, y: 0, z: 0}
   playerRb: {fileID: 372178184396956504}
   bobAmount: 0
   phaseOffset: 0
@@ -560,7 +560,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0.1}
+  m_Offset: {x: 0, y: -0.05}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -570,7 +570,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 0.2, y: 0.15}
+  m_Size: {x: 0.16, y: 0.05}
   m_EdgeRadius: 0
 --- !u!114 &5599934159995825312
 MonoBehaviour:
@@ -646,7 +646,7 @@ Transform:
   m_GameObject: {fileID: 8882619414510780911}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0.13, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

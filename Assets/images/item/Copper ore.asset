@@ -1,0 +1,86 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Copper ore
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u9285\u9271\u77F3"
+  icon: {fileID: -5148481080787096043, guid: d17c7682a732147a8a0e75ec73e8cfb4, type: 3}
+  itemType: 3
+  rarity: 35.6
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 180
+  mass: 2
+  collisionRadius: 0.1
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 3
+  canStack: 1
+  maxDurability: 100
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u9285\u9271\u77F3\u3002\u9285\u3063\u3066\u76F4\u8A33\u30AB\u30C3\u30D1\u30FC\u306A\u3093\u3060\u3051\u3069\u3001\u300C\u9285\u30E1\u30C0\u30EB\u300D\u3060\u3068\u306A\u305C\u304B\u30D6\u30ED\u30F3\u30BA\u306B\u306A\u308B\u3093\u3060\u3002\u3058\u3083\u3042\u3053\u308C\u306F\u30D6\u30ED\u30F3\u30BA\u304B\u30AB\u30C3\u30D1\u30FC\u304B...."
+  isConsumable: 0
+  useEffects: []
+  legacyItemEffects: []

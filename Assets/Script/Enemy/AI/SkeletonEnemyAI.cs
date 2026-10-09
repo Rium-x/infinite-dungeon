@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -11,6 +12,7 @@ public class SkeletonEnemyAI : MonoBehaviour
     private Transform player;
     [SerializeField] private float detectRange = 15.0f;
     [SerializeField] private LayerMask detectionMask;
+    [SerializeField, Min(0.02f)] private float sightCheckInterval = 0.1f;
     [SerializeField] private Vector2 rayOffset = new Vector2(0, -0.3f);
     [SerializeField] private Vector2 playerPositionOffset = new Vector2(0, -0.3f);
 
@@ -19,6 +21,7 @@ public class SkeletonEnemyAI : MonoBehaviour
     [SerializeField] private float runSpeed = 3.0f;
     [SerializeField] private float acceleration = 3.0f;
     [SerializeField] private float checkRadius = 0.3f; 
+    [SerializeField] private float turnAroundWallDistance = 5f;
 
     [Header("十字移動・硬直設定")]
     [SerializeField] private float turnStallDuration = 0.15f; 
@@ -45,6 +48,10 @@ public class SkeletonEnemyAI : MonoBehaviour
     [Header("分離設定 (重なり防止)")]
     [SerializeField] private float separationRadius = 3.0f; 
     [SerializeField] private float separationWeight = 0.2f; 
+    [SerializeField, Min(0.02f)] private float separationCheckInterval = 0.1f;
+    private readonly List<Collider2D> nearbyEnemyColliders = new List<Collider2D>(64);
+    private float nextSeparationCheckTime;
+    private Vector2 cachedSeparation;
 
     [Header("タイムアウト・捜索設定")]
     [SerializeField] private float searchTimeout = 1.0f; 
@@ -61,6 +68,8 @@ public class SkeletonEnemyAI : MonoBehaviour
     private float alertTimer;
     private Rigidbody2D rb;
     private Vector2 moveInput;
+    private float nextSightCheckTime;
+    private bool canSeePlayer;
 
     void Start()
     {
@@ -86,10 +95,13 @@ public class SkeletonEnemyAI : MonoBehaviour
 
     void Update()
     {
-        bool canSeePlayer = (player != null && player.gameObject.activeInHierarchy) && CheckLineOfSight();
-        
-        if (canSeePlayer) 
-            lastPlayerPos = player.position + (Vector3)playerPositionOffset;
+        if (Time.time >= nextSightCheckTime)
+        {
+            nextSightCheckTime = Time.time + Mathf.Max(0.02f, sightCheckInterval);
+            canSeePlayer = (player != null && player.gameObject.activeInHierarchy) && CheckLineOfSight();
+            if (canSeePlayer)
+                lastPlayerPos = player.position + (Vector3)playerPositionOffset;
+        }
 
         switch (currentState)
         {
@@ -105,6 +117,17 @@ public class SkeletonEnemyAI : MonoBehaviour
     private Vector2 SnapToCross(Vector2 dir)
     {
         if (dir == Vector2.zero) return Vector2.zero;
+
+        Vector2 requestedAxis = Mathf.Abs(dir.x) > Mathf.Abs(dir.y)
+            ? new Vector2(Mathf.Sign(dir.x), 0f)
+            : new Vector2(0f, Mathf.Sign(dir.y));
+        if (currentAxis != Vector2.zero && Vector2.Dot(requestedAxis, currentAxis) < -0.9f)
+        {
+            RaycastHit2D wall = Physics2D.CircleCast(CenterPos, checkRadius, currentAxis,
+                turnAroundWallDistance, detectionMask);
+            if (wall.collider == null || wall.collider.CompareTag("Player") || wall.distance > turnAroundWallDistance)
+                return currentAxis;
+        }
         
         float xWeight = Mathf.Abs(dir.x) + (currentAxis.x != 0 ? 0.3f : 0f);
         float yWeight = Mathf.Abs(dir.y) + (currentAxis.y != 0 ? 0.3f : 0f);
@@ -193,11 +216,20 @@ public class SkeletonEnemyAI : MonoBehaviour
 
     Vector2 CalculateSeparation()
     {
+        if (Time.time < nextSeparationCheckTime)
+            return cachedSeparation;
+        nextSeparationCheckTime = Time.time + Mathf.Max(0.02f, separationCheckInterval);
+
         Vector2 separationVec = Vector2.zero;
-        Collider2D[] nearbyEnemies = Physics2D.OverlapCircleAll(transform.position, separationRadius);
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = Physics2D.queriesHitTriggers;
+        int nearbyCount = Physics2D.OverlapCircle(
+            transform.position, separationRadius, filter, nearbyEnemyColliders);
         int count = 0;
-        foreach (var col in nearbyEnemies)
+        for (int i = 0; i < nearbyCount; i++)
         {
+            Collider2D col = nearbyEnemyColliders[i];
+            if (col == null) continue;
             if (col.gameObject != this.gameObject && col.CompareTag("Enemy"))
             {
                 Vector2 diff = (Vector2)transform.position - (Vector2)col.transform.position;
@@ -207,7 +239,8 @@ public class SkeletonEnemyAI : MonoBehaviour
                 count++;
             }
         }
-        return count > 0 ? separationVec : Vector2.zero;
+        cachedSeparation = count > 0 ? separationVec : Vector2.zero;
+        return cachedSeparation;
     }
 
     Vector2 GetFarthestDirection()

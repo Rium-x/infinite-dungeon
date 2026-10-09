@@ -16,7 +16,7 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: cc803e33f282fd44f8d9fe2f7c3cc185, type: 3}
   itemType: 1
   rarity: 17.7
-  maxDropCount: 10
+  maxDropCount: 1
   dropCountProbability:
     serializedVersion: 2
     m_Curve:
@@ -48,8 +48,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 10
-      value: 0
+      time: 2.003296
+      value: -0.5067749
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -73,6 +73,9 @@ MonoBehaviour:
   visualScale: 4.5
   equipScale: 1.5
   canStack: 0
+  maxDurability: 150
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
   dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}

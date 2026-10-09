@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -31,6 +32,7 @@ public class LineFollowerEnemy : MonoBehaviour
 
     private float searchTimer;
     private float lostTimer;
+    private readonly List<Collider2D> searchHits = new List<Collider2D>(64);
 
     // 自分が追う相手
     private LineFollowerEnemy target;
@@ -123,13 +125,19 @@ public class LineFollowerEnemy : MonoBehaviour
 
         searchTimer = searchInterval;
 
-        Collider2D[] hits =
-            Physics2D.OverlapCircleAll(
-                transform.position,
-                searchRadius);
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = Physics2D.queriesHitTriggers;
+        int hitCount = Physics2D.OverlapCircle(
+            transform.position,
+            searchRadius,
+            filter,
+            searchHits);
 
-        foreach (Collider2D hit in hits)
+        for (int i = 0; i < hitCount; i++)
         {
+            Collider2D hit = searchHits[i];
+            if (hit == null)
+                continue;
             if (hit.gameObject == gameObject)
                 continue;
 

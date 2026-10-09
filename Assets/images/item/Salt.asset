@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Salt
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u5869"
+  icon: {fileID: -256844126908629303, guid: 15a1f427ed5fe48a09e11c1cdd2a6e8a, type: 3}
+  itemType: 3
+  rarity: 56.3
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1.4975433
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 3.0135193
+      value: 0.366333
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  isDefaultItem: 1
+  defaultAmount: 5
+  baseLifeTime: 300
+  mass: 1
+  collisionRadius: 0.13
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 3
+  canStack: 1
+  maxDurability: 100
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u5869\u3002\u3053\u308C\u3055\u3048\u3042\u308C\u3070\u5927\u6982\u306E\u7269\u306F\u98DF\u3048\u308B\u3060\u308D\u3046\u3002\u8150\u3063\u305F\u7269\u4EE5\u5916\u306F\u306D"
+  isConsumable: 1
+  useEffects:
+  - effectType: 0
+    healAmount: 4
+    buffData: {fileID: 0}
+    createTemporaryBuff: 0
+    temporaryBuff:
+      buffType: 0
+      buffName: "\u4E00\u6642\u30D0\u30D5"
+      duration: 10
+      isDebuff: 0
+      level: 1
+      healPerTick: 1
+      tickInterval: 1
+      damagePerTick: 1
+      speedMultiplier: 1.5
+    randomEffects: []
+    replacementItem: {fileID: 0}
+  - effectType: 0
+    healAmount: 4
+    buffData: {fileID: 0}
+    createTemporaryBuff: 0
+    temporaryBuff:
+      buffType: 0
+      buffName: "\u4E00\u6642\u30D0\u30D5"
+      duration: 10
+      isDebuff: 0
+      level: 1
+      healPerTick: 1
+      tickInterval: 1
+      damagePerTick: 1
+      speedMultiplier: 1.5
+    randomEffects: []
+    replacementItem: {fileID: 0}
+  legacyItemEffects: []

@@ -29,6 +29,11 @@ public class InventoryWindowUI : MonoBehaviour
     [SerializeField] private Vector2 rightHandMarkerPosition = new Vector2(0f, 48f);
     [SerializeField] private Vector2 rightHandMarkerSize = new Vector2(110f, 22f);
 
+    [Header("耐久度ゲージの色")]
+    [SerializeField] private Color lowDurabilityColor = new Color(0.76f, 0.39f, 0.41f);
+    [SerializeField] private Color mediumDurabilityColor = new Color(0.79f, 0.69f, 0.39f);
+    [SerializeField] private Color highDurabilityColor = new Color(0.39f, 0.66f, 0.45f);
+
     [Header("個数表示")]
     [SerializeField] private int countFontSize = 16;
     [SerializeField] private Vector2 countPosition = new Vector2(43f, 43f);
@@ -47,6 +52,8 @@ public class InventoryWindowUI : MonoBehaviour
     private InputAction inventoryAction;
     private readonly List<TextMeshProUGUI> rightHandMarkers =
         new List<TextMeshProUGUI>();
+    private GameObject durabilityGaugeObject;
+    private Image durabilityGaugeImage;
     private bool canvasWasActive;
     private bool canvasStateWasSaved;
 
@@ -234,6 +241,8 @@ public class InventoryWindowUI : MonoBehaviour
             return;
 
         rightHandMarkers.Clear();
+        durabilityGaugeObject = null;
+        durabilityGaugeImage = null;
 
         // 既存のスロットを削除
         for (int i = gridRoot.childCount - 1; i >= 0; i--)
@@ -248,6 +257,21 @@ public class InventoryWindowUI : MonoBehaviour
                 i,
                 Inventory.Instance.items[i]
             );
+        }
+
+        if (gridRoot.childCount > 0)
+        {
+            durabilityGaugeObject = CreateUIObject("DurabilityGauge", gridRoot.GetChild(0));
+            RectTransform gaugeRect = durabilityGaugeObject.GetComponent<RectTransform>();
+            gaugeRect.anchorMin = new Vector2(0.1f, 0.08f);
+            gaugeRect.anchorMax = new Vector2(0.9f, 0.08f);
+            gaugeRect.pivot = new Vector2(0.5f, 0f);
+            gaugeRect.sizeDelta = new Vector2(0f, 7f);
+            durabilityGaugeImage = durabilityGaugeObject.AddComponent<Image>();
+            durabilityGaugeImage.type = Image.Type.Filled;
+            durabilityGaugeImage.fillMethod = Image.FillMethod.Horizontal;
+            durabilityGaugeImage.fillOrigin = (int)Image.OriginHorizontal.Left;
+            RefreshDurabilityGauge();
         }
     }
 
@@ -449,6 +473,34 @@ public class InventoryWindowUI : MonoBehaviour
                     );
             }
         }
+
+        RefreshDurabilityGauge();
+    }
+
+    private void RefreshDurabilityGauge()
+    {
+        if (durabilityGaugeObject == null || durabilityGaugeImage == null || Inventory.Instance == null)
+            return;
+
+        int selectedIndex = Inventory.Instance.selectedSlot;
+        bool validSelection =
+            selectedIndex >= 0 &&
+            selectedIndex < Inventory.Instance.items.Count &&
+            selectedIndex < gridRoot.childCount;
+        ItemStack selectedStack = validSelection ? Inventory.Instance.items[selectedIndex] : null;
+        bool show = selectedStack != null && selectedStack.itemData != null && selectedStack.itemData.HasDurability;
+
+        durabilityGaugeObject.SetActive(show);
+        if (!show)
+            return;
+
+        durabilityGaugeObject.transform.SetParent(gridRoot.GetChild(selectedIndex), false);
+        int maxDurability = selectedStack.itemData.DurabilityLimit;
+        float ratio = Mathf.Clamp01((float)selectedStack.durability / maxDurability);
+        durabilityGaugeImage.fillAmount = ratio;
+        durabilityGaugeImage.color = ratio < 0.5f
+            ? Color.Lerp(lowDurabilityColor, mediumDurabilityColor, ratio * 2f)
+            : Color.Lerp(mediumDurabilityColor, highDurabilityColor, (ratio - 0.5f) * 2f);
     }
 
     private void RefreshDescription()

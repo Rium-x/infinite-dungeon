@@ -1,0 +1,91 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c0642155c941534e977996ca836ded4, type: 3}
+  m_Name: Grilled fish
+  m_EditorClassIdentifier: Assembly-CSharp::ItemData
+  itemName: "\u713C\u304D\u9B5A"
+  icon: {fileID: 6887537736870669416, guid: 904a6f21dbf954a62808d1f5e05782d7, type: 3}
+  itemType: 2
+  rarity: 16
+  maxDropCount: 10
+  dropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 100
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2.5344124
+      value: -0.8547335
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 10
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  isDefaultItem: 1
+  defaultAmount: 1
+  baseLifeTime: 300
+  mass: 2
+  collisionRadius: 0.1
+  equipOnStart: 0
+  equipmentPrefab: {fileID: 0}
+  armorSlot: 1
+  handLayer: 1
+  equipPositionOffset: {x: 0, y: 0.05, z: 0}
+  equipRotationOffset: {x: 0, y: 0, z: 0}
+  visualScale: 4.5
+  equipScale: 3
+  canStack: 1
+  maxDurability: 100
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
+  maxStackSize: 99
+  pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
+  dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
+  useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
+  description: "\u713C\u304D\u9B5A\u3002\u9999\u3070\u3057\u3044\u9999\u308A\u304C\u3059\u308B\u3002\u4ECA\u3059\u3050\u306B\u3067\u3082\u98DF\u3079\u305F\u3044\u3002"
+  isConsumable: 0
+  useEffects:
+  - effectType: 0
+    healAmount: 5
+    buffData: {fileID: 0}
+    randomEffects: []
+    replacementItem: {fileID: 0}
+  legacyItemEffects: []

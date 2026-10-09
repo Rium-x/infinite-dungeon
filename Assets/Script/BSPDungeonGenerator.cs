@@ -47,6 +47,8 @@ public class BSPDungeonMaster : MonoBehaviour
 
     [Header("Room Layout")]
     [Min(2)] public int roomCount = 18;
+    [Range(1f, 2f), Tooltip("部屋数設定に掛ける倍率です。1.4なら指定数の約1.4倍の部屋を配置し、歩行中に部屋へ出会いやすくします。最終数はマップ密度と保証部屋数に従います。")]
+    public float roomEncounterMultiplier = 1.4f;
     [Tooltip("部屋が占める面積の上限割合。配置に余裕がない場合は部屋数が減ります。")]
     [Range(0.05f, 0.8f)] public float maxRoomDensity = 0.32f;
     [Tooltip("部屋同士の最低間隔。大きくすると通路が長くなり、配置数は減ります。")]
@@ -80,6 +82,12 @@ public class BSPDungeonMaster : MonoBehaviour
     private bool isTransitioning = false;
     public static bool IsPlayerInputLocked { get; private set; }
     public bool IsUsingManualMap => currentStageData != null && currentStageData.manualMapPrefab != null;
+
+    /// <summary>現在のセルに置かれている地形タイプを返します。</summary>
+    public TerrainType GetTerrainTypeAt(Vector3Int cell)
+    {
+        return TerrainMap.ResolveTerrainType(floorTilemap, wallTilemap, cell);
+    }
 
     public List<StageData> GetOrderedStages()
     {
@@ -338,7 +346,8 @@ public class BSPDungeonMaster : MonoBehaviour
         if (!DungeonGraphMapBuilder.Generate(generationWidth, generationHeight,
                 currentStageData.roomLibrary, roomPlacementPadding, floorTilemap, wallTilemap,
                 stageFloor, currentStageData.groundTileWeights, currentStageData.randomizeRoomFloors,
-                stageWall, seed, transform, generatedRoomObjects, roomCount, maxRoomDensity,
+                stageWall, seed, transform, generatedRoomObjects, roomCount,
+                roomEncounterMultiplier, maxRoomDensity,
                 Mathf.Max(3, corridorWidth), extraBranchCount, branchChance,
                 maxRoomLinkDistance, maxCorridorTurns, windingCorridorChance,
                 outsideFloorPadding, removedRoomRetryThreshold))

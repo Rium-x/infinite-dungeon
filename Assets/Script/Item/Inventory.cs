@@ -7,8 +7,15 @@ using UnityEngine.InputSystem;
 public class ItemStack
 {
     public ItemData itemData;
-    public int amount; 
-    public ItemStack(ItemData data, int count) { itemData = data; amount = count; }
+    public int amount;
+    public int durability;
+    public ItemStack(ItemData data, int count) { itemData = data; amount = count; durability = data != null && data.HasDurability ? data.DurabilityLimit : 0; }
+
+    public void InitializeDurabilityIfMissing()
+    {
+        if (itemData != null && itemData.HasDurability && durability <= 0)
+            durability = itemData.DurabilityLimit;
+    }
 }
 
 public class Inventory : MonoBehaviour
@@ -116,7 +123,7 @@ public class Inventory : MonoBehaviour
     {
         if (amount <= 0) return true;
 
-        if (!data.canStack)
+        if (!data.canStack || data.HasDurability)
         {
             for (int a = 0; a < amount; a++)
             {
@@ -169,7 +176,7 @@ public class Inventory : MonoBehaviour
 
     public bool AddItem(ItemData data)
     {
-        if (data.canStack)
+        if (data.canStack && !data.HasDurability)
         {
             for (int i = 0; i < items.Count; i++)
             {
@@ -342,7 +349,8 @@ public class Inventory : MonoBehaviour
         List<ItemStack> clone = new List<ItemStack>(items.Count);
         foreach (ItemStack stack in items)
         {
-            clone.Add(stack == null ? null : new ItemStack(stack.itemData, stack.amount));
+            if (stack == null) clone.Add(null);
+            else { ItemStack copy = new ItemStack(stack.itemData, stack.amount); copy.durability = stack.durability; clone.Add(copy); }
         }
         return clone;
     }
@@ -370,7 +378,7 @@ public class Inventory : MonoBehaviour
             if (entry == null || entry.itemData == null || entry.amount <= 0) continue;
             int remaining = entry.amount;
 
-            if (entry.itemData.canStack)
+            if (entry.itemData.canStack && !entry.itemData.HasDurability)
             {
                 for (int i = 0; i < target.Count && remaining > 0; i++)
                 {
@@ -387,7 +395,7 @@ public class Inventory : MonoBehaviour
                 int emptyIndex = target.FindIndex(stack => stack == null || stack.itemData == null);
                 if (emptyIndex < 0) return false;
 
-                int added = entry.itemData.canStack
+                int added = entry.itemData.canStack && !entry.itemData.HasDurability
                     ? Mathf.Min(entry.itemData.maxStackSize, remaining)
                     : 1;
                 target[emptyIndex] = new ItemStack(entry.itemData, added);
@@ -416,9 +424,6 @@ public class Inventory : MonoBehaviour
             return;
         }
 
-        if (playerHealth.IsAtFullHealth && ContainsHealEffect(data))
-            return;
-
         ItemStack usedStack = items[index];
         if (data.IsConsumable && usedStack.amount > 1 && !CanStoreAnyReplacement(data, index))
         {
@@ -436,32 +441,97 @@ public class Inventory : MonoBehaviour
 
         if (data.IsConsumable)
         {
-            if (replacementItem != null)
+            if (!data.consumeOnUse && data.HasDurability)
             {
-                if (usedStack.amount == 1)
+                if (replacementItem != null)
                 {
                     items[index] = new ItemStack(replacementItem, 1);
+                    RefreshEquippedItemAtSlot(index);
+                }
+                else
+                {
+                    DamageDurability(index, 1);
+                }
+            }
+            else
+            {
+                if (replacementItem != null)
+                {
+                    if (usedStack.amount == 1)
+                    {
+                        items[index] = new ItemStack(replacementItem, 1);
+                    }
+                    else
+                    {
+                        usedStack.amount--;
+                        AddItem(replacementItem);
+                    }
+
+                    RefreshEquippedItemAtSlot(index);
                 }
                 else
                 {
                     usedStack.amount--;
-                    AddItem(replacementItem);
-                }
-
-                RefreshEquippedItemAtSlot(index);
-            }
-            else
-            {
-                usedStack.amount--;
-                if (usedStack.amount <= 0)
-                {
-                    items[index] = null;
-                    RefreshEquippedItemAtSlot(index);
+                    if (usedStack.amount <= 0)
+                    {
+                        items[index] = null;
+                        RefreshEquippedItemAtSlot(index);
+                    }
                 }
             }
         }
 
         UpdateUI();
+    }
+
+    public bool AddItemWithDurability(ItemData data, int durability)
+    {
+        if (data == null || items == null) return false;
+        if (!data.HasDurability) return AddItem(data);
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i] != null) continue;
+            items[i] = new ItemStack(data, 1);
+            items[i].durability = durability <= 0
+                ? data.DurabilityLimit
+                : Mathf.Clamp(durability, 1, data.DurabilityLimit);
+            UpdateUI();
+            return true;
+        }
+        return false;
+    }
+
+    public void DamageDurability(int index, int amount = 1)
+    {
+        if (index < 0 || index >= items.Count || amount <= 0) return;
+        ItemStack stack = items[index];
+        if (stack == null || stack.itemData == null || !stack.itemData.HasDurability) return;
+        EquipmentManager equipment = EquipmentManager.Instance;
+        bool previousSuppressAutoEquip = equipment != null && equipment.suppressAutoEquip;
+        if (equipment != null) equipment.suppressAutoEquip = true;
+
+        // Legacy ItemData assets and already-created stacks may still carry zero
+        // from before durability was introduced. Normalize them before wear.
+        if (stack.durability <= 0)
+            stack.durability = stack.itemData.DurabilityLimit;
+        else
+            stack.durability = Mathf.Min(stack.durability, stack.itemData.DurabilityLimit);
+        stack.durability = Mathf.Max(0, stack.durability - amount);
+        if (stack.durability == 0)
+        {
+            AudioClip clip = stack.itemData.breakSound;
+            if (clip != null && Camera.main != null)
+                AudioSource.PlayClipAtPoint(clip, Camera.main.transform.position);
+            items[index] = null;
+            if (equipment != null)
+            {
+                if (equipment.currentRightSlot == index) equipment.UnequipItem(false);
+                if (equipment.currentLeftSlot == index) equipment.UnequipItem(true);
+                equipment.UnequipArmorAtSlot(index);
+            }
+        }
+        UpdateUI();
+        if (equipment != null) equipment.suppressAutoEquip = previousSuppressAutoEquip;
     }
 
     private bool CanStoreAnyReplacement(ItemData data, int sourceIndex)
@@ -559,32 +629,6 @@ public class Inventory : MonoBehaviour
         return true;
     }
 
-    private bool ContainsHealEffect(ItemData data)
-    {
-        if (data.useEffects == null)
-            return false;
-
-        foreach (ItemEffectData effect in data.useEffects)
-        {
-            if (effect == null)
-                continue;
-
-            if (effect.effectType == ItemEffectType.Heal)
-                return true;
-
-            if (effect.effectType == ItemEffectType.Random && effect.randomEffects != null)
-            {
-                foreach (ItemRandomEffectData entry in effect.randomEffects)
-                {
-                    if (entry != null && entry.effectType == ItemEffectType.Heal)
-                        return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
     public void DropItem(int index)
     {
         if (index < 0 || items[index] == null) return;
@@ -606,6 +650,7 @@ public class Inventory : MonoBehaviour
         if (itemScript != null)
         {
             itemScript.SetItemData(dataToDrop);
+            itemScript.SetDurability(items[index].durability);
             itemScript.isPermanent = true;
         }
 
@@ -635,6 +680,9 @@ public class Inventory : MonoBehaviour
 
     private void UpdateUI()
     {
+        foreach (ItemStack stack in items)
+            stack?.InitializeDurabilityIfMissing();
+
         InventoryUpdated?.Invoke();
     }
 

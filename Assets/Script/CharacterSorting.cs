@@ -16,10 +16,11 @@ public class CharacterSorting : MonoBehaviour
     [SerializeField] private int characterOffset = 0;
 
     private SpriteRenderer[] renderers;
-    private readonly List<int> localOffsets = new();
+    private int[] baseOrderValues;
     private readonly Dictionary<SpriteRenderer, int> baseOrders = new();
 
     private Transform hb;
+    private int lastAppliedCharacterOrder = int.MinValue;
 
     private void Awake()
     {
@@ -54,6 +55,9 @@ public class CharacterSorting : MonoBehaviour
             * characterOrderRange;
 
         characterOrder += characterOffset;
+        if (characterOrder == lastAppliedCharacterOrder)
+            return;
+        lastAppliedCharacterOrder = characterOrder;
 
         for (int i = 0; i < renderers.Length; i++)
         {
@@ -62,23 +66,17 @@ public class CharacterSorting : MonoBehaviour
                 continue;
             }
 
-            renderers[i].sortingLayerName = sortingLayerName;
-
-            if (!baseOrders.ContainsKey(renderers[i]))
-            {
-                baseOrders[renderers[i]] = renderers[i].sortingOrder;
-            }
-
-            int baseOrder = baseOrders[renderers[i]];
-            renderers[i].sortingOrder = baseOrder + characterOrder;
+            int targetOrder = baseOrderValues[i] + characterOrder;
+            if (renderers[i].sortingOrder != targetOrder)
+                renderers[i].sortingOrder = targetOrder;
         }
     }
 
     public void RefreshRenderers()
     {
         renderers = GetComponentsInChildren<SpriteRenderer>(true);
-
-        localOffsets.Clear();
+        baseOrderValues = new int[renderers.Length];
+        lastAppliedCharacterOrder = int.MinValue;
 
         hb = transform.Find("HB");
 
@@ -91,7 +89,6 @@ public class CharacterSorting : MonoBehaviour
         {
             if (renderers[i] == null)
             {
-                localOffsets.Add(0);
                 continue;
             }
 
@@ -103,8 +100,7 @@ public class CharacterSorting : MonoBehaviour
             {
                 baseOrders[renderers[i]] = renderers[i].sortingOrder;
             }
-
-            localOffsets.Add(renderers[i].sortingOrder);
+            baseOrderValues[i] = baseOrders[renderers[i]];
         }
     }
 }

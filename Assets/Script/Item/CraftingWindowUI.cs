@@ -192,19 +192,23 @@ public class CraftingWindowUI : MonoBehaviour
         ScrollRect scrollRect =
             root.GetComponentInParent<ScrollRect>();
 
-        Transform dropRoot =
-            scrollRect != null
-                ? scrollRect.transform
-                : root;
+        SetupDropTargetOnObject(root, returnsToInventory);
 
-        Image image =
-            dropRoot.GetComponent<Image>();
+        if (scrollRect != null && scrollRect.transform != root)
+            SetupDropTargetOnObject(scrollRect.transform, returnsToInventory);
+    }
 
+    private void SetupDropTargetOnObject(
+        Transform dropRoot,
+        bool returnsToInventory)
+    {
+        Image image = dropRoot.GetComponent<Image>();
         if (image == null)
             image = dropRoot.gameObject.AddComponent<Image>();
 
         image.color =
             new Color(1f, 1f, 1f, 0.01f);
+        image.raycastTarget = true;
 
         CraftDropTarget target =
             dropRoot.GetComponent<CraftDropTarget>();
@@ -406,6 +410,18 @@ public class CraftingWindowUI : MonoBehaviour
                 FontStyles.Bold;
         }
 
+        Button button = slot.AddComponent<Button>();
+        if (isSelectedItem)
+        {
+            button.onClick.AddListener(
+                () => RemoveSelectedItem(data));
+        }
+        else
+        {
+            button.onClick.AddListener(
+                () => AddSelectedItem(data));
+        }
+
         CraftItemDragHandler dragHandler =
             slot.AddComponent<CraftItemDragHandler>();
 
@@ -414,14 +430,6 @@ public class CraftingWindowUI : MonoBehaviour
             data,
             isSelectedItem);
 
-        if (isSelectedItem)
-        {
-            Button button =
-                slot.AddComponent<Button>();
-
-            button.onClick.AddListener(
-                () => RemoveSelectedItem(data));
-        }
     }
 
     // =========================================================
@@ -912,7 +920,7 @@ public class CraftingWindowUI : MonoBehaviour
 
             SetStatus(
                 selectedItems.Count == 0
-                    ? "アイテムをドラッグしてください。"
+                    ? "アイテムをクリックまたはドラッグしてください。"
                     : "材料に一致するレシピがありません。",
                 Color.black);
 
@@ -1255,10 +1263,10 @@ public class CraftingWindowUI : MonoBehaviour
                 eventData.pointerDrag == null
                     ? null
                     : eventData.pointerDrag
-                        .GetComponent
+                        .GetComponentInParent
                         <CraftItemDragHandler>();
 
-            if (source == null)
+            if (source == null || owner == null)
                 return;
 
             if (returnsToInventory &&

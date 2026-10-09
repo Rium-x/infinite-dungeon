@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Iron ore
   m_EditorClassIdentifier: Assembly-CSharp::ItemData
   itemName: "\u9244\u9271\u77F3"
-  icon: {fileID: -1175519311937243252, guid: 0d640bc9e565446bdb739763ee154d2d, type: 3}
+  icon: {fileID: 5703966154501591932, guid: 4c8c4b8a1fd7f4d7495d7b82ef82cabe, type: 3}
   itemType: 3
   rarity: 35.6
   maxDropCount: 10
@@ -73,10 +73,14 @@ MonoBehaviour:
   visualScale: 4.5
   equipScale: 2
   canStack: 1
+  maxDurability: 100
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
   dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
   useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
-  description: "\u9244\u9271\u77F3\u3002\u5C11\u3057\u5BC2\u308C\u3066\u3044\u308B\u3002"
+  description: "\u5C11\u3057\u5BC2\u308C\u305F\u9244\u9271\u77F3\u3002\u9053\u5177\u3055\u3048\u3042\u308C\u3070\u4F55\u306B\u3067\u3082\u4F7F\u3048\u308B\u3002\u305F\u3060\u3001\u305D\u306E\u9053\u5177\u304C\u9244\u3067\u3067\u304D\u3066\u3044\u308B\u3051\u3069\u306D"
   isConsumable: 0
-  itemEffects: []
+  useEffects: []
+  legacyItemEffects: []

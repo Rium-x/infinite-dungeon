@@ -15,7 +15,7 @@ MonoBehaviour:
   itemName: "\u30DC\u30A6\u30EB"
   icon: {fileID: -8620500895140490796, guid: 7ddbe88bbb5c44bd1bf924899f366570, type: 3}
   itemType: 3
-  rarity: 36.1
+  rarity: 44.9
   maxDropCount: 10
   dropCountProbability:
     serializedVersion: 2
@@ -73,6 +73,9 @@ MonoBehaviour:
   visualScale: 5
   equipScale: 2
   canStack: 1
+  maxDurability: 100
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
   dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}

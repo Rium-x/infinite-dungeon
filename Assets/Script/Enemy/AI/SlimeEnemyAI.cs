@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -29,6 +30,7 @@ private Item targetItem;
 private EnemyHealth targetEnemy;
 
 private float searchTimer;
+private readonly List<Collider2D> itemSearchHits = new List<Collider2D>(64);
 
 private void Awake()
 {
@@ -166,20 +168,24 @@ private Transform GetCurrentTarget()
 
 private void FindNearestItem()
 {
-    Collider2D[] hits =
-        Physics2D.OverlapCircleAll(
-            transform.position,
-            searchRadius,
-            itemLayer
-        );
+    ContactFilter2D filter = new ContactFilter2D();
+    filter.SetLayerMask(itemLayer);
+    filter.useTriggers = Physics2D.queriesHitTriggers;
+    int hitCount = Physics2D.OverlapCircle(
+        transform.position,
+        searchRadius,
+        filter,
+        itemSearchHits);
 
     float closestDistance =
         float.MaxValue;
 
     Item closestItem = null;
 
-    foreach (Collider2D hit in hits)
+    for (int i = 0; i < hitCount; i++)
     {
+        Collider2D hit = itemSearchHits[i];
+        if (hit == null) continue;
         Item item =
             hit.GetComponent<Item>();
 

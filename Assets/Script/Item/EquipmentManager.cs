@@ -1,9 +1,11 @@
 using UnityEngine;
 using System.Collections; 
+using System;
 
 // ★「, IHealth」を追加して、TimeRewindManagerからの命令を受け取れるようにします
 public class EquipmentManager : MonoBehaviour, IHealth
 {
+    public static event Action<Transform> EquipmentVisualsChanged;
     public static EquipmentManager Instance;
     public Transform rightHandSlot, leftHandSlot;
     public Transform bodySlot, faceSlot;
@@ -31,6 +33,8 @@ public class EquipmentManager : MonoBehaviour, IHealth
         {
             sorting.RefreshRenderers();
         }
+
+        EquipmentVisualsChanged?.Invoke(slot);
     }
     
     private void Awake() { if (Instance == null) Instance = this; }
@@ -124,7 +128,7 @@ public class EquipmentManager : MonoBehaviour, IHealth
             }
         }
 
-        PlayerCombat playerCombat = Object.FindAnyObjectByType<PlayerCombat>();
+        PlayerCombat playerCombat = UnityEngine.Object.FindAnyObjectByType<PlayerCombat>();
         if (playerCombat != null) playerCombat.CancelCurrentAction();
 
         if (isLeft)
@@ -337,7 +341,7 @@ public class EquipmentManager : MonoBehaviour, IHealth
 
     public void UnequipItem(bool isLeft)
     {
-        PlayerCombat playerCombat = Object.FindAnyObjectByType<PlayerCombat>();
+        PlayerCombat playerCombat = UnityEngine.Object.FindAnyObjectByType<PlayerCombat>();
         if (playerCombat != null) playerCombat.CancelCurrentAction();
 
         if (isLeft) { currentLeftItem = null; currentLeftSlot = -1; if (leftVisual != null) Destroy(leftVisual); }

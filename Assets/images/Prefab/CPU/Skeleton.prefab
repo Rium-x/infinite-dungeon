@@ -979,7 +979,7 @@ MonoBehaviour:
   rayCount: 16
   scanInterval: 0.3
   fastScanInterval: 0.2
-  forwardBias: 8
+  forwardBias: 11
   rayLaunchRadius: 1
   chestBonus: 30
   separationRadius: 3

@@ -12,6 +12,7 @@ public class HarpyAI : MonoBehaviour
     private Transform player;
     // プレイヤー検出レンジ
     [SerializeField] private float detectRange = 8f;
+    [SerializeField, Min(0.02f)] private float wallCheckInterval = 0.1f;
     // 壁判定用のレイヤーマスク（Inspectorで設定）
     [SerializeField] private LayerMask wallLayerMask;
 
@@ -124,6 +125,7 @@ public class HarpyAI : MonoBehaviour
     private Vector2 debugPredictedPos;
     // ランタイム - プレイヤーが近くにいて壁越しでないか
     private bool playerNearbyVisible;
+    private float nextWallCheckTime;
 
     void Start()
     {
@@ -163,15 +165,19 @@ public class HarpyAI : MonoBehaviour
             Vector2 currentPos2D = transform.position;
             Vector2 playerPos2D = player.position;
             float distanceToPlayer = Vector2.Distance(currentPos2D, playerPos2D);
-            bool rayHitWall = false;
             Vector2 playerDir = playerPos2D - currentPos2D;
 
-            if (distanceToPlayer <= detectRange && playerDir.sqrMagnitude > 0f)
+            if (distanceToPlayer > detectRange)
             {
-                rayHitWall = Physics2D.Raycast(currentPos2D, playerDir.normalized, playerDir.magnitude, wallLayerMask).collider != null;
+                playerNearbyVisible = false;
             }
-
-            playerNearbyVisible = distanceToPlayer <= detectRange && !rayHitWall;
+            else if (Time.time >= nextWallCheckTime)
+            {
+                nextWallCheckTime = Time.time + Mathf.Max(0.02f, wallCheckInterval);
+                bool rayHitWall = playerDir.sqrMagnitude > 0f &&
+                    Physics2D.Raycast(currentPos2D, playerDir.normalized, playerDir.magnitude, wallLayerMask).collider != null;
+                playerNearbyVisible = !rayHitWall;
+            }
             debugPredictedPos = (Vector2)player.position + (usePrediction ? playerVelocity * predictionTime : Vector2.zero);
 
             if (playerNearbyVisible)

@@ -34,14 +34,18 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
 
     private readonly Dictionary<SpriteRenderer, VisionState> states = new();
     private readonly List<SpriteRenderer> targetRenderers = new();
+    private readonly List<SpriteRenderer> removedRenderers = new();
     private readonly HashSet<SpriteRenderer> activeRenderers = new();
     private readonly RaycastHit2D[] raycastHits = new RaycastHit2D[16];
     
     private float nextRefreshTime;
     private float nextTargetScanTime;
     private float nextDiagnosticsTime;
+    private float nextPlayerSearchTime;
+    private bool restoredWithoutPlayer;
 
     private MaterialPropertyBlock mpb;
+    private Camera mainCamera;
     private static readonly int ColorPropertyId = Shader.PropertyToID("_Color");
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -60,6 +64,7 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
     private void Awake()
     {
         mpb = new MaterialPropertyBlock();
+        mainCamera = Camera.main;
 
         if (occluderLayers.value == 0)
         {
@@ -84,9 +89,14 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
     {
         if (!TryFindPlayer())
         {
-            RestoreAll();
+            if (!restoredWithoutPlayer)
+            {
+                RestoreAll();
+                restoredWithoutPlayer = true;
+            }
             return;
         }
+        restoredWithoutPlayer = false;
 
         if (Time.unscaledTime >= nextRefreshTime)
         {
@@ -105,7 +115,7 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
 
                 activeRenderers.Add(renderer);
                 VisionState state = GetState(renderer);
-                state.targetVisibility = HasAnyVisiblePoint(origin, renderer) ? 1f : 0f;
+                state.targetVisibility = !IsOnScreen(renderer) || HasAnyVisiblePoint(origin, renderer) ? 1f : 0f;
 
                 if (state.targetVisibility <= 0f)
                 {
@@ -133,6 +143,9 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
     {
         if (player == null)
         {
+            if (Time.unscaledTime < nextPlayerSearchTime)
+                return false;
+            nextPlayerSearchTime = Time.unscaledTime + 0.5f;
             GameObject playerObject = GameObject.FindGameObjectWithTag("Player");
             if (playerObject != null)
             {
@@ -183,6 +196,20 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
         return target == player || target.IsChildOf(player);
     }
 
+    private bool IsOnScreen(SpriteRenderer renderer)
+    {
+        if (mainCamera == null) return true;
+
+        Bounds bounds = renderer.bounds;
+        Vector3 center = mainCamera.WorldToViewportPoint(bounds.center);
+        Vector3 upperRight = mainCamera.WorldToViewportPoint(bounds.max);
+        float extentX = Mathf.Abs(upperRight.x - center.x);
+        float extentY = Mathf.Abs(upperRight.y - center.y);
+        return center.z >= 0f &&
+               center.x + extentX >= 0f && center.x - extentX <= 1f &&
+               center.y + extentY >= 0f && center.y - extentY <= 1f;
+    }
+
     private bool HasAnyVisiblePoint(Vector2 origin, SpriteRenderer renderer)
     {
         Bounds bounds = renderer.bounds;
@@ -193,10 +220,6 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
         Vector2 yOffset = new(0f, Mathf.Max(0f, extent.y - margin));
 
         return HasLineOfSight(origin, center, renderer.transform) ||
-               HasLineOfSight(origin, center + xOffset, renderer.transform) ||
-               HasLineOfSight(origin, center - xOffset, renderer.transform) ||
-               HasLineOfSight(origin, center + yOffset, renderer.transform) ||
-               HasLineOfSight(origin, center - yOffset, renderer.transform) ||
                HasLineOfSight(origin, center + xOffset + yOffset, renderer.transform) ||
                HasLineOfSight(origin, center + xOffset - yOffset, renderer.transform) ||
                HasLineOfSight(origin, center - xOffset + yOffset, renderer.transform) ||
@@ -271,7 +294,7 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
 
     private void RestoreMissingRenderers(HashSet<SpriteRenderer> activeRenderers)
     {
-        List<SpriteRenderer> removed = new();
+        removedRenderers.Clear();
 
         foreach (KeyValuePair<SpriteRenderer, VisionState> pair in states)
         {
@@ -280,7 +303,7 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
 
             if (renderer == null)
             {
-                removed.Add(renderer);
+                removedRenderers.Add(renderer);
                 continue;
             }
 
@@ -294,12 +317,12 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
                     {
                         renderer.SetPropertyBlock(null);
                     }
-                    removed.Add(renderer);
+                    removedRenderers.Add(renderer);
                 }
             }
         }
 
-        foreach (SpriteRenderer renderer in removed)
+        foreach (SpriteRenderer renderer in removedRenderers)
         {
             states.Remove(renderer);
         }
@@ -330,6 +353,9 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
             state.currentVisibility = state.targetVisibility;
         }
 
+        if (Mathf.Approximately(state.currentVisibility, state.lastAppliedVisibility))
+            return;
+
         renderer.GetPropertyBlock(mpb);
         Color overlayColor = Color.white;
 
@@ -346,6 +372,7 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
 
         mpb.SetColor(ColorPropertyId, overlayColor);
         renderer.SetPropertyBlock(mpb);
+        state.lastAppliedVisibility = state.currentVisibility;
     }
 
     private void RestoreAll()
@@ -359,6 +386,7 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
                 {
                     pair.Key.SetPropertyBlock(null);
                 }
+                pair.Value.lastAppliedVisibility = float.NaN;
             }
         }
     }
@@ -388,6 +416,7 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
         public readonly bool originalEnabled;
         public float currentVisibility = 1f;
         public float targetVisibility = 1f;
+        public float lastAppliedVisibility = float.NaN;
 
         public VisionState(bool originalEnabled)
         {

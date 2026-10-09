@@ -71,7 +71,6 @@ MonoBehaviour:
   fadeInDuration: 1
   fadeOutDuration: 1
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
-  normalDropRate: 100
   normalItemTypeAdjustments:
   - itemType: 0
     modifier: -9
@@ -85,6 +84,86 @@ MonoBehaviour:
     modifier: 25
   - itemType: 2
     modifier: 25
+  normalDropRatioPercent: 50
+  maxTotalDropCount: 20
+  totalDropCountProbability:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 25
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 2
+      value: 30
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 3
+      value: 20
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 4
+      value: 10
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 5
+      value: 5
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 6
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 20
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
   dropList: []
 --- !u!114 &-5732425892869942870
 MonoBehaviour:
@@ -1147,6 +1226,7 @@ MonoBehaviour:
   runSpeed: 3
   acceleration: 3
   checkRadius: 0.3
+  turnAroundWallDistance: 5
   stuckThreshold: 1
   minMoveDistance: 0.05
   rayCount: 16
@@ -1209,6 +1289,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MoveStats
   speedMultiplier: 1
+  environmentSpeedMultiplier: 1
 --- !u!1 &8567873448345226266
 GameObject:
   m_ObjectHideFlags: 0

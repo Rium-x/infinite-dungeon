@@ -47,7 +47,7 @@ public static class DungeonGraphMapBuilder
         int placementPadding, Tilemap floorMap, Tilemap wallMap, TileBase defaultFloor,
         List<GroundTileWeight> groundTileWeights, bool randomizeRoomFloors,
         TileBase defaultWall, int seed, Transform roomObjectsParent, List<GameObject> generatedObjects,
-        int targetRoomCount, float maxRoomDensity, int corridorWidth,
+        int targetRoomCount, float roomEncounterMultiplier, float maxRoomDensity, int corridorWidth,
         int maxExtraConnections, float branchChance, int maxRoomLinkDistance,
         int maxCorridorTurns, float windingChance,
         int outsideFloorPadding, int removedRoomRetryThreshold)
@@ -72,7 +72,7 @@ public static class DungeonGraphMapBuilder
         int corridorWidthClamped = Mathf.Clamp(corridorWidth, 3, 9);
         int edgePadding = corridorWidthClamped + corridorWidthClamped + 2;
         List<PlacedRoom> rooms = PlaceRooms(width, height, library, placementPadding, edgePadding, random,
-            targetRoomCount, maxRoomDensity, allRules);
+            targetRoomCount, roomEncounterMultiplier, maxRoomDensity, allRules);
         if (rooms == null) return false;
         int guaranteedRoomsPlaced = CountGuaranteedRooms(rooms);
         if (rooms.Count < 2)
@@ -85,20 +85,15 @@ public static class DungeonGraphMapBuilder
         bool[,] roomClearance = new bool[width, height];
         bool[,] corridorPathBlocked = new bool[width, height];
         int corridorRadius = Mathf.Clamp(corridorWidth, 3, 9) / 2;
+        int corridorEdgeMargin = GetCorridorEdgeMargin(corridorWidth);
         bool[,] floor = new bool[width, height];
         bool[,] corridorCenterline = new bool[width, height];
         TileBase[,] roomFloor = new TileBase[width, height];
         TileBase[,] roomWall = new TileBase[width, height];
         for (int x = 0; x < width; x++)
-        {
-            corridorPathBlocked[x, 0] = true;
-            corridorPathBlocked[x, height - 1] = true;
-        }
-        for (int y = 0; y < height; y++)
-        {
-            corridorPathBlocked[0, y] = true;
-            corridorPathBlocked[width - 1, y] = true;
-        }
+            for (int y = 0; y < height; y++)
+                corridorPathBlocked[x, y] = x < corridorEdgeMargin || y < corridorEdgeMargin ||
+                    x >= width - corridorEdgeMargin || y >= height - corridorEdgeMargin;
         foreach (PlacedRoom room in rooms)
         {
             CopyRoom(room, width, height, floor, roomFloor, roomWall);
@@ -249,7 +244,7 @@ public static class DungeonGraphMapBuilder
                 retryProducedMap = Generate(mapWidth, mapHeight, library, placementPadding,
                     floorMap, wallMap, defaultFloor, groundTileWeights, randomizeRoomFloors,
                     defaultWall, nextSeed, roomObjectsParent, generatedObjects, targetRoomCount,
-                    maxRoomDensity, corridorWidth, maxExtraConnections, branchChance,
+                    roomEncounterMultiplier, maxRoomDensity, corridorWidth, maxExtraConnections, branchChance,
                     maxRoomLinkDistance, maxCorridorTurns, windingChance, outsideFloorPadding,
                     removedRoomRetryThreshold);
             }
@@ -455,7 +450,8 @@ public static class DungeonGraphMapBuilder
     }
 
     private static List<PlacedRoom> PlaceRooms(int width, int height, DungeonRoomLibrary library,
-        int padding, int edgePadding, System.Random random, int targetRoomCount, float maxRoomDensity,
+        int padding, int edgePadding, System.Random random, int targetRoomCount,
+        float roomEncounterMultiplier, float maxRoomDensity,
         List<DungeonRoomSpawnRule> rules)
     {
         List<PlacedRoom> placed = new List<PlacedRoom>();
@@ -468,7 +464,10 @@ public static class DungeonGraphMapBuilder
         foreach (DungeonRoomSpawnRule rule in rules)
             for (int i = 0; i < Mathf.Max(0, rule.guaranteedCount); i++) required.Add(rule);
 
-        int target = Mathf.Max(Mathf.Clamp(targetRoomCount, 2, 60), required.Count);
+        int baseTarget = Mathf.Clamp(targetRoomCount, 2, 60);
+        float encounterMultiplier = Mathf.Clamp(roomEncounterMultiplier, 1f, 2f);
+        int target = Mathf.Max(Mathf.Clamp(Mathf.CeilToInt(baseTarget * encounterMultiplier), 2, 60),
+            required.Count);
         HashSet<DungeonRoomDefinition> guaranteedPrefabs = new HashSet<DungeonRoomDefinition>();
         foreach (DungeonRoomSpawnRule rule in required) guaranteedPrefabs.Add(rule.prefab);
 
@@ -695,12 +694,14 @@ public static class DungeonGraphMapBuilder
         bool[,] corridorPathBlocked, int corridorRadius, int corridorWidth,
         int width, int height)
     {
+        int edgeMargin = GetCorridorEdgeMargin(corridorWidth);
         for (int x = 0; x < width; x++)
             for (int y = 0; y < height; y++)
             {
                 blocked[x, y] = false;
                 roomClearance[x, y] = false;
-                corridorPathBlocked[x, y] = x == 0 || y == 0 || x == width - 1 || y == height - 1;
+                corridorPathBlocked[x, y] = x < edgeMargin || y < edgeMargin ||
+                    x >= width - edgeMargin || y >= height - edgeMargin;
             }
 
         for (int i = 0; i < rooms.Count; i++)
@@ -1190,7 +1191,9 @@ public static class DungeonGraphMapBuilder
             for (int dy = min; dy <= max; dy++)
             {
                 int x = center.x + dx, y = center.y + dy;
-                if (!Inside(x, y, mapWidth, mapHeight) || roomBlocked[x, y] || roomClearance[x, y])
+                if (!Inside(x, y, mapWidth, mapHeight) || x == 0 || y == 0 ||
+                    x == mapWidth - 1 || y == mapHeight - 1 ||
+                    roomBlocked[x, y] || roomClearance[x, y])
                     return false;
             }
         return true;
@@ -1271,6 +1274,15 @@ public static class DungeonGraphMapBuilder
                 if (Inside(x, y, mapWidth, mapHeight)) blocked[x, y] = true;
     }
 
+    private static int GetCorridorEdgeMargin(int corridorWidth)
+    {
+        int width = Mathf.Clamp(corridorWidth, 3, 9);
+        int footprintRadius = Mathf.Max((width - 1) / 2, width / 2);
+        // Keep the full corridor footprint away from the perimeter wall so it cannot
+        // be clipped by the map edge or the boundary collision tile.
+        return footprintRadius + 1;
+    }
+
     private static bool ChooseExits(PlacedRoom a, PlacedRoom b, out int exitA, out int exitB)
     {
         exitA = -1;
@@ -1313,13 +1325,8 @@ public static class DungeonGraphMapBuilder
         bool[,] blocked, int width, int height, int maxTurns, float windingChance,
         int minimumStraightCells, System.Random random)
     {
-        if (maxTurns >= 2 && random.NextDouble() < windingChance &&
-            TryBuildWindingPath(start, end, blocked, width, height, random, out List<Vector2Int> winding) &&
-            IsCorridorPathValid(winding, startDirection, endDirection, maxTurns, minimumStraightCells))
-            return winding;
-
-        // Prefer a single straight run with one right-angle turn. Use constrained grid search
-        // when room buffers or existing corridor keep-outs block both simple routes.
+        // Prefer the direct one-turn routes first. Winding routes are optional variety and
+        // must not replace a valid simple route just because their chance roll succeeded.
         bool horizontalFirst = random.Next(2) == 0;
         Vector2Int corner = horizontalFirst
             ? new Vector2Int(end.x, start.y)
@@ -1333,10 +1340,14 @@ public static class DungeonGraphMapBuilder
         if (maxTurns >= 1 && TryBuildAxisPath(start, alternateCorner, end, blocked, width, height, out direct) &&
             IsCorridorPathValid(direct, startDirection, endDirection, maxTurns, minimumStraightCells))
             return direct;
-        if (maxTurns >= 2 && TryBuildWindingPath(start, end, blocked, width, height, random, out winding) &&
+
+        if (maxTurns >= 2 && random.NextDouble() < windingChance &&
+            TryBuildWindingPath(start, end, blocked, width, height, random, out List<Vector2Int> winding) &&
             IsCorridorPathValid(winding, startDirection, endDirection, maxTurns, minimumStraightCells))
             return winding;
 
+        // Use constrained grid search only after both direct routes and the optional
+        // winding attempt fail their obstacle and minimum-straight-run checks.
         List<Vector2Int> constrained = FindConstrainedPath(start, end, startDirection,
             endDirection, blocked, width, height, maxTurns, minimumStraightCells);
         return constrained;

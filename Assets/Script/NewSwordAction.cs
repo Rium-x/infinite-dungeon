@@ -42,6 +42,7 @@ public class  NewSwordAction: MonoBehaviour, IWeapon
     private State currentState = State.Idle;
 
     public bool IsAttacking => currentState == State.Attacking || currentState == State.Returning;
+    public Transform PlayerTransform => player;
     // 互換性のための共通プロパティ
     public bool IsBusy => IsAttacking;
 

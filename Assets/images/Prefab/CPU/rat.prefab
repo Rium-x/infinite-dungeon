@@ -84,7 +84,7 @@ MonoBehaviour:
     modifier: 100
   - itemType: 2
     modifier: 25
-  normalDropRatioPercent: 50
+  normalDropRatioPercent: 67.6
   maxTotalDropCount: 20
   totalDropCountProbability:
     serializedVersion: 2
@@ -130,6 +130,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   dropList:
   - itemData: {fileID: 11400000, guid: 82316af56353b154388415d0c1914125, type: 2}
+    monsterModifier: 37
+  - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
+    monsterModifier: 37
+  - itemData: {fileID: 11400000, guid: 9f186eba8c3ae4722af2622b2ec53165, type: 2}
     monsterModifier: 37
 --- !u!114 &-5732425892869942870
 MonoBehaviour:
@@ -1197,24 +1201,25 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentState: 0
-  detectRange: 5
+  detectRange: 4
   detectionMask:
     serializedVersion: 2
     m_Bits: 392
   rayOffset: {x: 0, y: -0.3}
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 5
-  runSpeed: 5
+  runSpeed: 6
   acceleration: 3
   checkRadius: 0.3
+  turnAroundWallDistance: 5
   stuckThreshold: 1
   minMoveDistance: 0.05
   rayCount: 16
   scanInterval: 0.2
   fastScanInterval: 0.2
-  forwardBias: 8
+  forwardBias: 11
   rayLaunchRadius: 0.7
-  chestBonus: 30
+  chestBonus: 7
   separationRadius: 3
   separationWeight: 0.2
   searchTimeout: 1

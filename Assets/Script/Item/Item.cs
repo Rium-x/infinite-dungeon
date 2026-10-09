@@ -4,6 +4,7 @@ using System.Collections;
 public class Item : MonoBehaviour
 {
     public ItemData data;
+    public int durability = -1;
     private SpriteRenderer spriteRenderer;
     private Rigidbody2D rb;
     private bool isPlayerNearby = false;
@@ -126,7 +127,9 @@ public class Item : MonoBehaviour
             if (Inventory.Instance != null)
             {
                 bool isNewItem = !Inventory.Instance.HasItem(data);
-                bool isAdded = Inventory.Instance.AddItem(data);
+                bool isAdded = durability >= 0
+                    ? Inventory.Instance.AddItemWithDurability(data, durability)
+                    : Inventory.Instance.AddItem(data);
 
                 if (isAdded)
                 {
@@ -149,4 +152,6 @@ public class Item : MonoBehaviour
         this.data = newData;
         ApplyDataSettings();
     }
+
+    public void SetDurability(int value) { durability = value; }
 }

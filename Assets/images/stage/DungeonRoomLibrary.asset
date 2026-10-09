@@ -15,7 +15,7 @@ MonoBehaviour:
   rooms:
   - prefab: {fileID: 2268309366662937298, guid: bc20979b6b38c4805bccc333d3b5cc29, type: 3}
     size: 0
-    spawnWeight: 7
+    spawnWeight: 4
     guaranteedCount: 0
   - prefab: {fileID: 8346961634279647381, guid: 28a4a95e8094d4a7c8f2758e7215bbf9, type: 3}
     size: 0
@@ -43,11 +43,11 @@ MonoBehaviour:
     guaranteedCount: 0
   - prefab: {fileID: 4985094446915672750, guid: 5fd642043faf748dd8f33ac99bf1cff9, type: 3}
     size: 1
-    spawnWeight: 2
+    spawnWeight: 5
     guaranteedCount: 0
   - prefab: {fileID: 8346961634279647381, guid: af56755a90d744daba5ce6a073649e6b, type: 3}
     size: 0
-    spawnWeight: 12
+    spawnWeight: 15
     guaranteedCount: 0
   - prefab: {fileID: 8346961634279647381, guid: 037184087403b46cdae13c6f4e8073f5, type: 3}
     size: 0

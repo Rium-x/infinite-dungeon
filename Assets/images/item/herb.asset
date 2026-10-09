@@ -73,15 +73,19 @@ MonoBehaviour:
   visualScale: 4
   equipScale: 2.5
   canStack: 1
+  maxDurability: 100
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
   dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
   useSound: {fileID: 8300000, guid: c6469ecb046764b2bbfbdf370470e774, type: 3}
-  description: "\u306B\u304C\u3044\u85AC\u8349\u3002\u4F53\u529B\u3092\u5C11\u3057\u56DE\u5FA9\u3059\u308B\u3002\u305D\u3057\u3066\u304F\u305B\u3047"
+  description: "\u85AC\u8349\u3002\u4F53\u529B\u3092\u5C11\u3057\u56DE\u5FA9\u3059\u308B\u3002\u305D\u306E\u307E\u307E\u98DF\u3079\u3066\u3082\n\u7F8E\u5473\u3057\u304F\u306A\u3044\u3057\u82E6\u3044\u304B\u3089\u8ABF\u7406\u3057\u3066\uFF1F"
   isConsumable: 1
   useEffects:
   - effectType: 0
     healAmount: 4
     buffData: {fileID: 0}
     randomEffects: []
+    replacementItem: {fileID: 0}
   legacyItemEffects: []

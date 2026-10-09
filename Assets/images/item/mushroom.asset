@@ -15,7 +15,7 @@ MonoBehaviour:
   itemName: "\u30AD\u30CE\u30B3"
   icon: {fileID: 7195095843781814050, guid: cfa66606a8845ee4bbb3a7731edc82a5, type: 3}
   itemType: 2
-  rarity: 60.6
+  rarity: 65.5
   maxDropCount: 10
   dropCountProbability:
     serializedVersion: 2
@@ -73,6 +73,9 @@ MonoBehaviour:
   visualScale: 5
   equipScale: 3.5
   canStack: 1
+  maxDurability: 100
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
   dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}
@@ -83,6 +86,17 @@ MonoBehaviour:
   - effectType: 0
     healAmount: 2
     buffData: {fileID: 0}
+    createTemporaryBuff: 0
+    temporaryBuff:
+      buffType: 0
+      buffName: "\u4E00\u6642\u30D0\u30D5"
+      duration: 10
+      isDebuff: 0
+      level: 1
+      healPerTick: 1
+      tickInterval: 1
+      damagePerTick: 1
+      speedMultiplier: 1.5
     randomEffects: []
     replacementItem: {fileID: 0}
   legacyItemEffects: []

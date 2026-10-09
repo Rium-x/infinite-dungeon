@@ -15,14 +15,14 @@ MonoBehaviour:
   itemName: "\u68D2"
   icon: {fileID: 7353294426574453240, guid: e358ed7bde62fd84b8295cab681fe291, type: 3}
   itemType: 1
-  rarity: 47.2
+  rarity: 37.3
   maxDropCount: 2
   dropCountProbability:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0
-      value: 0
+      time: 0.0026779175
+      value: -5.297119
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -39,8 +39,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 2
-      value: 0
+      time: 1.9545256
+      value: -5.0031495
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -48,8 +48,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 10
-      value: 0
+      time: 1.96344
+      value: -14.6345215
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -73,6 +73,9 @@ MonoBehaviour:
   visualScale: 4.5
   equipScale: 1.5
   canStack: 0
+  maxDurability: 125
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
   dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}

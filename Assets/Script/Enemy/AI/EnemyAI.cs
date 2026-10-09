@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody2D))]
@@ -12,6 +13,7 @@ private MoveStats moveStats;
     private Transform player;
     [SerializeField] private float detectRange = 15.0f;
     [SerializeField] private LayerMask detectionMask = 392;
+    [SerializeField, Min(0.02f)] private float sightCheckInterval = 0.1f;
     [SerializeField] private Vector2 rayOffset = new Vector2(0, -0.3f);
     [SerializeField] private Vector2 playerPositionOffset = new Vector2(0, -0.3f);
 
@@ -20,6 +22,7 @@ private MoveStats moveStats;
     [SerializeField] private float runSpeed = 3.0f;
     [SerializeField] private float acceleration = 3.0f;
     [SerializeField] private float checkRadius = 0.3f; 
+    [SerializeField] private float turnAroundWallDistance = 5f;
 
     [Header("スタック(壁引っ掛かり)対策")]
     [SerializeField] private float stuckThreshold = 1.0f; // 何秒止まったらスタックとみなすか
@@ -38,6 +41,10 @@ private MoveStats moveStats;
     [Header("分離設定 (重なり防止)")]
     [SerializeField] private float separationRadius = 3.0f; 
     [SerializeField] private float separationWeight = 0.2f; 
+    [SerializeField, Min(0.02f)] private float separationCheckInterval = 0.1f;
+    private readonly List<Collider2D> nearbyEnemyColliders = new List<Collider2D>(64);
+    private float nextSeparationCheckTime;
+    private Vector2 cachedSeparation;
 
     [Header("タイムアウト・捜索設定")]
     [SerializeField] private float searchTimeout = 1.0f; 
@@ -54,6 +61,8 @@ private MoveStats moveStats;
     private float alertTimer;
     private Rigidbody2D rb;
     private Vector2 moveInput;
+    private float nextSightCheckTime;
+    private bool canSeePlayer;
 
     void Start()
     {
@@ -80,10 +89,13 @@ private MoveStats moveStats;
 
     void Update()
     {
-        bool canSeePlayer = (player != null && player.gameObject.activeInHierarchy) && CheckLineOfSight();
-        
-        if (canSeePlayer) 
-            lastPlayerPos = player.position + (Vector3)playerPositionOffset;
+        if (Time.time >= nextSightCheckTime)
+        {
+            nextSightCheckTime = Time.time + Mathf.Max(0.02f, sightCheckInterval);
+            canSeePlayer = (player != null && player.gameObject.activeInHierarchy) && CheckLineOfSight();
+            if (canSeePlayer)
+                lastPlayerPos = player.position + (Vector3)playerPositionOffset;
+        }
 
         switch (currentState)
         {
@@ -95,6 +107,16 @@ private MoveStats moveStats;
     }
 
     private Vector2 CenterPos => (Vector2)transform.position + rayOffset;
+
+    private bool CanTurnAround(Vector2 direction)
+    {
+        if (lastDirection == Vector2.zero || Vector2.Dot(direction.normalized, lastDirection.normalized) > -0.9f)
+            return true;
+
+        RaycastHit2D wall = Physics2D.CircleCast(CenterPos, checkRadius, lastDirection.normalized,
+            turnAroundWallDistance, detectionMask);
+        return wall.collider != null && !wall.collider.CompareTag("Player") && wall.distance <= turnAroundWallDistance;
+    }
 
     void UpdateIdle(bool canSeePlayer)
     {
@@ -125,6 +147,7 @@ private MoveStats moveStats;
             return; 
         }
         moveInput = ((Vector2)player.position + playerPositionOffset - CenterPos).normalized;
+        if (!CanTurnAround(moveInput)) moveInput = lastDirection;
         lastDirection = moveInput;
     }
 
@@ -135,6 +158,7 @@ private MoveStats moveStats;
         if (currentSearchTimer >= searchTimeout) { ForceChangeToAlert(); return; }
         Vector2 dirToLastPos = ((Vector2)lastPlayerPos - CenterPos).normalized;
         moveInput = dirToLastPos;
+        if (!CanTurnAround(moveInput)) moveInput = lastDirection;
         if (Vector2.Distance(CenterPos, lastPlayerPos) < 0.2f) ForceChangeToAlert();
     }
 
@@ -161,11 +185,20 @@ private MoveStats moveStats;
 
     Vector2 CalculateSeparation()
     {
+        if (Time.time < nextSeparationCheckTime)
+            return cachedSeparation;
+        nextSeparationCheckTime = Time.time + Mathf.Max(0.02f, separationCheckInterval);
+
         Vector2 separationVec = Vector2.zero;
-        Collider2D[] nearbyEnemies = Physics2D.OverlapCircleAll(transform.position, separationRadius);
+        ContactFilter2D filter = new ContactFilter2D();
+        filter.useTriggers = Physics2D.queriesHitTriggers;
+        int nearbyCount = Physics2D.OverlapCircle(
+            transform.position, separationRadius, filter, nearbyEnemyColliders);
         int count = 0;
-        foreach (var col in nearbyEnemies)
+        for (int i = 0; i < nearbyCount; i++)
         {
+            Collider2D col = nearbyEnemyColliders[i];
+            if (col == null) continue;
             if (col.gameObject != this.gameObject && col.CompareTag("Enemy"))
             {
                 Vector2 diff = (Vector2)transform.position - (Vector2)col.transform.position;
@@ -175,7 +208,8 @@ private MoveStats moveStats;
                 count++;
             }
         }
-        return count > 0 ? separationVec : Vector2.zero;
+        cachedSeparation = count > 0 ? separationVec : Vector2.zero;
+        return cachedSeparation;
     }
 
     Vector2 GetFarthestDirection()
@@ -187,6 +221,7 @@ private MoveStats moveStats;
         {
             float angle = i * (360f / rayCount);
             Vector2 dir = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+            if (!CanTurnAround(dir)) continue;
             Vector2 startPos = CenterPos + (dir * rayLaunchRadius);
             
             RaycastHit2D hit = Physics2D.CircleCast(startPos, checkRadius, dir, detectRange, detectionMask);

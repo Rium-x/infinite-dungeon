@@ -83,41 +83,41 @@ MonoBehaviour:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 1.0307388
-      value: 85.85919
-      inSlope: 0
-      outSlope: 0
+      time: 0.9521822
+      value: -7.8757935
+      inSlope: -0.28487262
+      outSlope: -0.28487262
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0
+      outWeight: 0.62578857
     - serializedVersion: 3
-      time: 1.5750146
-      value: 50.29925
-      inSlope: 0.18369548
-      outSlope: 0.18369548
+      time: 0.96482545
+      value: 100.799995
+      inSlope: -1.7727993
+      outSlope: -1.7727993
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.42032263
-      outWeight: 0.21756737
+      inWeight: 0.33333334
+      outWeight: 0.33333334
     - serializedVersion: 3
-      time: 3.6310425
-      value: 1.871582
-      inSlope: 0
-      outSlope: 0
+      time: 1.1369146
+      value: 100.1324
+      inSlope: 0.013744844
+      outSlope: 0.013744844
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
-      outWeight: 0
+      inWeight: 1
+      outWeight: 0.33333334
     - serializedVersion: 3
-      time: 10
-      value: 0
-      inSlope: 0
-      outSlope: 0
+      time: 1.9304552
+      value: -0.34153366
+      inSlope: -0.5999149
+      outSlope: -0.5999149
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0
-      outWeight: 0
+      inWeight: 0.33333334
+      outWeight: 0.24966168
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
@@ -139,7 +139,7 @@ MonoBehaviour:
   sortingLayerName: Characters
   yToSortingScale: 10
   characterOrderRange: 100
-  characterOffset: -199
+  characterOffset: 0
 --- !u!1 &5723949514176499206
 GameObject:
   m_ObjectHideFlags: 0

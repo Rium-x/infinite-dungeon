@@ -97,11 +97,15 @@ public class PlayerHealth : MonoBehaviour
         if (!this.enabled) return; 
 
         float finalDamage = damage;
+        bool armorDefended = false;
 
         ArmorDefense[] armorDefenses = GetComponentsInChildren<ArmorDefense>(true);
         foreach (ArmorDefense armorDefense in armorDefenses)
         {
+            float damageBeforeArmor = finalDamage;
             finalDamage = armorDefense.ApplyDamageReduction(finalDamage, isEnemyDamage);
+            if (finalDamage < damageBeforeArmor)
+                armorDefended = true;
         }
 
         if (EquipmentManager.Instance != null)
@@ -116,7 +120,25 @@ public class PlayerHealth : MonoBehaviour
 
             if (shield != null)
             {
+                float damageBeforeShield = finalDamage;
                 finalDamage = shield.ApplyDamageReduction(finalDamage);
+                if (finalDamage < damageBeforeShield && Inventory.Instance != null)
+                {
+                    int shieldSlot = EquipmentManager.Instance.leftHandSlot != null &&
+                        EquipmentManager.Instance.leftHandSlot.GetComponentInChildren<ShieldAction>() == shield
+                        ? EquipmentManager.Instance.currentLeftSlot
+                        : EquipmentManager.Instance.currentRightSlot;
+                    Inventory.Instance.DamageDurability(shieldSlot);
+                }
+            }
+
+            if (isEnemyDamage && damage > 0f && armorDefended && Inventory.Instance != null)
+            {
+                EquipmentManager equipment = EquipmentManager.Instance;
+                Inventory.Instance.DamageDurability(equipment.currentHandsArmorSlot);
+                Inventory.Instance.DamageDurability(equipment.currentBodyArmorSlot);
+                Inventory.Instance.DamageDurability(equipment.currentFaceArmorSlot);
+                Inventory.Instance.DamageDurability(equipment.currentFeetArmorSlot);
             }
         }
 
