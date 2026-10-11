@@ -13,16 +13,25 @@ public class EnemyChase : MonoBehaviour
     [SerializeField] private float acceleration = 5.0f; // 加速度（大きいほどすぐ最高速になる）
     
     private Rigidbody2D rb;
+    private MoveStats moveStats;
+    private WaterTerrainEffect waterEffect;
     private Vector2 moveInput;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        moveStats = GetComponentInChildren<MoveStats>(true);
+        waterEffect = GetComponentInParent<WaterTerrainEffect>();
     }
 
     void Update()
     {
         if (player == null) return;
+        if (waterEffect != null && waterEffect.AvoidsWater)
+        {
+            WaterTerrainEffect playerWater = player.GetComponentInParent<WaterTerrainEffect>();
+            if (playerWater != null && playerWater.IsInWaterNow) { moveInput = Vector2.zero; return; }
+        }
 
         Vector2 direction = (player.position - transform.position).normalized;
         float distanceToPlayer = Vector2.Distance(transform.position, player.position);
@@ -52,6 +61,8 @@ public class EnemyChase : MonoBehaviour
         // 物理演算に基づいた滑らかな加速・減速
         // 現在の速度から目標の速度（moveInput * maxSpeed）へ、徐々に近づける
         Vector2 targetVelocity = moveInput * maxSpeed;
+        if (waterEffect != null && !waterEffect.AllowsWaterDirection(moveInput)) targetVelocity = Vector2.zero;
+        if (moveStats != null) targetVelocity *= moveStats.ApplySpeed(1f);
         rb.linearVelocity = Vector2.Lerp(rb.linearVelocity, targetVelocity, acceleration * Time.fixedDeltaTime);
     }
 }

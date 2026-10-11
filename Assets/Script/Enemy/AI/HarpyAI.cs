@@ -118,6 +118,9 @@ public class HarpyAI : MonoBehaviour
 
     // ランタイム - Rigidbody参照（表示不要）
     private Rigidbody2D rb;
+    private MoveStats moveStats;
+    private WaterTerrainEffect waterEffect;
+    private WaterTerrainEffect playerWaterEffect;
     // ランタイム - 目標位置（軌道追従の内部状態）
     private Vector2 desiredPosition;
     
@@ -130,6 +133,8 @@ public class HarpyAI : MonoBehaviour
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        moveStats = GetComponentInChildren<MoveStats>(true);
+        waterEffect = GetComponentInParent<WaterTerrainEffect>();
         radius = baseRadius;
         targetAngularOffset = Random.Range(-angularOffsetRange, angularOffsetRange);
         if (player == null) FindPlayer();
@@ -140,7 +145,11 @@ public class HarpyAI : MonoBehaviour
     void FindPlayer()
     {
         var players = GameObject.FindGameObjectsWithTag("Player");
-        if (players.Length > 0) player = players[0].transform;
+        if (players.Length > 0)
+        {
+            player = players[0].transform;
+            playerWaterEffect = player.GetComponentInParent<WaterTerrainEffect>();
+        }
     }
 
     void Update()
@@ -155,6 +164,12 @@ public class HarpyAI : MonoBehaviour
 
         if (player != null)
         {
+            if (playerWaterEffect == null)
+                playerWaterEffect = player.GetComponentInParent<WaterTerrainEffect>();
+            if (waterEffect != null && waterEffect.AvoidsWater && playerWaterEffect != null
+                && playerWaterEffect.IsInWaterNow)
+                playerNearbyVisible = false;
+
             playerVelocity = ((Vector2)player.position - lastPlayerPos) / Mathf.Max(dt, 1e-6f);
             lastPlayerPos = player.position;
         }
@@ -166,8 +181,10 @@ public class HarpyAI : MonoBehaviour
             Vector2 playerPos2D = player.position;
             float distanceToPlayer = Vector2.Distance(currentPos2D, playerPos2D);
             Vector2 playerDir = playerPos2D - currentPos2D;
+            bool playerInAvoidedWater = waterEffect != null && waterEffect.AvoidsWater
+                && playerWaterEffect != null && playerWaterEffect.IsInWaterNow;
 
-            if (distanceToPlayer > detectRange)
+            if (distanceToPlayer > detectRange || playerInAvoidedWater)
             {
                 playerNearbyVisible = false;
             }
@@ -333,6 +350,7 @@ public class HarpyAI : MonoBehaviour
 
             currentSpeed += (attackSpeed - currentSpeed) * attackAcceleration * fdt;
             Vector2 targetVel = dir * currentSpeed;
+            ApplyWaterMovement(ref targetVel);
             rb.linearVelocity = Vector2.MoveTowards(rb.linearVelocity, targetVel, attackAcceleration * fdt * attackSpeed);
 
             if (Vector2.Distance(pos, attackTarget) <= attackArrivalDistance)
@@ -357,8 +375,17 @@ public class HarpyAI : MonoBehaviour
                 targetVel = Vector2.ClampMagnitude(targetVel, orbitMaxSpeed);
             }
 
+            ApplyWaterMovement(ref targetVel);
             rb.linearVelocity = Vector2.MoveTowards(rb.linearVelocity, targetVel, movementAcceleration * fdt);
         }
+    }
+
+    private void ApplyWaterMovement(ref Vector2 targetVelocity)
+    {
+        if (moveStats != null)
+            targetVelocity *= moveStats.ApplySpeed(1f);
+        if (waterEffect != null && !waterEffect.AllowsWaterDirection(targetVelocity))
+            targetVelocity = Vector2.zero;
     }
 
     private void OnDrawGizmos()

@@ -438,7 +438,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -468,7 +468,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1.1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -626,6 +626,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 475e4ff2126df8e41a8030f61452d831, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyInitializer
+  waterSpeedPercent: 50
+  takeDamageInWater: 0
+  waterDamagePerSecond: 5
+  takeDamageOutsideWater: 0
+  outsideWaterDamagePerSecond: 5
+  avoidWater: 0
+  cannotLeaveWater: 0
+  individualWaterFadeObjects: []
 --- !u!114 &7092720809294063280
 MonoBehaviour:
   m_ObjectHideFlags: 0

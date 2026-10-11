@@ -80,9 +80,11 @@ public static class DungeonRoomAssetBuilder
         grid.cellSize = Vector3.one;
         Tilemap floorMap = CreateTilemap(root.transform, "Floor", 0);
         Tilemap wallMap = CreateTilemap(root.transform, "Wall", 1);
+        Tilemap trapMap = CreateTilemap(root.transform, "Trap", 2);
         DungeonRoomDefinition definition = root.AddComponent<DungeonRoomDefinition>();
         definition.floorTilemap = floorMap;
         definition.wallTilemap = wallMap;
+        definition.trapTilemap = trapMap;
 
         int minX = -width / 2;
         int minY = -height / 2;
@@ -129,6 +131,11 @@ public static class DungeonRoomAssetBuilder
     {
         GameObject child = new GameObject(name);
         child.transform.SetParent(parent, false);
+        if (name.IndexOf("trap", System.StringComparison.OrdinalIgnoreCase) >= 0)
+        {
+            int trapLayer = LayerMask.NameToLayer("Trap");
+            if (trapLayer >= 0) child.layer = trapLayer;
+        }
         Tilemap map = child.AddComponent<Tilemap>();
         TilemapRenderer renderer = child.AddComponent<TilemapRenderer>();
         renderer.sortingOrder = sortingOrder;
@@ -179,6 +186,8 @@ public static class DungeonRoomAssetBuilder
 
         generator.floorTilemap = groundObject.GetComponent<Tilemap>();
         generator.wallTilemap = wallMap;
+        generator.trapTilemap = FindOrCreateTrapTilemap(groundObject.transform.parent,
+            generator.floorTilemap);
         generator.tilemap = generator.wallTilemap;
         generator.floorTile = floor;
         generator.wallTile = wall;
@@ -186,6 +195,31 @@ public static class DungeonRoomAssetBuilder
         Debug.Log($"Room setup: floor={generator.floorTilemap}, wall={generator.wallTilemap}, legacy={generator.tilemap}");
         EditorSceneManager.MarkSceneDirty(scene);
         EditorSceneManager.SaveScene(scene);
+    }
+
+    private static Tilemap FindOrCreateTrapTilemap(Transform parent, Tilemap floorMap)
+    {
+        Tilemap trapMap = null;
+        foreach (Tilemap candidate in Object.FindObjectsByType<Tilemap>())
+            if (candidate.name.IndexOf("trap", System.StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                trapMap = candidate;
+                break;
+            }
+
+        if (trapMap == null)
+        {
+            GameObject child = new GameObject("Trap");
+            child.transform.SetParent(parent, false);
+            trapMap = child.AddComponent<Tilemap>();
+            TilemapRenderer renderer = child.AddComponent<TilemapRenderer>();
+            renderer.sortingLayerID = floorMap.GetComponent<TilemapRenderer>().sortingLayerID;
+            renderer.sortingOrder = floorMap.GetComponent<TilemapRenderer>().sortingOrder + 1;
+        }
+
+        int trapLayer = LayerMask.NameToLayer("Trap");
+        if (trapLayer >= 0) trapMap.gameObject.layer = trapLayer;
+        return trapMap;
     }
 
     private static Tilemap FindWallTilemap()

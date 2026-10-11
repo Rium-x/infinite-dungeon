@@ -36,6 +36,7 @@ public class BSPDungeonMaster : MonoBehaviour
     public Tilemap tilemap;
     public Tilemap floorTilemap;
     public Tilemap wallTilemap;
+    public Tilemap trapTilemap;
     public TileBase floorTile;
     public TileBase wallTile;
 
@@ -185,6 +186,15 @@ public class BSPDungeonMaster : MonoBehaviour
         }
 
         if (wallTilemap == null) wallTilemap = tilemap;
+        if (trapTilemap == null)
+        {
+            foreach (Tilemap candidate in FindObjectsByType<Tilemap>())
+                if (candidate.name.IndexOf("trap", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    trapTilemap = candidate;
+                    break;
+                }
+        }
         List<StageData> orderedStages = GetOrderedStages();
         if (stageOrder == null) stageOrder = new List<StageData>();
         stageOrder.Clear();
@@ -290,6 +300,8 @@ public class BSPDungeonMaster : MonoBehaviour
 
         var col = wallTilemap != null ? wallTilemap.GetComponent<TilemapCollider2D>() : null;
         if (col != null) col.ProcessTilemapChanges();
+        var trapCollider = trapTilemap != null ? trapTilemap.GetComponent<TilemapCollider2D>() : null;
+        if (trapCollider != null) trapCollider.ProcessTilemapChanges();
 
         Physics2D.SyncTransforms();
         GenerationVersion++;
@@ -306,20 +318,26 @@ public class BSPDungeonMaster : MonoBehaviour
 
         Transform floorTransform = floorTilemap.transform;
         Transform wallTransform = wallTilemap.transform;
-        if (floorTransform.parent == wallTransform.parent)
+        AlignTilemapTransform(floorTransform, wallTransform);
+        if (trapTilemap != null) AlignTilemapTransform(trapTilemap.transform, wallTransform);
+    }
+
+    private static void AlignTilemapTransform(Transform target, Transform reference)
+    {
+        if (target.parent == reference.parent)
         {
-            Vector3 localPosition = floorTransform.localPosition;
-            localPosition.x = wallTransform.localPosition.x;
-            localPosition.y = wallTransform.localPosition.y;
-            floorTransform.localPosition = localPosition;
+            Vector3 localPosition = target.localPosition;
+            localPosition.x = reference.localPosition.x;
+            localPosition.y = reference.localPosition.y;
+            target.localPosition = localPosition;
         }
         else
         {
-            Vector3 floorPosition = floorTransform.position;
-            Vector3 wallPosition = wallTransform.position;
-            floorPosition.x = wallPosition.x;
-            floorPosition.y = wallPosition.y;
-            floorTransform.position = floorPosition;
+            Vector3 targetPosition = target.position;
+            Vector3 referencePosition = reference.position;
+            targetPosition.x = referencePosition.x;
+            targetPosition.y = referencePosition.y;
+            target.position = targetPosition;
         }
     }
 
@@ -344,7 +362,7 @@ public class BSPDungeonMaster : MonoBehaviour
         TileBase stageFloor = currentStageData.groundTile != null ? currentStageData.groundTile : floorTile;
         TileBase stageWall = currentStageData.wallTile != null ? currentStageData.wallTile : wallTile;
         if (!DungeonGraphMapBuilder.Generate(generationWidth, generationHeight,
-                currentStageData.roomLibrary, roomPlacementPadding, floorTilemap, wallTilemap,
+                currentStageData.roomLibrary, roomPlacementPadding, floorTilemap, wallTilemap, trapTilemap,
                 stageFloor, currentStageData.groundTileWeights, currentStageData.randomizeRoomFloors,
                 stageWall, seed, transform, generatedRoomObjects, roomCount,
                 roomEncounterMultiplier, maxRoomDensity,
@@ -375,7 +393,8 @@ public class BSPDungeonMaster : MonoBehaviour
 
         foreach (Tilemap sourceTilemap in sourceTilemaps)
         {
-            Tilemap destination = IsFloorMap(sourceTilemap) ? floorTilemap : wallTilemap;
+            Tilemap destination = IsTrapMap(sourceTilemap) ? trapTilemap :
+                IsFloorMap(sourceTilemap) ? floorTilemap : wallTilemap;
             if (destination == null) continue;
             foreach (Vector3Int cell in sourceTilemap.cellBounds.allPositionsWithin)
             {
@@ -384,7 +403,7 @@ public class BSPDungeonMaster : MonoBehaviour
             }
         }
 
-        ExtractManualObjects(mapInstance, sourceTilemaps);
+        ExtractManualObjects(mapInstance);
         Destroy(mapInstance);
     }
 
@@ -393,26 +412,23 @@ public class BSPDungeonMaster : MonoBehaviour
         return source != null && source.name.IndexOf("floor", StringComparison.OrdinalIgnoreCase) >= 0;
     }
 
+    private static bool IsTrapMap(Tilemap source)
+    {
+        return source != null && source.name.IndexOf("trap", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
     private void ClearOutputTilemaps()
     {
         if (floorTilemap != null) floorTilemap.ClearAllTiles();
         if (wallTilemap != null) wallTilemap.ClearAllTiles();
-        else if (tilemap != null) tilemap.ClearAllTiles();
+        if (trapTilemap != null) trapTilemap.ClearAllTiles();
+        if (wallTilemap == null && tilemap != null) tilemap.ClearAllTiles();
     }
 
-    private void ExtractManualObjects(GameObject mapInstance, Tilemap[] sourceTilemaps)
+    private void ExtractManualObjects(GameObject mapInstance)
     {
         List<Transform> objectsToExtract = new List<Transform>();
-
-        for (int index = 0; index < mapInstance.transform.childCount; index++)
-        {
-            Transform child = mapInstance.transform.GetChild(index);
-            if (Array.Exists(sourceTilemaps, source => source.transform == child) ||
-                child.GetComponentInChildren<Tilemap>(true) != null)
-                continue;
-
-            objectsToExtract.Add(child);
-        }
+        CollectNonTilemapSubtrees(mapInstance.transform, objectsToExtract);
 
         foreach (Transform objectRoot in objectsToExtract)
         {
@@ -428,6 +444,18 @@ public class BSPDungeonMaster : MonoBehaviour
                     pausedManualMapTeleporters.Add(randomTeleporter);
                 }
             }
+        }
+    }
+
+    private static void CollectNonTilemapSubtrees(Transform parent, List<Transform> results)
+    {
+        for (int index = parent.childCount - 1; index >= 0; index--)
+        {
+            Transform child = parent.GetChild(index);
+            if (child.GetComponentInChildren<Tilemap>(true) == null)
+                results.Add(child);
+            else
+                CollectNonTilemapSubtrees(child, results);
         }
     }
 

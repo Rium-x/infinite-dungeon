@@ -54,7 +54,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b15625a2badbdbd489edc0979c8df229, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 10
+  maxHealth: 9
   currentHealth: 0
   enableAutoHeal: 1
   healStartDelay: 15
@@ -285,7 +285,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack
   attackDamage: 1
-  attackCooldown: 0.35
+  attackCooldown: 0.5
   buffsToApply: []
 --- !u!1 &3904842073167903681
 GameObject:
@@ -1314,22 +1314,25 @@ MonoBehaviour:
   detectionMask:
     serializedVersion: 2
     m_Bits: 392
+  sightCheckInterval: 0.15
   rayOffset: {x: 0, y: -0.3}
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 3
   runSpeed: 4
   acceleration: 3
   checkRadius: 0.3
+  turnAroundWallDistance: 5
   stuckThreshold: 1
   minMoveDistance: 0.05
-  rayCount: 16
-  scanInterval: 0.2
-  fastScanInterval: 0.1
+  rayCount: 8
+  scanInterval: 0.3
+  fastScanInterval: 0.2
   forwardBias: 13
   rayLaunchRadius: 0.7
   chestBonus: 30
   separationRadius: 3
   separationWeight: 0.2
+  separationCheckInterval: 0.2
   searchTimeout: 1
   alertDuration: 7
   showDebug: 0
@@ -1369,6 +1372,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 475e4ff2126df8e41a8030f61452d831, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyInitializer
+  waterSpeedPercent: 50
+  takeDamageInWater: 0
+  waterDamagePerSecond: 5
+  takeDamageOutsideWater: 0
+  outsideWaterDamagePerSecond: 5
+  avoidWater: 0
+  cannotLeaveWater: 0
 --- !u!114 &4739881796721921894
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1382,6 +1392,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MoveStats
   speedMultiplier: 1
+  environmentSpeedMultiplier: 1
 --- !u!1 &8567873448345226266
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,12 +10,8 @@ public class MoveStats : MonoBehaviour
 
     private void Awake()
     {
-        // EnemyInitializer installs one shared effect on the character root.
-        if (GetComponent<EnemyInitializer>() != null)
-            return;
-
-        if (GetComponent<WaterTerrainEffect>() == null)
-            gameObject.AddComponent<WaterTerrainEffect>();
+        // WaterTerrainEffectはキャラクター全体で共有し、手足などの各パーツには追加しません。
+        WaterTerrainEffect.EnsureForCharacter(transform);
     }
 
     public void SetEnvironmentSpeedMultiplier(float multiplier)

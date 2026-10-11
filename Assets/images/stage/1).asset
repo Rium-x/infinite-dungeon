@@ -10,7 +10,7 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 02625238967e24e13b6fbf7f2dc9ab0c, type: 3}
-  m_Name: DungeonRoomLibrary
+  m_Name: 1)
   m_EditorClassIdentifier: Assembly-CSharp::DungeonRoomLibrary
   rooms:
   - prefab: {fileID: 2268309366662937298, guid: bc20979b6b38c4805bccc333d3b5cc29, type: 3}
@@ -27,7 +27,7 @@ MonoBehaviour:
     guaranteedCount: 0
   - prefab: {fileID: 3827745028263364601, guid: b3f9653e7b7344921b7f4e15a9a8b287, type: 3}
     size: 1
-    spawnWeight: 1
+    spawnWeight: 3
     guaranteedCount: 0
   - prefab: {fileID: 6841493121066132117, guid: d357adb4b04d941319e178de92f59fba, type: 3}
     size: 2
@@ -39,19 +39,27 @@ MonoBehaviour:
     guaranteedCount: 3
   - prefab: {fileID: 4985094446915672750, guid: 4fdee5d9228254b95bfd99748b8b067b, type: 3}
     size: 1
-    spawnWeight: 1
+    spawnWeight: 3
     guaranteedCount: 0
   - prefab: {fileID: 4985094446915672750, guid: 5fd642043faf748dd8f33ac99bf1cff9, type: 3}
     size: 1
     spawnWeight: 5
     guaranteedCount: 0
-  - prefab: {fileID: 8346961634279647381, guid: af56755a90d744daba5ce6a073649e6b, type: 3}
+  - prefab: {fileID: 7430261019727077982, guid: af56755a90d744daba5ce6a073649e6b, type: 3}
     size: 0
     spawnWeight: 15
     guaranteedCount: 0
-  - prefab: {fileID: 8346961634279647381, guid: 037184087403b46cdae13c6f4e8073f5, type: 3}
+  - prefab: {fileID: 8346961634279647381, guid: beda5cb6b43154d24b13902de665ed99, type: 3}
     size: 0
     spawnWeight: 5
+    guaranteedCount: 0
+  - prefab: {fileID: 6841493121066132117, guid: a21e10653db5d47bd9df5aa70636e943, type: 3}
+    size: 0
+    spawnWeight: 3
+    guaranteedCount: 0
+  - prefab: {fileID: 4985094446915672750, guid: a05d05e9b545d49fbae00723589f0b53, type: 3}
+    size: 0
+    spawnWeight: 3
     guaranteedCount: 0
   targetRoomCount: 2
   corridorWidth: 3

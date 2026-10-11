@@ -59,14 +59,17 @@ MonoBehaviour:
   manualMapPrefab: {fileID: 0}
   mapWidth: 180
   mapHeight: 180
-  roomLibrary: {fileID: 11400000, guid: b8ce77ecff4dc4a49a5971bd85d5169f, type: 2}
+  roomLibrary: {fileID: 11400000, guid: 43200d6c0bb0446ef8c09c319fbe8fa6, type: 2}
   groundTile: {fileID: 11400000, guid: 9c856d9c2663fae428408e8cae5759a2, type: 2}
   groundTileWeights:
-  - tile: {fileID: 11400000, guid: 20ae1236f1172416ab1420c71967efe9, type: 2}
+  - tile: {fileID: 11400000, guid: 9c856d9c2663fae428408e8cae5759a2, type: 2}
+    tilemap: 0
     weight: 80
-  - tile: {fileID: 11400000, guid: 20ae1236f1172416ab1420c71967efe9, type: 2}
+  - tile: {fileID: 11400000, guid: 8b74a652c6a34fb4aa342dbafb78d0a7, type: 2}
+    tilemap: 0
     weight: 18
-  - tile: {fileID: 11400000, guid: 20ae1236f1172416ab1420c71967efe9, type: 2}
+  - tile: {fileID: 11400000, guid: 5d85e946032d5ee44bb0b645fed1935f, type: 2}
+    tilemap: 0
     weight: 1
   randomizeRoomFloors: 0
   wallTile: {fileID: 0}

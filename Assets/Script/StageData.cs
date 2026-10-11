@@ -7,8 +7,16 @@ using UnityEngine.Tilemaps;
 public sealed class GroundTileWeight
 {
     public TileBase tile;
+    [Tooltip("このタイルを描画するタイルマップ。Floorは床の上書き、Trapは床の上に重ねて描画します。")]
+    public StageTilemapLayer tilemap = StageTilemapLayer.Floor;
     [Min(0f), Tooltip("他の床タイルと比べた抽選ウェイト。ウェイト合計に対する割合で選ばれます。")]
     public float weight = 1f;
+}
+
+public enum StageTilemapLayer
+{
+    Floor,
+    Trap
 }
 
 [CreateAssetMenu(fileName = "NewStageData", menuName = "Dungeon/StageData")]
@@ -51,7 +59,7 @@ public class StageData : ScriptableObject
     public TileBase groundTile;
     [Tooltip("空欄なら基本床タイルだけを使います。複数登録するとウェイト比で各セルを抽選します。")]
     public List<GroundTileWeight> groundTileWeights = new List<GroundTileWeight>();
-    [Tooltip("ONなら部屋Prefab内の床も、上の床タイル候補から抽選します。OFFなら部屋Prefabの床デザインを維持します。")]
+    [Tooltip("ONなら部屋Prefab内の床・Trapレイヤーを、上の候補から抽選して置き換えます。各候補のTilemap設定も適用します。OFFならPrefabの床とTrapデザインを維持します。")]
     public bool randomizeRoomFloors;
     [Tooltip("設定すると壁の基本タイルをこのステージだけ差し替えます。")]
     public TileBase wallTile;

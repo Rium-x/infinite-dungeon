@@ -278,8 +278,8 @@ Tilemap:
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Origin: {x: -4, y: -4, z: 0}
-  m_Size: {x: 9, y: 9, z: 1}
+  m_Origin: {x: -5, y: -5, z: 0}
+  m_Size: {x: 11, y: 11, z: 1}
   m_TileAnchor: {x: 0.5, y: 0.5, z: 0}
   m_TileOrientation: 0
   m_TileOrientationMatrix:
@@ -344,9 +344,9 @@ TilemapRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
-  m_SortingOrder: 1
+  m_SortingLayerID: 1512260081
+  m_SortingLayer: 1
+  m_SortingOrder: 3
   m_MaskInteraction: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
   m_ChunkCullingBounds: {x: 0, y: 0, z: 0}
@@ -935,8 +935,8 @@ Tilemap:
   m_TileObjectToInstantiateArray: []
   m_AnimationFrameRate: 1
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Origin: {x: -3, y: -3, z: 0}
-  m_Size: {x: 7, y: 7, z: 1}
+  m_Origin: {x: -4, y: -4, z: 0}
+  m_Size: {x: 9, y: 9, z: 1}
   m_TileAnchor: {x: 0.5, y: 0.5, z: 0}
   m_TileOrientation: 0
   m_TileOrientationMatrix:
@@ -1001,8 +1001,8 @@ TilemapRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: -1501366671
+  m_SortingLayer: -1
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_ChunkSize: {x: 32, y: 32, z: 32}
@@ -1024,7 +1024,7 @@ GameObject:
   - component: {fileID: 3722889426545963221}
   - component: {fileID: 8346961634279647381}
   m_Layer: 0
-  m_Name: Large Wooden Chest
+  m_Name: Middle room 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1045,7 +1045,7 @@ Transform:
   m_Children:
   - {fileID: 3550445433458931762}
   - {fileID: 3583826969598190924}
-  - {fileID: 1403207922548380059}
+  - {fileID: 5262037441878887205}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!156049354 &3722889426545963221
@@ -1075,16 +1075,17 @@ MonoBehaviour:
   usableExitCount: 4
   floorTilemap: {fileID: 394078525456682934}
   wallTilemap: {fileID: 656684315004233753}
+  trapTilemap: {fileID: 0}
   exits:
-  - cell: {x: 0, y: 4}
+  - cell: {x: 0, y: 3}
     direction: 0
-  - cell: {x: 4, y: 0}
+  - cell: {x: 3, y: 0}
     direction: 1
-  - cell: {x: 0, y: -4}
+  - cell: {x: 0, y: -3}
     direction: 2
-  - cell: {x: -4, y: 0}
+  - cell: {x: -3, y: 0}
     direction: 3
---- !u!1001 &2898326954295296485
+--- !u!1001 &8234651620312062811
 PrefabInstance:
   m_ObjectHideFlags: 0
   serializedVersion: 2
@@ -1098,11 +1099,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4269939291061522558, guid: 7844ba9a4071fd844bbb0402464a8292, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0.48960996
+      value: 0.48213002
       objectReference: {fileID: 0}
     - target: {fileID: 4269939291061522558, guid: 7844ba9a4071fd844bbb0402464a8292, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.11556795
+      value: 0.7522441
       objectReference: {fileID: 0}
     - target: {fileID: 4269939291061522558, guid: 7844ba9a4071fd844bbb0402464a8292, type: 3}
       propertyPath: m_LocalPosition.z
@@ -1141,8 +1142,8 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7844ba9a4071fd844bbb0402464a8292, type: 3}
---- !u!4 &1403207922548380059 stripped
+--- !u!4 &5262037441878887205 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4269939291061522558, guid: 7844ba9a4071fd844bbb0402464a8292, type: 3}
-  m_PrefabInstance: {fileID: 2898326954295296485}
+  m_PrefabInstance: {fileID: 8234651620312062811}
   m_PrefabAsset: {fileID: 0}

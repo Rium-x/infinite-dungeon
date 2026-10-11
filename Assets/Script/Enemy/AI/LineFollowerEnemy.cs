@@ -29,6 +29,8 @@ public class LineFollowerEnemy : MonoBehaviour
 
     private Rigidbody2D rb;
     private EnemyAI enemyAI;
+    private WaterTerrainEffect waterEffect;
+    private MoveStats moveStats;
 
     private float searchTimer;
     private float lostTimer;
@@ -46,6 +48,8 @@ public class LineFollowerEnemy : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         enemyAI = GetComponent<EnemyAI>();
+        waterEffect = GetComponentInParent<WaterTerrainEffect>();
+        moveStats = GetComponentInChildren<MoveStats>(true);
     }
 
     private void Update()
@@ -81,9 +85,20 @@ public class LineFollowerEnemy : MonoBehaviour
         // 近付きすぎたら後退
         if (distance <= retreatDistance)
         {
-            rb.linearVelocity =
-                -dir * moveSpeed;
+            Vector2 retreatDirection = -dir;
+            if (waterEffect != null && !waterEffect.AllowsWaterDirection(retreatDirection))
+            {
+                rb.linearVelocity = Vector2.zero;
+                return;
+            }
+            rb.linearVelocity = retreatDirection * GetWaterAdjustedSpeed();
 
+            return;
+        }
+
+        if (waterEffect != null && !waterEffect.AllowsWaterDirection(dir))
+        {
+            rb.linearVelocity = Vector2.zero;
             return;
         }
 
@@ -112,8 +127,13 @@ public class LineFollowerEnemy : MonoBehaviour
 
         rb.linearVelocity =
             dir *
-            moveSpeed *
+            GetWaterAdjustedSpeed() *
             speedMultiplier;
+    }
+
+    private float GetWaterAdjustedSpeed()
+    {
+        return moveStats != null ? moveStats.ApplySpeed(moveSpeed) : moveSpeed;
     }
 
     private void SearchTarget()

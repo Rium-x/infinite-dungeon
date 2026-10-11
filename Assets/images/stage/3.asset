@@ -13,19 +13,27 @@ MonoBehaviour:
   m_Name: 3
   m_EditorClassIdentifier: Assembly-CSharp::StageData
   stageName: "Chittering Hollow \\n (\u87F2\u9CF4\u308B\u6E7F\u6D1E)"
+  playerLevelOrderPerLevel: 0.1
+  normalItemOrderFalloff: 0.5
+  normalItemEntryRampStages: 2
+  normalItemDrops:
+    items: []
   randomPlayerSpawn: 1
   playerSpawnPosition: {x: 0, y: 0}
   manualMapPrefab: {fileID: 0}
   mapWidth: 180
   mapHeight: 180
-  roomLibrary: {fileID: 11400000, guid: b8ce77ecff4dc4a49a5971bd85d5169f, type: 2}
+  roomLibrary: {fileID: 11400000, guid: 43200d6c0bb0446ef8c09c319fbe8fa6, type: 2}
   groundTile: {fileID: 11400000, guid: 9c856d9c2663fae428408e8cae5759a2, type: 2}
   groundTileWeights:
   - tile: {fileID: 11400000, guid: 9c856d9c2663fae428408e8cae5759a2, type: 2}
+    tilemap: 0
     weight: 80
   - tile: {fileID: 11400000, guid: 8b74a652c6a34fb4aa342dbafb78d0a7, type: 2}
+    tilemap: 0
     weight: 18
   - tile: {fileID: 11400000, guid: 5d85e946032d5ee44bb0b645fed1935f, type: 2}
+    tilemap: 0
     weight: 1
   randomizeRoomFloors: 0
   wallTile: {fileID: 0}
@@ -35,13 +43,6 @@ MonoBehaviour:
     maxCount: 4
     spawnMode: 2
     startDelay: 38
-    minSpawnDelay: 5
-    maxSpawnDelay: 20
-  - enemyName: 4345354
-    prefab: {fileID: 362433543248169716, guid: cba1a841bdc8d124fa96e730954cb596, type: 3}
-    maxCount: 3
-    spawnMode: 0
-    startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
   - enemyName: musi4
@@ -108,4 +109,4 @@ MonoBehaviour:
     minSpawnDelay: 5
     maxSpawnDelay: 20
   spawnEnemiesOnManualMap: 0
-  nextStage: {fileID: 11400000, guid: a603453689483b140bc439f86f79510e, type: 2}
+  legacyNextStage: {fileID: 11400000, guid: a603453689483b140bc439f86f79510e, type: 2}

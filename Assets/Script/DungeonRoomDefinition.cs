@@ -49,10 +49,12 @@ public sealed class DungeonRoomDefinition : MonoBehaviour
     public int usableExitCount = 4;
     public Tilemap floorTilemap;
     public Tilemap wallTilemap;
+    public Tilemap trapTilemap;
     public List<DungeonRoomExit> exits = new List<DungeonRoomExit>();
 
     public bool TryGetBounds(out BoundsInt bounds)
     {
+        ResolveTilemapReferences();
         bool hasBounds = false;
         bounds = new BoundsInt();
 
@@ -80,20 +82,45 @@ public sealed class DungeonRoomDefinition : MonoBehaviour
             }
         }
 
+        if (trapTilemap != null && trapTilemap.GetUsedTilesCount() > 0)
+        {
+            BoundsInt trapBounds = trapTilemap.cellBounds;
+            if (!hasBounds)
+            {
+                bounds = trapBounds;
+                hasBounds = true;
+            }
+            else
+            {
+                int minX = Mathf.Min(bounds.xMin, trapBounds.xMin);
+                int minY = Mathf.Min(bounds.yMin, trapBounds.yMin);
+                int maxX = Mathf.Max(bounds.xMax, trapBounds.xMax);
+                int maxY = Mathf.Max(bounds.yMax, trapBounds.yMax);
+                bounds = new BoundsInt(minX, minY, 0, maxX - minX, maxY - minY, 1);
+            }
+        }
+
         return hasBounds && bounds.size.x > 0 && bounds.size.y > 0;
     }
 
     private void OnValidate()
     {
-        if (floorTilemap == null || wallTilemap == null)
+        ResolveTilemapReferences();
+    }
+
+    private void ResolveTilemapReferences()
+    {
+        if (floorTilemap == null || wallTilemap == null || trapTilemap == null)
         {
             Tilemap[] maps = GetComponentsInChildren<Tilemap>(true);
             foreach (Tilemap map in maps)
             {
-                if (map.name.IndexOf("floor", StringComparison.OrdinalIgnoreCase) >= 0)
+                if (floorTilemap == null && map.name.IndexOf("floor", StringComparison.OrdinalIgnoreCase) >= 0)
                     floorTilemap = map;
-                else if (map.name.IndexOf("wall", StringComparison.OrdinalIgnoreCase) >= 0)
+                else if (wallTilemap == null && map.name.IndexOf("wall", StringComparison.OrdinalIgnoreCase) >= 0)
                     wallTilemap = map;
+                else if (trapTilemap == null && map.name.IndexOf("trap", StringComparison.OrdinalIgnoreCase) >= 0)
+                    trapTilemap = map;
             }
         }
     }

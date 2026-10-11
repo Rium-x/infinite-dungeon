@@ -3,9 +3,22 @@ using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Tilemaps;
 
 public class RandomTeleporter : MonoBehaviour
 {
+    private struct SpawnCandidate
+    {
+        public Vector2 position;
+        public bool isWater;
+
+        public SpawnCandidate(Vector2 position, bool isWater)
+        {
+            this.position = position;
+            this.isWater = isWater;
+        }
+    }
+
     [Header("移動範囲の設定")]
     [SerializeField] private Vector2 minRange = new Vector2(56f, 56f);
     [SerializeField] private Vector2 maxRange = new Vector2(-56f, -56f);
@@ -31,6 +44,8 @@ public class RandomTeleporter : MonoBehaviour
     private Rigidbody2D rb;
     private bool isTeleporting = false;
     private float lastEnabledTime;
+    private bool hasWaterSpawnPreference;
+    private WaterSpawnPreference waterSpawnPreference = WaterSpawnPreference.Neutral;
 
     public bool IsTeleporting => isTeleporting;
 
@@ -39,6 +54,12 @@ public class RandomTeleporter : MonoBehaviour
     {
         minRange = Vector2.Min(firstCorner, secondCorner);
         maxRange = Vector2.Max(firstCorner, secondCorner);
+    }
+
+    public void SetWaterSpawnPreference(WaterSpawnPreference preference)
+    {
+        waterSpawnPreference = preference;
+        hasWaterSpawnPreference = true;
     }
 
     private void Awake()
@@ -63,7 +84,7 @@ public class RandomTeleporter : MonoBehaviour
         // 生成直後（0.1秒以内）またはフェード不要フラグが立っている場合は即時移動
         if (Time.unscaledTime - lastEnabledTime < 0.1f || !useVisualFade)
         {
-            ExecuteTeleportLogic();
+            ExecuteSpawnTeleport();
             Physics2D.SyncTransforms();
             onComplete?.Invoke();
         }
@@ -75,8 +96,145 @@ public class RandomTeleporter : MonoBehaviour
 
     public void TeleportToRandomPosition()
     {
-        ExecuteTeleportLogic();
+        ExecuteSpawnTeleport();
         Physics2D.SyncTransforms();
+    }
+
+    private void ExecuteSpawnTeleport()
+    {
+        if (hasWaterSpawnPreference)
+        {
+            // If the preferred terrain is absent, leave the enemy where it is;
+            // never silently place it on the opposite terrain.
+            TryTeleportToRandomPosition(waterSpawnPreference, out _);
+            return;
+        }
+
+        ExecuteTeleportLogic();
+    }
+
+    public bool TryTeleportToRandomPosition(WaterSpawnPreference preference, out bool hasPreferredTerrain)
+    {
+        List<SpawnCandidate> candidates = CollectSpawnCandidates(preference);
+        hasPreferredTerrain = candidates.Count > 0;
+        if (!hasPreferredTerrain) return false;
+
+        // タイル候補から無作為に選び、壁や敵の近くを避けます。
+        int attempts = Mathf.Min(candidates.Count, 500);
+        for (int i = 0; i < attempts; i++)
+        {
+            int index = UnityEngine.Random.Range(0, candidates.Count);
+            SpawnCandidate spawnCandidate = candidates[index];
+            candidates[index] = candidates[candidates.Count - 1];
+            candidates.RemoveAt(candidates.Count - 1);
+
+            Vector2 candidate = spawnCandidate.position;
+            if (IsBlockedByWall(candidate, spawnCandidate.isWater)) continue;
+            if (useEnemyCheck && CheckEnemyDanger(candidate)) continue;
+
+            transform.position = new Vector3(candidate.x, candidate.y, transform.position.z);
+            Physics2D.SyncTransforms();
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool IsBlockedByWall(Vector2 position, bool isWater)
+    {
+        Collider2D[] overlaps = Physics2D.OverlapBoxAll(position, checkSize, 0f, wallLayer);
+        foreach (Collider2D overlap in overlaps)
+        {
+            if (isWater)
+            {
+                TilemapCollider2D tilemapCollider = overlap.GetComponent<TilemapCollider2D>();
+                Tilemap tilemap = tilemapCollider != null
+                    ? tilemapCollider.GetComponent<Tilemap>()
+                    : null;
+
+                // The water tile itself may have a collider on the HB Tilemap.
+                // Ignore that collider only when no solid, collidable tile occupies
+                // any part of the spawn footprint.
+                if (tilemapCollider != null && tilemap != null &&
+                    !HasSolidTileInSpawnFootprint(tilemap, position))
+                    continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    private bool HasSolidTileInSpawnFootprint(Tilemap tilemap, Vector2 position)
+    {
+        Vector2 halfSize = checkSize * 0.5f;
+        Vector3Int minCell = tilemap.WorldToCell(position - halfSize);
+        Vector3Int maxCell = tilemap.WorldToCell(position + halfSize);
+        for (int x = minCell.x; x <= maxCell.x; x++)
+        {
+            for (int y = minCell.y; y <= maxCell.y; y++)
+            {
+                Vector3Int cell = new Vector3Int(x, y, 0);
+                TileBase tile = tilemap.GetTile(cell);
+                if (tile != null && !IsWaterTile(tile) &&
+                    tilemap.GetColliderType(cell) != Tile.ColliderType.None)
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
+    private List<SpawnCandidate> CollectSpawnCandidates(WaterSpawnPreference preference)
+    {
+        List<SpawnCandidate> candidates = new List<SpawnCandidate>();
+        Tilemap[] maps = FindObjectsByType<Tilemap>();
+        TerrainMap terrainMap = FindAnyObjectByType<TerrainMap>();
+        Vector2 rangeMin = Vector2.Min(minRange, maxRange);
+        Vector2 rangeMax = Vector2.Max(minRange, maxRange);
+
+        foreach (Tilemap map in maps)
+        {
+            if (map == null) continue;
+            foreach (Vector3Int cell in map.cellBounds.allPositionsWithin)
+            {
+                TileBase tile = map.GetTile(cell);
+                if (tile == null) continue;
+                Vector3 center = map.GetCellCenterWorld(cell);
+                if (center.x < rangeMin.x || center.x > rangeMax.x ||
+                    center.y < rangeMin.y || center.y > rangeMax.y)
+                    continue;
+
+                bool isWater = IsWaterTile(tile);
+                bool isLand = !isWater && IsLandPosition(center, map, terrainMap);
+                bool matches = preference switch
+                {
+                    WaterSpawnPreference.WaterLoving => isWater,
+                    WaterSpawnPreference.LandLoving => isLand,
+                    _ => isWater || isLand
+                };
+                if (matches) candidates.Add(new SpawnCandidate(center, isWater));
+            }
+        }
+
+        return candidates;
+    }
+
+    private static bool IsLandPosition(Vector3 position, Tilemap sourceMap, TerrainMap terrainMap)
+    {
+        if (terrainMap != null)
+            return terrainMap.GetTerrainTypeAtWorldPosition(position) == TerrainType.Floor;
+
+        string mapName = sourceMap.name;
+        return mapName.IndexOf("ground", StringComparison.OrdinalIgnoreCase) >= 0
+            || mapName.IndexOf("floor", StringComparison.OrdinalIgnoreCase) >= 0;
+    }
+
+    private static bool IsWaterTile(TileBase tile)
+    {
+        return tile is TerrainTile terrainTile && terrainTile.Type == TerrainType.Water
+            || tile != null && tile.name == "Water";
     }
 
     private IEnumerator TeleportSequence(Action onComplete)
@@ -94,7 +252,7 @@ public class RandomTeleporter : MonoBehaviour
         yield return StartCoroutine(Fade(1f, 0f));
 
         // 2. 移動実行
-        ExecuteTeleportLogic();
+        ExecuteSpawnTeleport();
         Physics2D.SyncTransforms();
 
         // 移動完了後のコールバック

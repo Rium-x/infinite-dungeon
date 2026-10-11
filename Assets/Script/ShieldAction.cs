@@ -45,6 +45,7 @@ public class ShieldAction : MonoBehaviour, IWeapon
     private bool followWasDisabled;
     private bool isGuarding;
     private Quaternion defaultLocalRotation;
+    private WaterTerrainEffect waterTerrainEffect;
 
     // 前フレームのプレイヤー位置
     private Vector3 previousPlayerPosition;
@@ -90,6 +91,9 @@ public class ShieldAction : MonoBehaviour, IWeapon
             followScript =
                 targetHand.GetComponent("Follow_WithAnimation") as MonoBehaviour;
         }
+
+        if (player != null)
+            waterTerrainEffect = player.GetComponentInParent<WaterTerrainEffect>();
     }
 
     private void Start()
@@ -160,7 +164,7 @@ public class ShieldAction : MonoBehaviour, IWeapon
 
         // プレイヤーの現在位置を基準にアクション位置を計算
         Vector3 targetPosition =
-            player.position + actionTargetOffset;
+            player.position + actionTargetOffset + Vector3.down * GetWaterLowerAmount();
 
         targetPosition.z = fixedZ;
 
@@ -192,7 +196,7 @@ public class ShieldAction : MonoBehaviour, IWeapon
 
         // プレイヤーの現在位置を基準に通常位置を計算
         Vector3 returnPosition =
-            player.position + restOffset;
+            player.position + restOffset + Vector3.down * GetWaterLowerAmount();
 
         returnPosition.z = fixedZ;
 
@@ -258,7 +262,7 @@ public class ShieldAction : MonoBehaviour, IWeapon
         {
             // 現在の通常位置を保存
             restOffset =
-                targetHand.position - player.position;
+                targetHand.position - player.position + Vector3.up * GetWaterLowerAmount();
 
             restOffset.z = 0f;
 
@@ -272,6 +276,17 @@ public class ShieldAction : MonoBehaviour, IWeapon
         currentRotationVelocity = 0f;
 
         currentState = State.Acting;
+    }
+
+    private float GetWaterLowerAmount()
+    {
+        if (waterTerrainEffect == null && player != null)
+            waterTerrainEffect = player.GetComponentInParent<WaterTerrainEffect>();
+
+        Follow_WithAnimation follower = followScript as Follow_WithAnimation;
+        return waterTerrainEffect != null && follower != null
+            ? waterTerrainEffect.GetFollowLowerAmountFor(follower)
+            : 0f;
     }
 
     // =========================

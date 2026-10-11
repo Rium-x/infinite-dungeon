@@ -9,6 +9,7 @@ public class EnemySpawner : MonoBehaviour
     
     // 【重要】設定データ（インスタンス）そのものをキーにして、個別にカウントを管理
     private Dictionary<EnemySpawnSettings, int> activeCounts = new Dictionary<EnemySpawnSettings, int>();
+    private HashSet<EnemySpawnSettings> missingPreferredTerrain = new HashSet<EnemySpawnSettings>();
 
     void Awake()
     {
@@ -43,6 +44,7 @@ public class EnemySpawner : MonoBehaviour
 
         StopAllCoroutines();
         activeCounts.Clear(); // 辞書をまっさらにリセット
+        missingPreferredTerrain.Clear();
 
         if (dungeonMaster == null || dungeonMaster.currentStageData == null) return;
         if (dungeonMaster.IsUsingManualMap && !dungeonMaster.currentStageData.spawnEnemiesOnManualMap) return;
@@ -89,33 +91,59 @@ public class EnemySpawner : MonoBehaviour
     private void SpawnToMax(EnemySpawnSettings setting, bool canRespawn)
     {
         // この設定枠の最大数に達するまで生成
-        while (activeCounts[setting] < setting.maxCount)
+        while (activeCounts[setting] < setting.maxCount && !missingPreferredTerrain.Contains(setting))
         {
-            SpawnEnemy(setting, canRespawn);
+            if (!SpawnEnemy(setting, canRespawn, out bool hasPreferredTerrain))
+            {
+                if (!hasPreferredTerrain) missingPreferredTerrain.Add(setting);
+                break;
+            }
         }
     }
 
     private IEnumerator SpawnRoutine(EnemySpawnSettings setting, bool canRespawn)
     {
-        while (true)
+        while (!missingPreferredTerrain.Contains(setting))
         {
             yield return new WaitForSeconds(Random.Range(setting.minSpawnDelay, setting.maxSpawnDelay));
 
             // この設定枠のカウントだけをチェック
             if (activeCounts[setting] < setting.maxCount)
             {
-                SpawnEnemy(setting, canRespawn);
+                if (!SpawnEnemy(setting, canRespawn, out bool hasPreferredTerrain))
+                {
+                    if (!hasPreferredTerrain) missingPreferredTerrain.Add(setting);
+                    if (!hasPreferredTerrain) yield break;
+                }
             }
         }
     }
 
-    private void SpawnEnemy(EnemySpawnSettings setting, bool canRespawn)
+    private bool SpawnEnemy(EnemySpawnSettings setting, bool canRespawn, out bool hasPreferredTerrain)
     {
-        if (setting.prefab == null) return;
+        hasPreferredTerrain = true;
+        if (setting.prefab == null) return false;
 
         GameObject enemy = Instantiate(setting.prefab);
-        
-        // この「setting」枠のカウントを増やす
+
+        RandomTeleporter teleporter = enemy.GetComponentInChildren<RandomTeleporter>();
+        if (teleporter != null)
+        {
+            dungeonMaster.GetEnemySpawnRange(out Vector2 min, out Vector2 max);
+            teleporter.SetSpawnRange(min, max);
+            EnemyInitializer initializer = enemy.GetComponentInChildren<EnemyInitializer>(true);
+            WaterSpawnPreference preference = initializer != null
+                ? initializer.WaterSpawnPreference
+                : WaterSpawnPreference.Neutral;
+            teleporter.SetWaterSpawnPreference(preference);
+            if (!teleporter.TryTeleportToRandomPosition(preference, out hasPreferredTerrain))
+            {
+                Destroy(enemy);
+                return false;
+            }
+        }
+
+        // Count only after a valid position has been found.
         activeCounts[setting]++;
 
         var health = enemy.GetComponent<EnemyHealth>();
@@ -131,12 +159,6 @@ public class EnemySpawner : MonoBehaviour
             };
         }
 
-        RandomTeleporter teleporter = enemy.GetComponentInChildren<RandomTeleporter>();
-        if (teleporter != null)
-        {
-            dungeonMaster.GetEnemySpawnRange(out Vector2 min, out Vector2 max);
-            teleporter.SetSpawnRange(min, max);
-            teleporter.TeleportToRandomPosition();
-        }
+        return true;
     }
 }

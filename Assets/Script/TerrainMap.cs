@@ -15,6 +15,14 @@ public sealed class TerrainMap : MonoBehaviour
         return ResolveTerrainType(floorTilemap, wallTilemap, cell);
     }
 
+    public TerrainType GetTerrainTypeAtWorldPosition(Vector3 worldPosition)
+    {
+        Tilemap reference = floorTilemap != null ? floorTilemap : wallTilemap;
+        return reference != null
+            ? GetTerrainType(reference.WorldToCell(worldPosition))
+            : TerrainType.Unknown;
+    }
+
     public static TerrainType ResolveTerrainType(Tilemap floorMap, Tilemap wallMap, Vector3Int cell)
     {
         TileBase wall = wallMap != null ? wallMap.GetTile(cell) : null;

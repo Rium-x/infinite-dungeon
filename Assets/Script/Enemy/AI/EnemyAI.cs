@@ -6,6 +6,8 @@ public class EnemyAI : MonoBehaviour
 {
     
 private MoveStats moveStats;
+    private WaterTerrainEffect waterEffect;
+    private WaterTerrainEffect playerWaterEffect;
     enum State { Idle, Chase, Alert, Search }
     [SerializeField] private State currentState = State.Search;
 
@@ -13,7 +15,8 @@ private MoveStats moveStats;
     private Transform player;
     [SerializeField] private float detectRange = 15.0f;
     [SerializeField] private LayerMask detectionMask = 392;
-    [SerializeField, Min(0.02f)] private float sightCheckInterval = 0.1f;
+    [SerializeField, Min(0.02f)] private float sightCheckInterval = 0.15f;
+    [SerializeField, Min(0.02f)] private float movementDecisionInterval = 0.15f;
     [SerializeField] private Vector2 rayOffset = new Vector2(0, -0.3f);
     [SerializeField] private Vector2 playerPositionOffset = new Vector2(0, -0.3f);
 
@@ -31,9 +34,9 @@ private MoveStats moveStats;
     private float stuckTimer;
 
     [Header("スキャン設定")]
-    [SerializeField] private int rayCount = 16;
-    [SerializeField] private float scanInterval = 0.3f;
-    [SerializeField] private float fastScanInterval = 0.2f;
+    [SerializeField] private int rayCount = 8;
+    [SerializeField] private float scanInterval = 0.45f;
+    [SerializeField] private float fastScanInterval = 0.3f;
     [SerializeField] private float forwardBias = 8.0f;
     [SerializeField] private float rayLaunchRadius = 0.7f; 
     [SerializeField] private float chestBonus = 30.0f; 
@@ -41,7 +44,7 @@ private MoveStats moveStats;
     [Header("分離設定 (重なり防止)")]
     [SerializeField] private float separationRadius = 3.0f; 
     [SerializeField] private float separationWeight = 0.2f; 
-    [SerializeField, Min(0.02f)] private float separationCheckInterval = 0.1f;
+    [SerializeField, Min(0.02f)] private float separationCheckInterval = 0.2f;
     private readonly List<Collider2D> nearbyEnemyColliders = new List<Collider2D>(64);
     private float nextSeparationCheckTime;
     private Vector2 cachedSeparation;
@@ -62,6 +65,7 @@ private MoveStats moveStats;
     private Rigidbody2D rb;
     private Vector2 moveInput;
     private float nextSightCheckTime;
+    private float nextMovementDecisionTime;
     private bool canSeePlayer;
 
     void Start()
@@ -69,7 +73,8 @@ private MoveStats moveStats;
         rb = GetComponent<Rigidbody2D>();
         lastPosition = transform.position;
         moveStats =
-    GetComponent<MoveStats>();
+        GetComponentInChildren<MoveStats>(true);
+        waterEffect = GetComponentInParent<WaterTerrainEffect>();
         FindPlayer();
         Physics2D.queriesStartInColliders = true;
     }
@@ -82,6 +87,7 @@ private MoveStats moveStats;
             if (obj.GetComponent<RandomTeleporter>() != null)
             {
                 player = obj.transform;
+                playerWaterEffect = obj.GetComponentInParent<WaterTerrainEffect>();
                 break;
             }
         }
@@ -89,10 +95,15 @@ private MoveStats moveStats;
 
     void Update()
     {
+        if (player != null && playerWaterEffect == null)
+            playerWaterEffect = player.GetComponentInParent<WaterTerrainEffect>();
         if (Time.time >= nextSightCheckTime)
         {
             nextSightCheckTime = Time.time + Mathf.Max(0.02f, sightCheckInterval);
-            canSeePlayer = (player != null && player.gameObject.activeInHierarchy) && CheckLineOfSight();
+            bool playerInWaterAndAvoided = waterEffect != null && waterEffect.AvoidsWater
+                && playerWaterEffect != null && playerWaterEffect.IsInWaterNow;
+            canSeePlayer = (player != null && player.gameObject.activeInHierarchy)
+                && !playerInWaterAndAvoided && CheckLineOfSight();
             if (canSeePlayer)
                 lastPlayerPos = player.position + (Vector3)playerPositionOffset;
         }
@@ -144,10 +155,14 @@ private MoveStats moveStats;
         if (!canSeePlayer) { 
             currentState = State.Search; 
             currentSearchTimer = 0;
-            return; 
+            return;
         }
+        if (Time.time < nextMovementDecisionTime) return;
+        nextMovementDecisionTime = Time.time + Mathf.Max(0.02f, movementDecisionInterval);
         moveInput = ((Vector2)player.position + playerPositionOffset - CenterPos).normalized;
         if (!CanTurnAround(moveInput)) moveInput = lastDirection;
+        if (waterEffect != null && !waterEffect.AllowsWaterDirection(moveInput))
+            moveInput = GetFarthestDirection();
         lastDirection = moveInput;
     }
 
@@ -156,9 +171,13 @@ private MoveStats moveStats;
         if (canSeePlayer) { currentState = State.Chase; return; }
         currentSearchTimer += Time.deltaTime;
         if (currentSearchTimer >= searchTimeout) { ForceChangeToAlert(); return; }
+        if (Time.time < nextMovementDecisionTime) return;
+        nextMovementDecisionTime = Time.time + Mathf.Max(0.02f, movementDecisionInterval);
         Vector2 dirToLastPos = ((Vector2)lastPlayerPos - CenterPos).normalized;
         moveInput = dirToLastPos;
         if (!CanTurnAround(moveInput)) moveInput = lastDirection;
+        if (waterEffect != null && !waterEffect.AllowsWaterDirection(moveInput))
+            moveInput = GetFarthestDirection();
         if (Vector2.Distance(CenterPos, lastPlayerPos) < 0.2f) ForceChangeToAlert();
     }
 
@@ -221,6 +240,7 @@ private MoveStats moveStats;
         {
             float angle = i * (360f / rayCount);
             Vector2 dir = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+            if (waterEffect != null && !waterEffect.AllowsWaterDirection(dir)) continue;
             if (!CanTurnAround(dir)) continue;
             Vector2 startPos = CenterPos + (dir * rayLaunchRadius);
             
@@ -273,6 +293,9 @@ private MoveStats moveStats;
         Vector2 separation = CalculateSeparation() * separationWeight;
         Vector2 finalForce = moveInput;
         if (separation.magnitude > 0.1f) finalForce = Vector2.Lerp(moveInput, (moveInput + separation).normalized, 0.7f);
+        if (waterEffect != null && finalForce != Vector2.zero &&
+            (finalForce - moveInput).sqrMagnitude > 0.01f &&
+            !waterEffect.AllowsWaterDirection(finalForce)) finalForce = Vector2.zero;
         
         float baseSpeed =
     (currentState == State.Idle)
@@ -281,14 +304,6 @@ private MoveStats moveStats;
 
 float speed =
     baseSpeed;
-
-if (moveStats != null)
-{
-    speed =
-        moveStats.ApplySpeed(
-            baseSpeed
-        );
-}
 
 if (moveStats != null)
 {

@@ -83,8 +83,8 @@ MonoBehaviour:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 1.0599923
-      value: -18.212305
+      time: 1.0684237
+      value: -22.51166
       inSlope: -0.28487262
       outSlope: -0.28487262
       tangentMode: 0
@@ -92,8 +92,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0.62578857
     - serializedVersion: 3
-      time: 1.077029
-      value: 96.92278
+      time: 1.069247
+      value: 111.7131
       inSlope: -0.8715511
       outSlope: -0.8715511
       tangentMode: 0
@@ -436,7 +436,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -541,7 +541,7 @@ Rigidbody2D:
   m_Interpolate: 1
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 4
+  m_Constraints: 7
 --- !u!61 &1399398795994328264
 BoxCollider2D:
   m_ObjectHideFlags: 0
@@ -624,6 +624,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 475e4ff2126df8e41a8030f61452d831, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyInitializer
+  waterSpeedPercent: 50
+  takeDamageInWater: 0
+  waterDamagePerSecond: 5
+  takeDamageOutsideWater: 0
+  outsideWaterDamagePerSecond: 5
+  avoidWater: 0
+  cannotLeaveWater: 0
+  individualWaterFadeObjects: []
 --- !u!114 &795022578688661256
 MonoBehaviour:
   m_ObjectHideFlags: 0

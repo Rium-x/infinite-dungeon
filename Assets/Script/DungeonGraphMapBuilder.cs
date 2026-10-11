@@ -44,7 +44,7 @@ public static class DungeonGraphMapBuilder
     }
 
     public static bool Generate(int mapWidth, int mapHeight, DungeonRoomLibrary library,
-        int placementPadding, Tilemap floorMap, Tilemap wallMap, TileBase defaultFloor,
+        int placementPadding, Tilemap floorMap, Tilemap wallMap, Tilemap trapMap, TileBase defaultFloor,
         List<GroundTileWeight> groundTileWeights, bool randomizeRoomFloors,
         TileBase defaultWall, int seed, Transform roomObjectsParent, List<GameObject> generatedObjects,
         int targetRoomCount, float roomEncounterMultiplier, float maxRoomDensity, int corridorWidth,
@@ -232,8 +232,10 @@ public static class DungeonGraphMapBuilder
                 ? "保証部屋の接続に失敗したため"
                 : $"削除された部屋がしきい値 {Mathf.Max(0, removedRoomRetryThreshold)} を超えたため";
             Debug.LogWarning($"{retryReason}、部屋配置から別レイアウトを試します（削除 {retiredRoomCount}部屋）。", library);
-            PaintGeneratedMap(width, height, floor, roomFloor, roomWall, floorMap, wallMap,
+            PaintGeneratedMap(width, height, floor, roomFloor, roomWall, floorMap, wallMap, trapMap,
                 defaultFloor, groundTileWeights, randomizeRoomFloors, defaultWall, random, outsideFloorPadding);
+            if (!randomizeRoomFloors)
+                PaintRoomTrapTiles(rooms, width, height, trapMap);
             int paintedVersionBeforeRetry = paintedLayoutVersion;
             int generatedObjectCountBeforeRetry = generatedObjects != null ? generatedObjects.Count : 0;
             layoutRetryDepth++;
@@ -242,7 +244,7 @@ public static class DungeonGraphMapBuilder
             try
             {
                 retryProducedMap = Generate(mapWidth, mapHeight, library, placementPadding,
-                    floorMap, wallMap, defaultFloor, groundTileWeights, randomizeRoomFloors,
+                    floorMap, wallMap, trapMap, defaultFloor, groundTileWeights, randomizeRoomFloors,
                     defaultWall, nextSeed, roomObjectsParent, generatedObjects, targetRoomCount,
                     roomEncounterMultiplier, maxRoomDensity, corridorWidth, maxExtraConnections, branchChance,
                     maxRoomLinkDistance, maxCorridorTurns, windingChance, outsideFloorPadding,
@@ -276,26 +278,30 @@ public static class DungeonGraphMapBuilder
         Debug.Log($"部屋生成: {rooms.Count}部屋 / 保証部屋 {guaranteedRoomsPlaced}個を配置しました。", library);
         foreach (PlacedRoom room in rooms)
             CopyRoomObjects(room, width, height, roomObjectsParent, generatedObjects);
-        PaintGeneratedMap(width, height, floor, roomFloor, roomWall, floorMap, wallMap,
+        PaintGeneratedMap(width, height, floor, roomFloor, roomWall, floorMap, wallMap, trapMap,
             defaultFloor, groundTileWeights, randomizeRoomFloors, defaultWall, random, outsideFloorPadding);
+        if (!randomizeRoomFloors)
+            PaintRoomTrapTiles(rooms, width, height, trapMap);
         return allRoomsConnected;
     }
 
     private static void PaintGeneratedMap(int width, int height, bool[,] floor,
-        TileBase[,] roomFloor, TileBase[,] roomWall, Tilemap floorMap, Tilemap wallMap,
+        TileBase[,] roomFloor, TileBase[,] roomWall, Tilemap floorMap, Tilemap wallMap, Tilemap trapMap,
         TileBase defaultFloor, List<GroundTileWeight> groundTileWeights,
         bool randomizeRoomFloors, TileBase defaultWall, System.Random random, int outsideFloorPadding)
     {
         floorMap.ClearAllTiles();
         wallMap.ClearAllTiles();
+        if (trapMap != null) trapMap.ClearAllTiles();
         int padding = Mathf.Max(0, outsideFloorPadding);
         int offsetX = width / 2, offsetY = height / 2;
         int paintWidth = width + padding * 2;
         int paintHeight = height + padding * 2;
         TileBase fallbackFloor = defaultFloor != null ? defaultFloor : defaultWall;
-        GroundTilePicker groundPicker = new GroundTilePicker(groundTileWeights, fallbackFloor);
+        GroundTilePicker groundPicker = new GroundTilePicker(groundTileWeights);
         TileBase[] floorTiles = new TileBase[paintWidth * paintHeight];
         TileBase[] wallTiles = new TileBase[paintWidth * paintHeight];
+        TileBase[] trapTiles = trapMap != null ? new TileBase[paintWidth * paintHeight] : null;
 
         // Keep the same random-number order as before: paint the generated map first,
         // then choose decorative tiles for the outside padding. SetTilesBlock batches
@@ -304,19 +310,30 @@ public static class DungeonGraphMapBuilder
             for (int y = 0; y < height; y++)
             {
                 int index = (x + padding) + (y + padding) * paintWidth;
-                TileBase groundTile = groundPicker.Choose(random);
+                GroundTileWeight selected = groundPicker.Choose(random);
+                TileBase groundTile = selected != null ? selected.tile : fallbackFloor;
                 floorTiles[index] = groundTile;
                 bool mapBoundary = x == 0 || y == 0 || x == width - 1 || y == height - 1;
                 if (mapBoundary)
                 {
+                    if (selected != null && selected.tilemap == StageTilemapLayer.Trap)
+                        floorTiles[index] = fallbackFloor;
                     wallTiles[index] = defaultWall;
                     continue;
                 }
 
                 if (floor[x, y])
                 {
-                    if (!randomizeRoomFloors && roomFloor[x, y] != null)
+                    bool preserveRoomFloor = !randomizeRoomFloors && roomFloor[x, y] != null;
+                    if (preserveRoomFloor)
+                    {
                         floorTiles[index] = roomFloor[x, y];
+                    }
+                    else if (selected != null && selected.tilemap == StageTilemapLayer.Trap)
+                    {
+                        floorTiles[index] = fallbackFloor;
+                        if (trapTiles != null) trapTiles[index] = selected.tile;
+                    }
                     wallTiles[index] = roomWall[x, y];
                 }
                 else
@@ -331,25 +348,47 @@ public static class DungeonGraphMapBuilder
                 if (x >= padding && x < padding + width &&
                     y >= padding && y < padding + height) continue;
                 int index = x + y * paintWidth;
-                floorTiles[index] = groundPicker.Choose(random);
+                GroundTileWeight selected = groundPicker.Choose(random);
+                if (selected == null || selected.tilemap == StageTilemapLayer.Floor)
+                    floorTiles[index] = selected != null ? selected.tile : fallbackFloor;
+                else if (trapTiles != null)
+                    trapTiles[index] = selected.tile;
             }
 
         BoundsInt paintBounds = new BoundsInt(-offsetX - padding, -offsetY - padding, 0,
             paintWidth, paintHeight, 1);
         floorMap.SetTilesBlock(paintBounds, floorTiles);
         wallMap.SetTilesBlock(paintBounds, wallTiles);
+        if (trapMap != null) trapMap.SetTilesBlock(paintBounds, trapTiles);
         paintedLayoutVersion++;
+    }
+
+    private static void PaintRoomTrapTiles(List<PlacedRoom> rooms, int width, int height, Tilemap trapMap)
+    {
+        if (trapMap == null || rooms == null) return;
+        foreach (PlacedRoom room in rooms)
+        {
+            Tilemap source = room != null && room.template != null ? room.template.trapTilemap : null;
+            if (source == null) continue;
+            foreach (Vector3Int sourceCell in source.cellBounds.allPositionsWithin)
+            {
+                TileBase tile = source.GetTile(sourceCell);
+                int x = room.offset.x + sourceCell.x - width / 2;
+                int y = room.offset.y + sourceCell.y - height / 2;
+                if (tile != null && x >= -width / 2 && x < width - width / 2 &&
+                    y >= -height / 2 && y < height - height / 2)
+                    trapMap.SetTile(new Vector3Int(x, y, sourceCell.z), tile);
+            }
+        }
     }
 
     private sealed class GroundTilePicker
     {
         private readonly List<GroundTileWeight> choices = new List<GroundTileWeight>();
-        private readonly TileBase fallback;
         private float totalWeight;
 
-        public GroundTilePicker(List<GroundTileWeight> source, TileBase fallbackTile)
+        public GroundTilePicker(List<GroundTileWeight> source)
         {
-            fallback = fallbackTile;
             if (source == null) return;
             foreach (GroundTileWeight choice in source)
             {
@@ -359,16 +398,16 @@ public static class DungeonGraphMapBuilder
             }
         }
 
-        public TileBase Choose(System.Random random)
+        public GroundTileWeight Choose(System.Random random)
         {
-            if (choices.Count == 0 || totalWeight <= 0f) return fallback;
+            if (choices.Count == 0 || totalWeight <= 0f) return null;
             double selection = random.NextDouble() * totalWeight;
             foreach (GroundTileWeight choice in choices)
             {
                 selection -= choice.weight;
-                if (selection < 0f) return choice.tile;
+                if (selection < 0f) return choice;
             }
-            return fallback;
+            return null;
         }
     }
 
@@ -376,26 +415,11 @@ public static class DungeonGraphMapBuilder
         Transform parent, List<GameObject> generatedObjects)
     {
         if (parent == null || generatedObjects == null) return;
-        bool hasObjects = false;
-        for (int i = 0; i < room.template.transform.childCount; i++)
-        {
-            Transform child = room.template.transform.GetChild(i);
-            if (child.GetComponentInChildren<Tilemap>(true) == null)
-            {
-                hasObjects = true;
-                break;
-            }
-        }
-        if (!hasObjects) return;
 
         Vector3 position = new Vector3(room.offset.x - width / 2, room.offset.y - height / 2, 0f);
         GameObject instance = UnityEngine.Object.Instantiate(room.template.gameObject, position, Quaternion.identity);
         List<Transform> objectsToKeep = new List<Transform>();
-        for (int i = 0; i < instance.transform.childCount; i++)
-        {
-            Transform child = instance.transform.GetChild(i);
-            if (child.GetComponentInChildren<Tilemap>(true) == null) objectsToKeep.Add(child);
-        }
+        CollectNonTilemapSubtrees(instance.transform, objectsToKeep);
 
         foreach (Transform roomObject in objectsToKeep)
         {
@@ -403,6 +427,18 @@ public static class DungeonGraphMapBuilder
             generatedObjects.Add(roomObject.gameObject);
         }
         UnityEngine.Object.Destroy(instance);
+    }
+
+    private static void CollectNonTilemapSubtrees(Transform parent, List<Transform> results)
+    {
+        for (int i = parent.childCount - 1; i >= 0; i--)
+        {
+            Transform child = parent.GetChild(i);
+            if (child.GetComponentInChildren<Tilemap>(true) == null)
+                results.Add(child);
+            else
+                CollectNonTilemapSubtrees(child, results);
+        }
     }
 
     private static List<DungeonRoomSpawnRule> GetValidRules(DungeonRoomLibrary library)

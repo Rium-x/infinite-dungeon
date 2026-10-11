@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.Tilemaps;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
 /// <summary>水タイル上にいるキャラクターの移動速度だけを補正します。</summary>
@@ -13,10 +14,21 @@ public sealed class WaterTerrainEffect : MonoBehaviour
     [SerializeField, Min(0.01f)] private float followOffsetSmoothTime = 0.25f;
     [SerializeField, Min(0.02f)] private float waterCheckInterval = 0.1f;
 
+    private float monsterWaterSpeedPercent = 50f;
+    private bool damageInWater;
+    private float waterDamagePerSecond = 5f;
+    private bool damageOutsideWater;
+    private float outsideWaterDamagePerSecond = 5f;
+    private bool avoidWater;
+    private bool cannotLeaveWater;
+    private readonly List<GameObject> individualWaterFadeObjects = new List<GameObject>();
+    private float terrainDamageInterval = 1f;
+
     private MoveStats moveStats;
     private Transform characterRoot;
     private Transform hitboxRoot;
     private Tilemap[] tilemaps;
+    private TerrainMap terrainMap;
     private Collider2D[] colliders;
     private readonly List<RendererState> renderers = new List<RendererState>();
     private readonly List<FollowAnchor> followAnchors = new List<FollowAnchor>();
@@ -27,6 +39,8 @@ public sealed class WaterTerrainEffect : MonoBehaviour
     private bool isInWater;
     private bool hasWaterCheckPosition;
     private Vector3 lastWaterCheckPosition;
+    private EnemyHealth enemyHealth;
+    private float nextTerrainDamageTime;
 
     private sealed class RendererState
     {
@@ -49,20 +63,70 @@ public sealed class WaterTerrainEffect : MonoBehaviour
     private static readonly int WaterCutoffYId = Shader.PropertyToID("_WaterCutoffY");
     private static readonly int WaterFadeId = Shader.PropertyToID("_WaterFade");
     private static readonly Dictionary<Material, Material> SharedFadeMaterials = new Dictionary<Material, Material>();
+    private static Tilemap[] cachedSceneTilemaps;
+    private static TerrainMap cachedSceneTerrainMap;
+    private static ulong cachedTerrainSceneHandle = ulong.MaxValue;
+    private static int cachedTerrainGenerationVersion = int.MinValue;
     private static Shader waterFadeShader;
     private static Material defaultFadeMaterial;
 
     private void Awake()
     {
+        characterRoot = FindCharacterRoot();
+        if (characterRoot != transform)
+        {
+            // MoveStatsがパーツ上にある場合も、水処理はキャラクター全体に1つだけ置きます。
+            EnsureForCharacter(characterRoot);
+            Destroy(this);
+            return;
+        }
+
+        WaterTerrainEffect[] effects = characterRoot.GetComponentsInChildren<WaterTerrainEffect>(true);
+        foreach (WaterTerrainEffect effect in effects)
+        {
+            if (effect != this && effect != null)
+            {
+                effect.RestoreRuntimeChanges();
+                Destroy(effect);
+            }
+        }
+
         propertyBlock = new MaterialPropertyBlock();
         moveStats = GetComponent<MoveStats>();
         if (moveStats == null) moveStats = GetComponentInChildren<MoveStats>(true);
-        characterRoot = FindCharacterRoot();
+        enemyHealth = GetComponentInChildren<EnemyHealth>(true);
         hitboxRoot = characterRoot.name == "HB" ? characterRoot : characterRoot.Find("HB");
         colliders = hitboxRoot != null ? hitboxRoot.GetComponents<Collider2D>() : new Collider2D[0];
-        tilemaps = FindObjectsByType<Tilemap>();
+        CacheSceneTerrain();
         RefreshRenderers();
         SetupFollowAnchors();
+    }
+
+    private void CacheSceneTerrain()
+    {
+        ulong sceneHandle = SceneManager.GetActiveScene().handle.GetRawData();
+        int generationVersion = BSPDungeonMaster.GenerationVersion;
+        if (cachedSceneTilemaps == null || cachedTerrainSceneHandle != sceneHandle ||
+            cachedTerrainGenerationVersion != generationVersion)
+        {
+            cachedSceneTilemaps = FindObjectsByType<Tilemap>();
+            cachedSceneTerrainMap = FindAnyObjectByType<TerrainMap>();
+            cachedTerrainSceneHandle = sceneHandle;
+            cachedTerrainGenerationVersion = generationVersion;
+        }
+
+        tilemaps = cachedSceneTilemaps;
+        terrainMap = cachedSceneTerrainMap;
+    }
+
+    public static WaterTerrainEffect EnsureForCharacter(Transform requester)
+    {
+        if (requester == null) return null;
+        Transform root = ResolveCharacterRoot(requester);
+        WaterTerrainEffect effect = root.GetComponent<WaterTerrainEffect>();
+        if (effect == null)
+            effect = root.gameObject.AddComponent<WaterTerrainEffect>();
+        return effect;
     }
 
     private void OnEnable()
@@ -79,7 +143,10 @@ public sealed class WaterTerrainEffect : MonoBehaviour
     {
         if (slot == null || characterRoot == null) return;
         if (slot == characterRoot || slot.IsChildOf(characterRoot))
+        {
             RefreshRenderers();
+            SetupFollowAnchors();
+        }
     }
 
     private void Update()
@@ -95,11 +162,13 @@ public sealed class WaterTerrainEffect : MonoBehaviour
 
                 bool wasInWater = isInWater;
                 isInWater = IsInWater();
-                if (wasInWater != isInWater && moveStats != null)
-                    moveStats.SetEnvironmentSpeedMultiplier(isInWater ? waterSpeedMultiplier : 1f);
+                if (moveStats != null && (wasInWater != isInWater || enemyHealth != null))
+                    moveStats.SetEnvironmentSpeedMultiplier(GetWaterSpeedMultiplier());
                 targetFollowLowerAmount = isInWater ? waterFollowLowerAmount : 0f;
             }
         }
+
+        ApplyTerrainDamage();
 
         float targetWaterFade = isInWater ? 1f : 0f;
         currentWaterFade = Mathf.MoveTowards(
@@ -109,24 +178,120 @@ public sealed class WaterTerrainEffect : MonoBehaviour
         ApplyWaterFade();
     }
 
+    private float GetWaterSpeedMultiplier()
+    {
+        return isInWater
+            ? (enemyHealth != null ? monsterWaterSpeedPercent / 100f : waterSpeedMultiplier)
+            : 1f;
+    }
+
+    private void ApplyTerrainDamage()
+    {
+        if (enemyHealth == null || Time.time < nextTerrainDamageTime) return;
+        nextTerrainDamageTime = Time.time + terrainDamageInterval;
+        if (isInWater && damageInWater)
+            enemyHealth.TakeDamage(waterDamagePerSecond * terrainDamageInterval);
+        else if (!isInWater && damageOutsideWater)
+            enemyHealth.TakeDamage(outsideWaterDamagePerSecond * terrainDamageInterval);
+    }
+
+    public bool IsInWaterNow => isInWater;
+    public bool AvoidsWater => avoidWater;
+
+    public float GetFollowLowerAmountFor(Follow_WithAnimation follower)
+    {
+        if (follower == null) return 0f;
+        foreach (FollowAnchor item in followAnchors)
+        {
+            if (item.follower == follower)
+                return item.currentLowerAmount;
+        }
+        return 0f;
+    }
+
+    public void ConfigureMonsterWater(float speedPercent, bool waterDamageEnabled, float waterDamage,
+        bool outsideDamageEnabled, float outsideDamage, bool avoidsWater, bool cannotLeave,
+        List<GameObject> individuallyCutObjects)
+    {
+        monsterWaterSpeedPercent = Mathf.Max(0f, speedPercent);
+        damageInWater = waterDamageEnabled;
+        waterDamagePerSecond = Mathf.Max(0f, waterDamage);
+        damageOutsideWater = outsideDamageEnabled;
+        outsideWaterDamagePerSecond = Mathf.Max(0f, outsideDamage);
+        avoidWater = avoidsWater;
+        cannotLeaveWater = cannotLeave;
+        individualWaterFadeObjects.Clear();
+        if (individuallyCutObjects != null)
+            individualWaterFadeObjects.AddRange(individuallyCutObjects);
+        RefreshRenderers();
+    }
+
+    public bool AllowsWaterDirection(Vector2 direction)
+    {
+        // Most characters have no water restriction. Skip every terrain lookup for them.
+        if (enemyHealth == null || (!avoidWater && !cannotLeaveWater) ||
+            direction.sqrMagnitude < 0.0001f)
+            return true;
+
+        Vector2 origin = hitboxRoot != null ? hitboxRoot.position : transform.position;
+        // isInWater is refreshed by Update; reusing it avoids another terrain query
+        // for every candidate direction tested by the enemy's steering AI.
+        bool startsInWater = isInWater;
+        if ((!avoidWater || startsInWater) && (!cannotLeaveWater || !startsInWater))
+            return true;
+
+        Vector2 normalizedDirection = direction.normalized;
+        // Two direct tile lookups cover the next cell and a one-unit lookahead.
+        // This replaces a physics raycast plus a loop of tilemap samples per AI ray.
+        bool midpointIsWater = IsWaterAtWorldPosition(origin + normalizedDirection * 0.5f);
+        bool endpointIsWater = IsWaterAtWorldPosition(origin + normalizedDirection);
+        if (avoidWater && !startsInWater && (midpointIsWater || endpointIsWater)) return false;
+        if (cannotLeaveWater && startsInWater && (!midpointIsWater || !endpointIsWater)) return false;
+        return true;
+    }
+
+    private bool IsWaterAtWorldPosition(Vector2 position)
+    {
+        if (terrainMap != null)
+        {
+            TerrainType terrain = terrainMap.GetTerrainTypeAtWorldPosition(position);
+            if (terrain != TerrainType.Unknown)
+                return terrain == TerrainType.Water;
+        }
+
+        if (tilemaps == null) return false;
+        foreach (Tilemap tilemap in tilemaps)
+        {
+            if (tilemap == null) continue;
+            if (IsWaterTile(tilemap.GetTile(tilemap.WorldToCell(position))))
+                return true;
+        }
+        return false;
+    }
+
     private void SetupFollowAnchors()
     {
-        // HBと追従パーツが兄弟オブジェクトでも、同じキャラクター全体に適用します。
+        // 追従先だけ記録し、実際に水へ入るまでアンカーのGameObjectは作りません。
         Follow_WithAnimation[] followers = characterRoot.GetComponentsInChildren<Follow_WithAnimation>(true);
         foreach (Follow_WithAnimation follower in followers)
         {
             if (follower == null || follower.FollowTarget == null) continue;
+            bool alreadyRegistered = false;
+            foreach (FollowAnchor existing in followAnchors)
+            {
+                if (existing.follower == follower)
+                {
+                    alreadyRegistered = true;
+                    break;
+                }
+            }
+            if (alreadyRegistered) continue;
 
-            Transform originalTarget = follower.FollowTarget;
-            GameObject anchorObject = new GameObject(follower.name + " Water Follow Anchor");
-            anchorObject.transform.position = originalTarget.position;
             followAnchors.Add(new FollowAnchor
             {
                 follower = follower,
-                originalTarget = originalTarget,
-                anchor = anchorObject.transform
+                originalTarget = follower.FollowTarget
             });
-            follower.SetFollowTarget(anchorObject.transform);
         }
     }
 
@@ -134,7 +299,7 @@ public sealed class WaterTerrainEffect : MonoBehaviour
     {
         foreach (FollowAnchor item in followAnchors)
         {
-            if (item.follower == null || item.originalTarget == null || item.anchor == null)
+            if (item.follower == null || item.originalTarget == null)
                 continue;
 
             item.currentLowerAmount = Mathf.SmoothDamp(
@@ -142,7 +307,26 @@ public sealed class WaterTerrainEffect : MonoBehaviour
                 targetFollowLowerAmount,
                 ref item.lowerAmountVelocity,
                 followOffsetSmoothTime);
+
+            if (item.anchor == null && item.currentLowerAmount > 0.001f)
+            {
+                GameObject anchorObject = new GameObject(item.follower.name + " Water Follow Anchor");
+                item.anchor = anchorObject.transform;
+                item.anchor.SetParent(characterRoot, true);
+                item.anchor.position = item.originalTarget.position;
+                item.follower.SetFollowTarget(item.anchor);
+            }
+
+            if (item.anchor == null) continue;
             item.anchor.position = item.originalTarget.position + Vector3.down * item.currentLowerAmount;
+
+            if (targetFollowLowerAmount <= 0.001f && item.currentLowerAmount <= 0.001f)
+            {
+                if (item.follower.FollowTarget == item.anchor)
+                    item.follower.SetFollowTarget(item.originalTarget);
+                Destroy(item.anchor.gameObject);
+                item.anchor = null;
+            }
         }
     }
 
@@ -155,6 +339,9 @@ public sealed class WaterTerrainEffect : MonoBehaviour
 
         foreach (SpriteRenderer child in children)
         {
+            // 手のパーツは水の境界で切らず、元のマテリアルのまま表示します。
+            if (IsHandRenderer(child) && !IsIndividuallyCutRenderer(child)) continue;
+
             bool alreadyRegistered = false;
             foreach (RendererState state in renderers)
             {
@@ -199,14 +386,19 @@ public sealed class WaterTerrainEffect : MonoBehaviour
 
     private void ApplyWaterFade()
     {
-        float cutoffY = hitboxRoot != null
+        float characterCutoffY = hitboxRoot != null
             ? hitboxRoot.position.y - 0.6f
             : characterRoot.position.y - 0.6f;
 
         foreach (RendererState state in renderers)
         {
             if (state.renderer == null) continue;
+            bool individuallyCut = IsIndividuallyCutRenderer(state.renderer);
+            if (IsHandRenderer(state.renderer) && !individuallyCut) continue;
             if (!isInWater && currentWaterFade <= 0.001f) continue;
+            float cutoffY = individuallyCut
+                ? state.renderer.bounds.center.y
+                : characterCutoffY;
             if (Mathf.Abs(state.lastCutoffY - cutoffY) < 0.01f &&
                 Mathf.Abs(state.lastWaterFade - currentWaterFade) < 0.001f)
                 continue;
@@ -220,8 +412,53 @@ public sealed class WaterTerrainEffect : MonoBehaviour
         }
     }
 
+    private bool IsIndividuallyCutRenderer(SpriteRenderer spriteRenderer)
+    {
+        if (spriteRenderer == null) return false;
+
+        Transform rendererTransform = spriteRenderer.transform;
+        foreach (GameObject individualObject in individualWaterFadeObjects)
+        {
+            if (individualObject == null) continue;
+            Transform individualTransform = individualObject.transform;
+            if (rendererTransform == individualTransform || rendererTransform.IsChildOf(individualTransform))
+                return true;
+        }
+
+        return false;
+    }
+
+    private bool IsHandRenderer(SpriteRenderer spriteRenderer)
+    {
+        if (spriteRenderer == null) return false;
+
+        // SpriteRendererの子オブジェクトに名前が付いている場合も拾えるよう、
+        // キャラクター直下までの親名を確認します。
+        for (Transform current = spriteRenderer.transform;
+             current != null && (characterRoot == null || current == characterRoot || current.IsChildOf(characterRoot));
+             current = current.parent)
+        {
+            string objectName = current.name.ToLowerInvariant();
+            if (objectName.Contains("hand") || objectName.Contains("右手") || objectName.Contains("左手"))
+                return true;
+            if (current == characterRoot) break;
+        }
+
+        return false;
+    }
+
     private bool IsInWater()
     {
+        // Enemy water affinity only needs the character's terrain cell. Avoid scanning
+        // every collider against every Tilemap for every water-sensitive enemy.
+        if (enemyHealth != null && terrainMap != null)
+        {
+            Vector3 position = hitboxRoot != null ? hitboxRoot.position : characterRoot.position;
+            TerrainType terrain = terrainMap.GetTerrainTypeAtWorldPosition(position);
+            if (terrain != TerrainType.Unknown)
+                return terrain == TerrainType.Water;
+        }
+
         if (tilemaps == null) return false;
 
         foreach (Tilemap tilemap in tilemaps)
@@ -278,19 +515,31 @@ public sealed class WaterTerrainEffect : MonoBehaviour
 
     private Transform FindCharacterRoot()
     {
-        if (GetComponentInChildren<EnemyInitializer>(true) != null)
-            return transform;
+        return ResolveCharacterRoot(transform);
+    }
 
-        for (Transform current = transform; current != null; current = current.parent)
+    private static Transform ResolveCharacterRoot(Transform requester)
+    {
+        Transform taggedPlayer = null;
+        for (Transform current = requester; current != null; current = current.parent)
         {
-            if (current.GetComponent<EnemyInitializer>() != null)
+            // PlayerのHBや各パーツにもPlayerタグが付くため、名前付きの全体Rootを優先します。
+            if (current.name == "Player")
                 return current;
 
-            if (current.name == "Player" && current.CompareTag("Player"))
-                return current;
+            if (taggedPlayer == null && current.CompareTag("Player"))
+                taggedPlayer = current;
+
+            EnemyInitializer initializer = current.GetComponent<EnemyInitializer>();
+            if (initializer != null)
+                return initializer.transform.parent != null ? initializer.transform.parent : current;
+
+            initializer = current.GetComponentInChildren<EnemyInitializer>(true);
+            if (initializer != null && initializer.transform.parent != null)
+                return initializer.transform.parent;
         }
 
-        return transform;
+        return taggedPlayer != null ? taggedPlayer : requester;
     }
 
     private static bool IsWaterTile(TileBase tile)
@@ -301,6 +550,11 @@ public sealed class WaterTerrainEffect : MonoBehaviour
 
     private void OnDestroy()
     {
+        RestoreRuntimeChanges();
+    }
+
+    private void RestoreRuntimeChanges()
+    {
         foreach (FollowAnchor item in followAnchors)
         {
             if (item.follower != null && item.originalTarget != null)
@@ -308,11 +562,13 @@ public sealed class WaterTerrainEffect : MonoBehaviour
             if (item.anchor != null)
                 Destroy(item.anchor.gameObject);
         }
+        followAnchors.Clear();
 
         foreach (RendererState state in renderers)
         {
             if (state.renderer != null)
                 state.renderer.sharedMaterial = state.originalMaterial;
         }
+        renderers.Clear();
     }
 }

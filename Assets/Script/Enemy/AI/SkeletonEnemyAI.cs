@@ -5,6 +5,8 @@ using UnityEngine;
 public class SkeletonEnemyAI : MonoBehaviour
 {
     private MoveStats moveStats;
+    private WaterTerrainEffect waterEffect;
+    private WaterTerrainEffect playerWaterEffect;
     enum State { Idle, Chase, Alert, Search }
     [SerializeField, HideInInspector] private State currentState = State.Idle;
 
@@ -12,7 +14,8 @@ public class SkeletonEnemyAI : MonoBehaviour
     private Transform player;
     [SerializeField] private float detectRange = 15.0f;
     [SerializeField] private LayerMask detectionMask;
-    [SerializeField, Min(0.02f)] private float sightCheckInterval = 0.1f;
+    [SerializeField, Min(0.02f)] private float sightCheckInterval = 0.15f;
+    [SerializeField, Min(0.02f)] private float movementDecisionInterval = 0.15f;
     [SerializeField] private Vector2 rayOffset = new Vector2(0, -0.3f);
     [SerializeField] private Vector2 playerPositionOffset = new Vector2(0, -0.3f);
 
@@ -38,9 +41,9 @@ public class SkeletonEnemyAI : MonoBehaviour
     private float avoidanceTimer = 0f;
 
     [Header("スキャン設定")]
-    [SerializeField] private int rayCount = 8; // ← 復活させました！
-    [SerializeField] private float scanInterval = 0.3f; 
-    [SerializeField] private float fastScanInterval = 0.2f;
+    [SerializeField] private int rayCount = 8;
+    [SerializeField] private float scanInterval = 0.45f;
+    [SerializeField] private float fastScanInterval = 0.3f;
     [SerializeField] private float forwardBias = 8.0f; 
     [SerializeField] private float rayLaunchRadius = 0.7f; 
     [SerializeField] private float chestBonus = 30.0f; 
@@ -48,7 +51,7 @@ public class SkeletonEnemyAI : MonoBehaviour
     [Header("分離設定 (重なり防止)")]
     [SerializeField] private float separationRadius = 3.0f; 
     [SerializeField] private float separationWeight = 0.2f; 
-    [SerializeField, Min(0.02f)] private float separationCheckInterval = 0.1f;
+    [SerializeField, Min(0.02f)] private float separationCheckInterval = 0.2f;
     private readonly List<Collider2D> nearbyEnemyColliders = new List<Collider2D>(64);
     private float nextSeparationCheckTime;
     private Vector2 cachedSeparation;
@@ -69,13 +72,15 @@ public class SkeletonEnemyAI : MonoBehaviour
     private Rigidbody2D rb;
     private Vector2 moveInput;
     private float nextSightCheckTime;
+    private float nextMovementDecisionTime;
     private bool canSeePlayer;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         lastPosition = transform.position;
-        moveStats = GetComponent<MoveStats>();
+        moveStats = GetComponentInChildren<MoveStats>(true);
+        waterEffect = GetComponentInParent<WaterTerrainEffect>();
         FindPlayer();
         Physics2D.queriesStartInColliders = true;
     }
@@ -88,6 +93,7 @@ public class SkeletonEnemyAI : MonoBehaviour
             if (obj.GetComponent<RandomTeleporter>() != null)
             {
                 player = obj.transform;
+                playerWaterEffect = obj.GetComponentInParent<WaterTerrainEffect>();
                 break;
             }
         }
@@ -95,10 +101,15 @@ public class SkeletonEnemyAI : MonoBehaviour
 
     void Update()
     {
+        if (player != null && playerWaterEffect == null)
+            playerWaterEffect = player.GetComponentInParent<WaterTerrainEffect>();
         if (Time.time >= nextSightCheckTime)
         {
             nextSightCheckTime = Time.time + Mathf.Max(0.02f, sightCheckInterval);
-            canSeePlayer = (player != null && player.gameObject.activeInHierarchy) && CheckLineOfSight();
+            bool playerInWaterAndAvoided = waterEffect != null && waterEffect.AvoidsWater
+                && playerWaterEffect != null && playerWaterEffect.IsInWaterNow;
+            canSeePlayer = (player != null && player.gameObject.activeInHierarchy)
+                && !playerInWaterAndAvoided && CheckLineOfSight();
             if (canSeePlayer)
                 lastPlayerPos = player.position + (Vector3)playerPositionOffset;
         }
@@ -168,16 +179,19 @@ public class SkeletonEnemyAI : MonoBehaviour
 
     void UpdateChase(bool canSeePlayer)
     {
-        if (!canSeePlayer) { 
-            currentState = State.Search; 
+        if (!canSeePlayer) {
+            currentState = State.Search;
             currentSearchTimer = 0;
-            return; 
+            return;
         }
 
-        if (avoidanceTimer > 0) return; 
-
+        if (Time.time < nextMovementDecisionTime) return;
+        nextMovementDecisionTime = Time.time + Mathf.Max(0.02f, movementDecisionInterval);
+        if (avoidanceTimer > 0) return;
         Vector2 dirToPlayer = ((Vector2)player.position + playerPositionOffset - CenterPos).normalized;
         moveInput = SnapToCross(dirToPlayer);
+        if (waterEffect != null && !waterEffect.AllowsWaterDirection(moveInput))
+            moveInput = SnapToCross(GetFarthestDirection());
         lastDirection = moveInput;
     }
 
@@ -186,9 +200,13 @@ public class SkeletonEnemyAI : MonoBehaviour
         if (canSeePlayer) { currentState = State.Chase; return; }
         currentSearchTimer += Time.deltaTime;
         if (currentSearchTimer >= searchTimeout) { ForceChangeToAlert(); return; }
+        if (Time.time < nextMovementDecisionTime) return;
+        nextMovementDecisionTime = Time.time + Mathf.Max(0.02f, movementDecisionInterval);
         
         Vector2 dirToLastPos = ((Vector2)lastPlayerPos - CenterPos).normalized;
         moveInput = SnapToCross(dirToLastPos);
+        if (waterEffect != null && !waterEffect.AllowsWaterDirection(moveInput))
+            moveInput = SnapToCross(GetFarthestDirection());
         
         if (Vector2.Distance(CenterPos, lastPlayerPos) < 0.2f) ForceChangeToAlert();
     }
@@ -253,6 +271,7 @@ public class SkeletonEnemyAI : MonoBehaviour
         {
             float angle = i * angleStep * Mathf.Deg2Rad;
             Vector2 dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+            if (waterEffect != null && !waterEffect.AllowsWaterDirection(dir)) continue;
             Vector2 startPos = CenterPos + (dir * rayLaunchRadius);
             
             RaycastHit2D hit = Physics2D.CircleCast(startPos, checkRadius, dir, detectRange, detectionMask);
@@ -310,6 +329,9 @@ public class SkeletonEnemyAI : MonoBehaviour
         {
             finalForce = (moveInput + separation).normalized;
         }
+        if (waterEffect != null && finalForce != Vector2.zero &&
+            (finalForce - moveInput).sqrMagnitude > 0.01f &&
+            !waterEffect.AllowsWaterDirection(finalForce)) finalForce = Vector2.zero;
         finalForce = SnapToCross(finalForce);
 
         if (finalForce != previousSnapDirection && finalForce != Vector2.zero)

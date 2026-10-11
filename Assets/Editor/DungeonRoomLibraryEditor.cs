@@ -47,12 +47,15 @@ public sealed class DungeonRoomLibraryEditor : Editor
             if (rule == null) continue;
             if (!IsValidRule(rule))
             {
-                EditorGUILayout.LabelField($"{rule.prefab?.name ?? "Prefab未設定"}    対象外（Prefab設定を確認）", EditorStyles.miniLabel);
+                DungeonRoomDefinition invalidRoom = rule.prefab;
+                string invalidRoomName = invalidRoom != null ? invalidRoom.name : "Prefab未設定";
+                EditorGUILayout.LabelField($"{invalidRoomName}    対象外（Prefab設定を確認）", EditorStyles.miniLabel);
                 continue;
             }
             float weight = uniformFallback ? 1f : Mathf.Max(0f, rule.spawnWeight);
             float probability = totalWeight > 0f ? weight / totalWeight : 0f;
-            string roomName = rule.prefab != null ? rule.prefab.name : "Prefab未設定";
+            DungeonRoomDefinition room = rule.prefab;
+            string roomName = room != null ? room.name : "Prefab未設定";
             string sizeName = rule.size == DungeonRoomSize.Small ? "小" :
                 rule.size == DungeonRoomSize.Large ? "大" : "特殊";
 

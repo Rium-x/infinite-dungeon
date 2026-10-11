@@ -25,6 +25,7 @@ public class SlimeEnemyAI : MonoBehaviour
 private Rigidbody2D rb;
 private SlimeItemEater eater;
 private MoveStats moveStats;
+private WaterTerrainEffect waterEffect;
 
 private Item targetItem;
 private EnemyHealth targetEnemy;
@@ -36,7 +37,8 @@ private void Awake()
 {
     rb = GetComponent<Rigidbody2D>();
     eater = GetComponent<SlimeItemEater>();
-    moveStats = GetComponent<MoveStats>();
+    moveStats = GetComponentInChildren<MoveStats>(true);
+    waterEffect = GetComponentInParent<WaterTerrainEffect>();
 }
 
 private void Update()
@@ -110,6 +112,9 @@ private void FixedUpdate()
 
     Vector2 targetVelocity =
         direction * speed;
+
+    if (waterEffect != null && !waterEffect.AllowsWaterDirection(direction))
+        targetVelocity = Vector2.zero;
 
     rb.linearVelocity =
         Vector2.Lerp(
@@ -250,13 +255,13 @@ private void FindPlant()
     targetEnemy = closestEnemy;
 
     if (targetEnemy != null)
-{
-    Debug.Log(
-        gameObject.name +
-        " 植物発見: " +
-        targetEnemy.name
-    );
-}
+    {
+        Debug.Log(
+            gameObject.name +
+            " 植物発見: " +
+            targetEnemy.name
+        );
+    }
 }
 
 private void OnDrawGizmosSelected()

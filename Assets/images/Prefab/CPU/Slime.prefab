@@ -89,7 +89,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 0
+      value: 1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -415,12 +415,14 @@ MonoBehaviour:
   detectionMask:
     serializedVersion: 2
     m_Bits: 392
+  sightCheckInterval: 0.1
   rayOffset: {x: 0, y: -0.3}
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 1
   runSpeed: 1.5
   acceleration: 2
   checkRadius: 0.3
+  turnAroundWallDistance: 5
   stuckThreshold: 1
   minMoveDistance: 0.05
   rayCount: 8
@@ -431,6 +433,7 @@ MonoBehaviour:
   chestBonus: 30
   separationRadius: 3
   separationWeight: 0.2
+  separationCheckInterval: 0.1
   searchTimeout: 1
   alertDuration: 20
   showDebug: 0
@@ -470,6 +473,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 475e4ff2126df8e41a8030f61452d831, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyInitializer
+  waterSpeedPercent: 50
+  takeDamageInWater: 1
+  waterDamagePerSecond: 1
+  takeDamageOutsideWater: 0
+  outsideWaterDamagePerSecond: 5
+  avoidWater: 1
+  cannotLeaveWater: 0
+  individualWaterFadeObjects: []
 --- !u!114 &3942721668747222379
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -483,6 +494,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MoveStats
   speedMultiplier: 1
+  environmentSpeedMultiplier: 1
 --- !u!114 &805923240683280129
 MonoBehaviour:
   m_ObjectHideFlags: 0

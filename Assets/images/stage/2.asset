@@ -19,40 +19,59 @@ MonoBehaviour:
   normalItemDrops:
     items:
     - itemData: {fileID: 11400000, guid: 888cf211361fbbc43a045b2e99125cff, type: 2}
-      stageModifier: 5
+      stageModifier: -41.9
     - itemData: {fileID: 11400000, guid: 065895ca1990c43ab8e145b92a4ffa08, type: 2}
       stageModifier: 0
     - itemData: {fileID: 11400000, guid: c573c7be79f06a444b5aa5cebf2b259f, type: 2}
       stageModifier: -22
     - itemData: {fileID: 11400000, guid: 595b5e264859043d1a62824469565d6c, type: 2}
-      stageModifier: -1
+      stageModifier: 10.3
     - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
-      stageModifier: 0
+      stageModifier: 1.7
     - itemData: {fileID: 11400000, guid: bcdb77378297fbc4885d775f32b087a4, type: 2}
-      stageModifier: 0
+      stageModifier: -11.1
     - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
-      stageModifier: 22
+      stageModifier: 4.3
     - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
       stageModifier: 0
     - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
-      stageModifier: 4
+      stageModifier: -23.1
     - itemData: {fileID: 11400000, guid: e73f5fc267ddd4c20acc51f649e75e75, type: 2}
-      stageModifier: 4
+      stageModifier: 16.2
     - itemData: {fileID: 11400000, guid: c578fd8f94c8ef24a9a18af02b1fc089, type: 2}
-      stageModifier: 4
+      stageModifier: -14.5
+    - itemData: {fileID: 11400000, guid: f3ba201c547854aeebcbd4efb1acb9c7, type: 2}
+      stageModifier: -14.5
+    - itemData: {fileID: 11400000, guid: 9f186eba8c3ae4722af2622b2ec53165, type: 2}
+      stageModifier: -27.4
+    - itemData: {fileID: 11400000, guid: d0467b1e7da534fdb8b7bbc263162f4a, type: 2}
+      stageModifier: -23.1
+    - itemData: {fileID: 11400000, guid: d0467b1e7da534fdb8b7bbc263162f4a, type: 2}
+      stageModifier: -17.1
+    - itemData: {fileID: 11400000, guid: 96c9cdaa624ea41438bcb3adf3f785d5, type: 2}
+      stageModifier: -17.1
+    - itemData: {fileID: 11400000, guid: 96c9cdaa624ea41438bcb3adf3f785d5, type: 2}
+      stageModifier: -17.1
+    - itemData: {fileID: 11400000, guid: b51786d276e1542bcb818eb33d2d6dbb, type: 2}
+      stageModifier: -36.8
+    - itemData: {fileID: 11400000, guid: 65b86dfb435a8444193b336181774ce5, type: 2}
+      stageModifier: 0.9
   randomPlayerSpawn: 1
   playerSpawnPosition: {x: 0, y: 0}
   manualMapPrefab: {fileID: 0}
   mapWidth: 180
   mapHeight: 180
-  roomLibrary: {fileID: 11400000, guid: b8ce77ecff4dc4a49a5971bd85d5169f, type: 2}
+  roomLibrary: {fileID: 11400000, guid: 43200d6c0bb0446ef8c09c319fbe8fa6, type: 2}
   groundTile: {fileID: 11400000, guid: 9c856d9c2663fae428408e8cae5759a2, type: 2}
   groundTileWeights:
   - tile: {fileID: 11400000, guid: 9c856d9c2663fae428408e8cae5759a2, type: 2}
+    tilemap: 0
     weight: 80
   - tile: {fileID: 11400000, guid: 8b74a652c6a34fb4aa342dbafb78d0a7, type: 2}
+    tilemap: 0
     weight: 18
   - tile: {fileID: 11400000, guid: 5d85e946032d5ee44bb0b645fed1935f, type: 2}
+    tilemap: 0
     weight: 1
   randomizeRoomFloors: 0
   wallTile: {fileID: 0}
@@ -103,13 +122,6 @@ MonoBehaviour:
     prefab: {fileID: 362433543248169716, guid: f1686296e018f624fab9385ea49b209a, type: 3}
     maxCount: 5
     spawnMode: 3
-    startDelay: 0
-    minSpawnDelay: 5
-    maxSpawnDelay: 20
-  - enemyName: aaaaaaaaa
-    prefab: {fileID: 362433543248169716, guid: cba1a841bdc8d124fa96e730954cb596, type: 3}
-    maxCount: 2
-    spawnMode: 0
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
