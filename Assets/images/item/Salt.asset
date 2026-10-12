@@ -16,7 +16,7 @@ MonoBehaviour:
   icon: {fileID: -256844126908629303, guid: 15a1f427ed5fe48a09e11c1cdd2a6e8a, type: 3}
   itemType: 3
   rarity: 56.3
-  maxDropCount: 10
+  maxDropCount: 2
   dropCountProbability:
     serializedVersion: 2
     m_Curve:

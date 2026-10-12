@@ -48,7 +48,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CharacterSorting
   sortingLayerName: Characters
   yToSortingScale: 10
-  extraOffset: 0
+  characterOrderRange: 100
+  characterOffset: 0
 --- !u!1 &5723949514176499206
 GameObject:
   m_ObjectHideFlags: 0
@@ -240,7 +241,11 @@ MonoBehaviour:
         m_SelectedSource:
           rid: -2
         m_Provider2DCache:
-          rid: -2
+          rid: 5139482600604434927
+    - rid: 5139482600604434927
+      type: {class: 'Provider2DCache`1[[UnityEngine.Rendering.Universal.Light2DProvider, Unity.RenderPipelines.Universal.2D.Runtime]]', ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
+      data:
+        m_Cache: []
 --- !u!1 &6449310333140156861
 GameObject:
   m_ObjectHideFlags: 0
@@ -608,7 +613,11 @@ MonoBehaviour:
         m_SelectedSource:
           rid: -2
         m_Provider2DCache:
-          rid: -2
+          rid: 5139482600604434926
+    - rid: 5139482600604434926
+      type: {class: 'Provider2DCache`1[[UnityEngine.Rendering.Universal.Light2DProvider, Unity.RenderPipelines.Universal.2D.Runtime]]', ns: UnityEngine.Rendering.Universal, asm: Unity.RenderPipelines.Universal.2D.Runtime}
+      data:
+        m_Cache: []
 --- !u!1 &8679968208963795330
 GameObject:
   m_ObjectHideFlags: 0
@@ -758,6 +767,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 475e4ff2126df8e41a8030f61452d831, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyInitializer
+  waterSpeedPercent: 50
+  takeDamageInWater: 0
+  waterDamagePerSecond: 5
+  takeDamageOutsideWater: 0
+  outsideWaterDamagePerSecond: 5
+  avoidWater: 0
+  cannotLeaveWater: 0
+  individualWaterFadeObjects: []
 --- !u!114 &795022578688661256
 MonoBehaviour:
   m_ObjectHideFlags: 0

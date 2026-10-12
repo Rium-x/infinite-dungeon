@@ -74,18 +74,24 @@ MonoBehaviour:
   normalItemTypeAdjustments:
   - itemType: 0
     modifier: 5
+    maxDropCount: 100
   - itemType: 1
     modifier: -35.2
+    maxDropCount: 1
   - itemType: 3
     modifier: 15
+    maxDropCount: 100
   - itemType: 4
     modifier: -49
+    maxDropCount: 100
   - itemType: 5
     modifier: 58
+    maxDropCount: 100
   - itemType: 2
     modifier: 25
+    maxDropCount: 100
   normalDropRatioPercent: 40.9
-  maxTotalDropCount: 3
+  maxTotalDropCount: 2
   totalDropCountProbability:
     serializedVersion: 2
     m_Curve:
@@ -139,8 +145,10 @@ MonoBehaviour:
     m_RotationOrder: 4
   dropList:
   - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
+    maxDropCount: 100
     monsterModifier: -22
   - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
+    maxDropCount: 100
     monsterModifier: 45
 --- !u!114 &-5732425892869942870
 MonoBehaviour:
@@ -261,7 +269,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b89251a054473842945f31a73548fd7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyAttack
-  attackDamage: 3.5
+  attackDamage: 2.5
   attackCooldown: 0.7
   buffsToApply: []
 --- !u!1 &3904842073167903681
@@ -383,7 +391,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 1.1
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -1213,6 +1221,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 392
   sightCheckInterval: 0.15
+  movementDecisionInterval: 0.15
   rayOffset: {x: 0, y: -0.3}
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 2
@@ -1234,6 +1243,7 @@ MonoBehaviour:
   searchTimeout: 1
   alertDuration: 7
   showDebug: 0
+  playerSearchInterval: 1
 --- !u!114 &1257060512434829963
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -24,19 +24,31 @@ public class StageData : ScriptableObject
 {
     public string stageName;
 
+    [Header("ステージクリア条件")]
+    [Min(0), Tooltip("このステージで次のステージへ進むために必要な探索値。0で即時に進めます。")]
+    public int requiredExplorationValue = 100;
+
+    [Header("ステージの明るさ")]
+    [Range(0f, 200f), Tooltip("プレイヤーの HB 配下の Light2D の半径をパーセンテージで調整します。50=半分、120=1.2倍、100=標準です。")]
+    public float playerLightRadiusPercent = 100f;
+
+    public int GetRequiredExplorationValueForNextStage()
+    {
+        return Mathf.Max(0, requiredExplorationValue);
+    }
+
+    public float GetPlayerLightRadiusScale()
+    {
+        return Mathf.Max(0f, playerLightRadiusPercent) / 100f;
+    }
+
     [Header("通常アイテムの順序補正")]
-    [Min(0f), Tooltip("プレイヤーレベルが1上がるごとに進むステージ順の量。0ならプレイヤーレベルでは変化しません。")]
-    [UnityEngine.Serialization.FormerlySerializedAs("playerLevelPositionPerLevel")]
-    public float playerLevelOrderPerLevel = 0.1f;
     [Range(0f, 1f), Tooltip("最後に設定したステージ順から離れたとき、順番1つごとに残る通常アイテム補正の割合。0.5なら100, 50, 25...です。")]
     [UnityEngine.Serialization.FormerlySerializedAs("normalItemPositionFalloff")]
     public float normalItemOrderFalloff = 0.5f;
-    [Min(0.01f), Tooltip("アイテムが初めて登録されたステージより前で、補正を0から登録値まで滑らかに上げる順序数。2なら2つ前で0%、1つ前で半分です。")]
-    [UnityEngine.Serialization.FormerlySerializedAs("normalItemEntryRampDistance")]
-    public float normalItemEntryRampStages = 2f;
 
     [Header("通常アイテム")]
-    [Tooltip("このステージでの通常アイテム候補と確率補正。未登録ステージ間は順序に沿って滑らかに補間され、全ステージで未登録なら出ません。")]
+    [Tooltip("このステージでの通常アイテム候補と確率補正。初登場ステージより前には出ず、登場後はステージ順に補間されます。")]
     public DropItemPool normalItemDrops = new DropItemPool();
 
     [Header("プレイヤースポーン")]

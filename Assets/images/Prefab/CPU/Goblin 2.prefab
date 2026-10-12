@@ -74,18 +74,24 @@ MonoBehaviour:
   normalItemTypeAdjustments:
   - itemType: 0
     modifier: -9
+    maxDropCount: 100
   - itemType: 1
     modifier: -31
+    maxDropCount: 1
   - itemType: 3
     modifier: 15
+    maxDropCount: 100
   - itemType: 4
     modifier: -49
+    maxDropCount: 100
   - itemType: 5
     modifier: 25
+    maxDropCount: 100
   - itemType: 2
     modifier: 25
+    maxDropCount: 100
   normalDropRatioPercent: 50
-  maxTotalDropCount: 20
+  maxTotalDropCount: 2
   totalDropCountProbability:
     serializedVersion: 2
     m_Curve:
@@ -164,7 +170,10 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  dropList: []
+  dropList:
+  - itemData: {fileID: 11400000, guid: 65b86dfb435a8444193b336181774ce5, type: 2}
+    maxDropCount: 100
+    monsterModifier: 0
 --- !u!114 &-5732425892869942870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -479,8 +488,8 @@ SpriteRenderer:
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
   m_GlobalIlluminationMeshLod: 0
-  m_SortingLayerID: 1035521245
-  m_SortingLayer: 0
+  m_SortingLayerID: 1651033857
+  m_SortingLayer: 2
   m_SortingOrder: 6
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: ddeeeaf67b91c8d44b1c95014eade970, type: 3}
@@ -1221,6 +1230,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 392
   sightCheckInterval: 0.15
+  movementDecisionInterval: 0.15
   rayOffset: {x: 0, y: -0.3}
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 2
@@ -1242,6 +1252,7 @@ MonoBehaviour:
   searchTimeout: 1
   alertDuration: 7
   showDebug: 0
+  playerSearchInterval: 1
 --- !u!114 &1257060512434829963
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1430,6 +1441,10 @@ PrefabInstance:
     - target: {fileID: 555737676813804302, guid: 2675e48abb5d7314cbaa3f0d560846d4, type: 3}
       propertyPath: m_Name
       value: PL_sword 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3877989934471276331, guid: 2675e48abb5d7314cbaa3f0d560846d4, type: 3}
+      propertyPath: m_SortingOrder
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 5692579652347913902, guid: 2675e48abb5d7314cbaa3f0d560846d4, type: 3}
       propertyPath: m_LocalPosition.x

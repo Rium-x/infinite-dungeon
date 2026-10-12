@@ -33,9 +33,11 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
     [SerializeField] private bool showDiagnostics;
 
     private readonly Dictionary<SpriteRenderer, VisionState> states = new();
+    private readonly Dictionary<SpriteRenderer, EnemyHealth> enemyByRenderer = new();
     private readonly List<SpriteRenderer> targetRenderers = new();
     private readonly List<SpriteRenderer> removedRenderers = new();
     private readonly HashSet<SpriteRenderer> activeRenderers = new();
+    private readonly HashSet<EnemyHealth> visibleEnemies = new();
     private readonly RaycastHit2D[] raycastHits = new RaycastHit2D[16];
     
     private float nextRefreshTime;
@@ -104,6 +106,7 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
             Vector2 origin = eyePoint != null ? eyePoint.position : player.position;
             RefreshTargetRenderersIfNeeded();
             activeRenderers.Clear();
+            visibleEnemies.Clear();
             int hiddenCount = 0;
 
             foreach (SpriteRenderer renderer in targetRenderers)
@@ -115,9 +118,40 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
 
                 activeRenderers.Add(renderer);
                 VisionState state = GetState(renderer);
-                state.targetVisibility = !IsOnScreen(renderer) || HasAnyVisiblePoint(origin, renderer) ? 1f : 0f;
 
-                if (state.targetVisibility <= 0f)
+                if (enemyByRenderer.TryGetValue(renderer, out EnemyHealth enemy) && enemy != null)
+                {
+                    if (!visibleEnemies.Contains(enemy) &&
+                        IsOnScreen(renderer) &&
+                        HasAnyVisiblePoint(origin, renderer))
+                    {
+                        visibleEnemies.Add(enemy);
+                    }
+                }
+                else
+                {
+                    state.targetVisibility =
+                        !IsOnScreen(renderer) || HasAnyVisiblePoint(origin, renderer) ? 1f : 0f;
+                }
+            }
+
+            foreach (SpriteRenderer renderer in targetRenderers)
+            {
+                if (renderer == null || !renderer.gameObject.activeInHierarchy)
+                {
+                    continue;
+                }
+
+                if (enemyByRenderer.TryGetValue(renderer, out EnemyHealth enemy) && enemy != null)
+                {
+                    VisionState state = GetState(renderer);
+                    state.targetVisibility = visibleEnemies.Contains(enemy) ? 1f : 0f;
+                    if (state.targetVisibility <= 0f)
+                    {
+                        hiddenCount++;
+                    }
+                }
+                else if (GetState(renderer).targetVisibility <= 0f)
                 {
                     hiddenCount++;
                 }
@@ -175,13 +209,17 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
 
         nextTargetScanTime = Time.unscaledTime + Mathf.Max(0.1f, targetScanInterval);
         targetRenderers.Clear();
+        enemyByRenderer.Clear();
 
+        // Instance-ID sorting is unnecessary here: visibility checks are independent
+        // per renderer, and sorting every renderer in the scene adds avoidable CPU work.
         SpriteRenderer[] renderers = FindObjectsByType<SpriteRenderer>();
         foreach (SpriteRenderer renderer in renderers)
         {
             if (renderer != null && IsTarget(renderer) && !IsInPlayer(renderer.transform))
             {
                 targetRenderers.Add(renderer);
+                enemyByRenderer.Add(renderer, renderer.GetComponentInParent<EnemyHealth>());
             }
         }
     }

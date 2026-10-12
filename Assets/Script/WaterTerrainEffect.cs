@@ -157,11 +157,14 @@ public sealed class WaterTerrainEffect : MonoBehaviour
             Vector3 checkPosition = hitboxRoot != null ? hitboxRoot.position : characterRoot.position;
             if (!hasWaterCheckPosition || (checkPosition - lastWaterCheckPosition).sqrMagnitude >= 0.0004f)
             {
+                bool isInitialWaterCheck = !hasWaterCheckPosition;
                 lastWaterCheckPosition = checkPosition;
                 hasWaterCheckPosition = true;
 
                 bool wasInWater = isInWater;
                 isInWater = IsInWater();
+                if (isInitialWaterCheck)
+                    nextTerrainDamageTime = Time.time + terrainDamageInterval;
                 if (moveStats != null && (wasInWater != isInWater || enemyHealth != null))
                     moveStats.SetEnvironmentSpeedMultiplier(GetWaterSpeedMultiplier());
                 targetFollowLowerAmount = isInWater ? waterFollowLowerAmount : 0f;
@@ -187,7 +190,7 @@ public sealed class WaterTerrainEffect : MonoBehaviour
 
     private void ApplyTerrainDamage()
     {
-        if (enemyHealth == null || Time.time < nextTerrainDamageTime) return;
+        if (enemyHealth == null || !hasWaterCheckPosition || Time.time < nextTerrainDamageTime) return;
         nextTerrainDamageTime = Time.time + terrainDamageInterval;
         if (isInWater && damageInWater)
             enemyHealth.TakeDamage(waterDamagePerSecond * terrainDamageInterval);
@@ -490,9 +493,6 @@ public sealed class WaterTerrainEffect : MonoBehaviour
         Bounds bounds = characterCollider.bounds;
         Vector3Int minCell = tilemap.WorldToCell(bounds.min);
         Vector3Int maxCell = tilemap.WorldToCell(bounds.max);
-        float halfCellDiagonal = Vector2.Distance(
-            tilemap.CellToWorld(Vector3Int.zero),
-            tilemap.CellToWorld(Vector3Int.one)) * 0.5f;
 
         for (int x = Mathf.Min(minCell.x, maxCell.x); x <= Mathf.Max(minCell.x, maxCell.x); x++)
         {
@@ -505,7 +505,7 @@ public sealed class WaterTerrainEffect : MonoBehaviour
                 if (characterCollider.OverlapPoint(tileCenter)) return true;
 
                 Vector2 closestPoint = characterCollider.ClosestPoint(tileCenter);
-                if (Vector2.Distance(tileCenter, closestPoint) <= halfCellDiagonal + 0.001f)
+                if (tilemap.WorldToCell(closestPoint) == cell)
                     return true;
             }
         }

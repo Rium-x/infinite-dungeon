@@ -182,7 +182,7 @@ public class ItemData : ScriptableObject
     [Header("ドロップ個数")]
     [Min(1), Tooltip("ドロップ個数グラフの横軸上限です。")]
     public int maxDropCount = 10;
-    [Tooltip("横軸は落ちる個数(1～上限)、縦軸はその個数の確率です。個数ごとのグラフ値を合計100%になるよう正規化して抽選します。整数個数の点をベル型に並べればガウス分布のような形になります。通常・モンスター固有の両ドロップに適用します。")]
+    [Tooltip("横軸は落ちる個数(1～上限)、縦軸はその個数の確率です。0個は抽選されず、ドロップ確率に当選した場合は必ず1個以上出ます。個数ごとのグラフ値を合計100%になるよう正規化して抽選します。モンスター側の最大個数を超えません。")]
     public AnimationCurve dropCountProbability = new AnimationCurve(
         new Keyframe(0f, 0f), new Keyframe(1f, 100f), new Keyframe(2f, 0f), new Keyframe(10f, 0f));
 

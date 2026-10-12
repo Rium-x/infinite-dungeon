@@ -77,13 +77,13 @@ MonoBehaviour:
   - itemType: 1
     modifier: -100
   - itemType: 3
-    modifier: -27
+    modifier: -75.7
   - itemType: 4
     modifier: -100
   - itemType: 5
     modifier: 100
   - itemType: 2
-    modifier: 25
+    modifier: -20.6
   normalDropRatioPercent: 67.6
   maxTotalDropCount: 20
   totalDropCountProbability:
@@ -1206,6 +1206,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 392
   sightCheckInterval: 0.15
+  movementDecisionInterval: 0.15
   rayOffset: {x: 0, y: -0.3}
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 5
@@ -1227,6 +1228,7 @@ MonoBehaviour:
   searchTimeout: 1
   alertDuration: 7
   showDebug: 0
+  playerSearchInterval: 1
 --- !u!114 &1257060512434829963
 MonoBehaviour:
   m_ObjectHideFlags: 0

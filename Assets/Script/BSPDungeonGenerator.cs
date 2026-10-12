@@ -18,6 +18,8 @@ public class BSPDungeonMaster : MonoBehaviour
 
     [Header("Current Stage")]
     public StageData currentStageData;
+    [Tooltip("開始時に stageOrder の何番目から始めるか。0 が最初。")]
+    [Min(0)] public int startStageIndex = 0;
     [Tooltip("ダンジョンの進行順。通常アイテムの確率補間にもこの順番を使用します。")]
     public List<StageData> stageOrder = new List<StageData>();
     [Tooltip("ONなら順序リストの最後から先頭へ戻ります。")]
@@ -124,6 +126,19 @@ public class BSPDungeonMaster : MonoBehaviour
         return loopStageOrder && orderedStages.Count > 0 ? orderedStages[0] : null;
     }
 
+    public void SetCurrentStageFromListIndex(int stageIndex)
+    {
+        if (stageOrder == null || stageOrder.Count == 0)
+            return;
+
+        int clampedIndex = Mathf.Clamp(stageIndex, 0, stageOrder.Count - 1);
+        currentStageData = stageOrder[clampedIndex];
+        ExplorationManager.Instance?.SetCurrentStage(currentStageData);
+
+        if (stageText != null)
+            stageText.text = currentStageData != null ? currentStageData.stageName : stageText.text;
+    }
+
     public void GetEnemySpawnRange(out Vector2 min, out Vector2 max)
     {
         int width = currentStageData == null ? mapWidth :
@@ -200,8 +215,12 @@ public class BSPDungeonMaster : MonoBehaviour
         stageOrder.Clear();
         stageOrder.AddRange(orderedStages);
         if (stageOrder.Count > 0)
-            currentStageData = stageOrder[0];
+        {
+            int selectedIndex = Mathf.Clamp(startStageIndex, 0, stageOrder.Count - 1);
+            currentStageData = stageOrder[selectedIndex];
+        }
         Instance = this;
+        ExplorationManager.Instance?.SetCurrentStage(currentStageData);
     }
 
 #if UNITY_EDITOR
@@ -248,7 +267,7 @@ public class BSPDungeonMaster : MonoBehaviour
         if (nextStage != null)
         {
             currentStageData = nextStage;
-            ExplorationManager.Instance?.ResetProgress();
+            ExplorationManager.Instance?.SetCurrentStage(currentStageData);
             GenerateDungeon();
         }
 

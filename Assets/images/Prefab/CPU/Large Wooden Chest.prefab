@@ -66,19 +66,25 @@ MonoBehaviour:
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
   normalItemTypeAdjustments:
   - itemType: 0
-    modifier: 28.7
+    modifier: 18.2
+    maxDropCount: 100
   - itemType: 1
-    modifier: 23.1
+    modifier: 100
+    maxDropCount: 1
   - itemType: 3
-    modifier: 42.5
+    modifier: 50.6
+    maxDropCount: 100
   - itemType: 4
-    modifier: -10
+    modifier: -17.9
+    maxDropCount: 1
   - itemType: 5
-    modifier: 17.4
+    modifier: 27.4
+    maxDropCount: 100
   - itemType: 2
-    modifier: 58.7
-  normalDropRatioPercent: 50
-  maxTotalDropCount: 20
+    modifier: 65
+    maxDropCount: 100
+  normalDropRatioPercent: 100
+  maxTotalDropCount: 10
   totalDropCountProbability:
     serializedVersion: 2
     m_Curve:
@@ -92,8 +98,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 2.41156
-      value: -0.24420166
+      time: 4.077183
+      value: -2.1315746
       inSlope: 0
       outSlope: 0
       tangentMode: 0

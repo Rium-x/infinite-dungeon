@@ -15,6 +15,7 @@ public class Transparent : MonoBehaviour
     private Tilemap tilemap;
     private float targetAlpha = 1.0f;
     private float currentAlpha = 1.0f;
+    private float lastAppliedAlpha = float.NaN;
 
     // 接触中カウント（これが超重要）
     private int stayCount = 0;
@@ -28,9 +29,13 @@ public class Transparent : MonoBehaviour
     {
         currentAlpha = Mathf.MoveTowards(currentAlpha, targetAlpha, fadeSpeed * Time.deltaTime);
 
+        // Once the fade has settled, avoid dirtying the Tilemap renderer every frame.
+        if (Mathf.Approximately(currentAlpha, lastAppliedAlpha)) return;
+
         Color color = tilemap.color;
         color.a = currentAlpha;
         tilemap.color = color;
+        lastAppliedAlpha = currentAlpha;
     }
 
     private bool IsTarget(Collider2D collision)

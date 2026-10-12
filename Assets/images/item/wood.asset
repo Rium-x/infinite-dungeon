@@ -15,8 +15,8 @@ MonoBehaviour:
   itemName: "\u6728\u6750"
   icon: {fileID: -3309080738005559460, guid: fd3b85673b8dc49808a08c60f6da1df9, type: 3}
   itemType: 3
-  rarity: 32.7
-  maxDropCount: 10
+  rarity: 35.7
+  maxDropCount: 3
   dropCountProbability:
     serializedVersion: 2
     m_Curve:
@@ -73,6 +73,9 @@ MonoBehaviour:
   visualScale: 3
   equipScale: 2
   canStack: 1
+  maxDurability: 100
+  breakSound: {fileID: 0}
+  consumeOnUse: 1
   maxStackSize: 99
   pickupSound: {fileID: 8300000, guid: 499b41dcf3575477c8b3d953f6677367, type: 3}
   dropSound: {fileID: 8300000, guid: 4222273481a344b0ca2a4d5a19900cbb, type: 3}

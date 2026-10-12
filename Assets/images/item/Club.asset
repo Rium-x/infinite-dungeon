@@ -15,14 +15,14 @@ MonoBehaviour:
   itemName: "\u68CD\u68D2"
   icon: {fileID: -5132751639681083994, guid: 08d2ababdd5ab89429dac24fcd163468, type: 3}
   itemType: 1
-  rarity: 18.3
-  maxDropCount: 1
+  rarity: 50
+  maxDropCount: 10
   dropCountProbability:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0
-      value: 0
+      time: 0.0026779175
+      value: -5.297119
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -39,8 +39,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 2
-      value: -0.02331543
+      time: 1.9545256
+      value: -5.0031495
       inSlope: 0
       outSlope: 0
       tangentMode: 0
@@ -48,8 +48,8 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 10
-      value: 0
+      time: 1.96344
+      value: -14.6345215
       inSlope: 0
       outSlope: 0
       tangentMode: 0

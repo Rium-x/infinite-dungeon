@@ -28,6 +28,10 @@ public sealed class MonsterItemTypeAdjustment
     [Tooltip("この種類の通常ドロップ確率の倍率補正。0=標準、-100=出ない、+100=2倍です。")]
     [FormerlySerializedAs("relativeFrequencyAdjustment")]
     public float modifier;
+
+    [Range(0, 100)]
+    [Tooltip("この種類の通常アイテムが出る最大個数です。")]
+    public int maxDropCount = 100;
 }
 
 /// <summary>The BSP stage order is treated as item probability keyframes.</summary>
@@ -48,8 +52,8 @@ public static class NormalItemDropCalculator
         return items;
     }
 
-    public static float GetStageProbability(IList<StageData> stages, StageData currentStage, int playerLevel,
-        ItemData item, float falloffPerStage, float entryRampStages)
+    public static float GetStageProbability(IList<StageData> stages, StageData currentStage,
+        ItemData item, float falloffPerStage)
     {
         if (stages == null || stages.Count == 0 || item == null) return 0f;
 
@@ -64,10 +68,9 @@ public static class NormalItemDropCalculator
         }
         if (currentStageIndex < 0) return 0f;
 
-        float perLevel = stages[0] != null ? stages[0].playerLevelOrderPerLevel : 0f;
-        float currentOrderPosition = currentStageIndex + 1f + Mathf.Max(0, playerLevel - 1) * perLevel;
+        float currentOrderPosition = currentStageIndex + 1f;
 
-        float firstPosition = 0f, firstValue = 0f;
+        float firstPosition = 0f;
         float previousPosition = 0f, previousValue = 0f;
         float lastPosition = 0f, lastValue = 0f;
         var points = new List<Vector2>();
@@ -88,17 +91,11 @@ public static class NormalItemDropCalculator
 
         points.Sort((a, b) => a.x.CompareTo(b.x));
         firstPosition = points[0].x;
-        firstValue = points[0].y;
         previousPosition = firstPosition;
-        previousValue = firstValue;
+        previousValue = points[0].y;
         lastPosition = points[points.Count - 1].x;
         lastValue = points[points.Count - 1].y;
-        if (currentOrderPosition < firstPosition)
-        {
-            float ramp = Mathf.Max(0.0001f, entryRampStages);
-            float t = Mathf.Clamp01(1f - (firstPosition - currentOrderPosition) / ramp);
-            return firstValue * t;
-        }
+        if (currentOrderPosition < firstPosition) return 0f;
 
         for (int i = 1; i < points.Count; i++)
         {

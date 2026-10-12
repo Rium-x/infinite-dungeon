@@ -67,18 +67,24 @@ MonoBehaviour:
   normalItemTypeAdjustments:
   - itemType: 0
     modifier: 1
+    maxDropCount: 100
   - itemType: 1
-    modifier: -27.9
+    modifier: -47.9
+    maxDropCount: 1
   - itemType: 3
     modifier: 49
+    maxDropCount: 100
   - itemType: 4
-    modifier: -45.7
+    modifier: -53.8
+    maxDropCount: 100
   - itemType: 5
     modifier: 50
+    maxDropCount: 100
   - itemType: 2
-    modifier: 3
+    modifier: 19
+    maxDropCount: 100
   normalDropRatioPercent: 100
-  maxTotalDropCount: 20
+  maxTotalDropCount: 5
   totalDropCountProbability:
     serializedVersion: 2
     m_Curve:
@@ -450,7 +456,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 0.751
       inSlope: 0
       outSlope: 0
       tangentMode: 0

@@ -9,6 +9,7 @@ public static class DungeonGraphMapBuilder
     private const int MaxLayoutRetryDepth = 2;
     private const int MaxMapDimension = 512;
     private const long MaxMapCellCount = (long)MaxMapDimension * MaxMapDimension;
+    private const int MaxWindingWaypointAttempts = 6;
 
     private sealed class PlacedRoom
     {
@@ -792,6 +793,7 @@ public static class DungeonGraphMapBuilder
         int activeRoomCount = rooms.Count;
         int corridorRadius = Mathf.Clamp(corridorWidth, 3, 9) / 2;
         bool failedToConnectGuaranteedRoom = false;
+        List<Vector2Int> corridorCells = GetCorridorCells(corridorCenterline, width, height);
         while (connected.Count < activeRoomCount)
         {
             bool hasUnconnectedGuaranteedRoom = false;
@@ -805,7 +807,6 @@ public static class DungeonGraphMapBuilder
             // Prefer direct branches from nearby existing hallways. Connecting a room
             // to the corridor network spends only that room's selected entrance and avoids
             // using entrances to chain rooms together when a hallway junction is available.
-            List<Vector2Int> corridorCells = GetCorridorCells(corridorCenterline, width, height);
             if (corridorCells.Count > 0)
             {
                 List<int> attachmentOrder = new List<int>();
@@ -873,7 +874,8 @@ public static class DungeonGraphMapBuilder
             {
                 if (!TryConnect(rooms[candidate.roomA], candidate.exitA,
                         rooms[candidate.roomB], candidate.exitB, blocked, roomClearance,
-                        corridorPathBlocked, floor, corridorCenterline, width, height, roomFloor, roomWall, defaultFloor,
+                        corridorPathBlocked, floor, corridorCenterline, corridorCells, width, height,
+                        roomFloor, roomWall, defaultFloor,
                         corridorWidth, maxCorridorTurns, windingChance, random)) continue;
 
                 connected.Add(candidate.roomB);
@@ -937,7 +939,6 @@ public static class DungeonGraphMapBuilder
         {
             if (addedConnections >= maxExtraConnections) break;
             if (random.NextDouble() >= branchChance) continue;
-            List<Vector2Int> corridorCells = GetCorridorCells(corridorCenterline, width, height);
             if (TryConnectRoomToCorridor(rooms[roomIndex], blocked, roomClearance,
                 corridorPathBlocked, floor, corridorCenterline, corridorCells, width, height,
                 roomFloor, roomWall, defaultFloor, corridorWidth, maxCorridorTurns,
@@ -962,8 +963,9 @@ public static class DungeonGraphMapBuilder
             if (random.NextDouble() >= branchChance) continue;
             if (!ChooseExits(rooms[extra.x], rooms[extra.y], out int exitA, out int exitB)) continue;
             if (TryConnect(rooms[extra.x], exitA, rooms[extra.y], exitB,
-                blocked, roomClearance, corridorPathBlocked, floor, corridorCenterline, width, height,
-                roomFloor, roomWall, defaultFloor, corridorWidth, maxCorridorTurns, windingChance, random))
+                blocked, roomClearance, corridorPathBlocked, floor, corridorCenterline, corridorCells,
+                width, height, roomFloor, roomWall, defaultFloor, corridorWidth,
+                maxCorridorTurns, windingChance, random))
                 addedConnections++;
         }
 
@@ -993,7 +995,7 @@ public static class DungeonGraphMapBuilder
 
     private static bool TryConnect(PlacedRoom roomA, int exitA, PlacedRoom roomB, int exitB,
         bool[,] blocked, bool[,] roomClearance, bool[,] corridorPathBlocked, bool[,] floor,
-        bool[,] corridorCenterline,
+        bool[,] corridorCenterline, List<Vector2Int> corridorCells,
         int width, int height, TileBase[,] roomFloor, TileBase[,] roomWall,
         TileBase defaultFloor, int corridorWidth,
         int maxCorridorTurns, float windingChance, System.Random random)
@@ -1021,9 +1023,9 @@ public static class DungeonGraphMapBuilder
             start, roomA.bounds, blocked, roomClearance, defaultFloor, width, height);
         Carve(floor, roomFloor, roomWall, doorB, b.DirectionVector, path, corridorWidth,
             end, roomB.bounds, blocked, roomClearance, defaultFloor, width, height);
-        MarkCorridorCenterline(path, corridorCenterline);
-        MarkDoorwayCenterline(doorA, a.DirectionVector, start, corridorCenterline);
-        MarkDoorwayCenterline(doorB, b.DirectionVector, end, corridorCenterline);
+        MarkCorridorCenterline(path, corridorCenterline, corridorCells);
+        MarkDoorwayCenterline(doorA, a.DirectionVector, start, corridorCenterline, corridorCells);
+        MarkDoorwayCenterline(doorB, b.DirectionVector, end, corridorCenterline, corridorCells);
         MarkCorridorKeepout(path, corridorPathBlocked, corridorWidth, width, height);
         MarkDoorwayKeepout(doorA, a.DirectionVector, start, corridorPathBlocked,
             corridorWidth, width, height);
@@ -1042,6 +1044,7 @@ public static class DungeonGraphMapBuilder
         float windingChance, System.Random random, int maxCandidateAttempts = 128)
     {
         List<CorridorAttachmentCandidate> candidates = new List<CorridorAttachmentCandidate>();
+        int candidateLimit = Mathf.Max(1, maxCandidateAttempts);
         int corridorSize = Mathf.Clamp(corridorWidth, 3, 9);
         for (int exit = 0; exit < room.usedExits.Length; exit++)
         {
@@ -1060,29 +1063,39 @@ public static class DungeonGraphMapBuilder
                     // footprint then meets the existing corridor edge without overlap.
                     Vector2Int target = corridorCell + outward * corridorSize;
                     if (!Inside(target.x, target.y, width, height) ||
-                        target.x == 0 || target.y == 0 || target.x == width - 1 || target.y == height - 1 ||
-                        !CorridorFootprintClearOfRooms(target, corridorSize, roomBlocked,
+                        target.x == 0 || target.y == 0 || target.x == width - 1 || target.y == height - 1)
+                        continue;
+
+                    // Only the cheapest candidates are ever routed below. Once the
+                    // bounded list is full, skip distant cells before the relatively
+                    // expensive footprint checks. This avoids building and sorting a
+                    // potentially huge list for every room attached to the corridor net.
+                    float distanceCost = Mathf.Abs(target.x - (int)room.Center.x) +
+                                         Mathf.Abs(target.y - (int)room.Center.y);
+                    if (candidates.Count == candidateLimit &&
+                        distanceCost > candidates[candidates.Count - 1].cost + 0.1f) continue;
+                    if (!CorridorFootprintClearOfRooms(target, corridorSize, roomBlocked,
                             roomClearance, width, height) ||
                         !CorridorFootprintSeparatedFromFloor(target, corridorSize, floor,
                             width, height, 0)) continue;
-                    float cost = Mathf.Abs(target.x - (int)room.Center.x) +
-                                 Mathf.Abs(target.y - (int)room.Center.y) +
-                                 (float)random.NextDouble() * 0.1f;
-                    candidates.Add(new CorridorAttachmentCandidate
+
+                    CorridorAttachmentCandidate attachment = new CorridorAttachmentCandidate
                     {
                         exit = exit,
                         target = target,
                         endDirection = -outward,
-                        cost = cost
-                    });
+                        cost = distanceCost + (float)random.NextDouble() * 0.1f
+                    };
+                    InsertAttachmentCandidate(candidates, attachment, candidateLimit);
                 }
             }
         }
 
-        candidates.Sort((left, right) => left.cost.CompareTo(right.cost));
-        int candidatesToTry = Mathf.Min(candidates.Count, maxCandidateAttempts);
+        int candidatesToTry = candidates.Count;
         int minimumStraightCells = corridorSize + 1;
-        bool[,] attachmentBlocked = CloneGrid(corridorPathBlocked);
+        // Only the final straight approach is opened temporarily, so reuse the source
+        // grid instead of cloning up to 512x512 cells for every room attachment attempt.
+        bool[,] attachmentBlocked = corridorPathBlocked;
         Vector2Int[] temporarilyOpened = new Vector2Int[minimumStraightCells + 1];
         bool[] previousBlockedState = new bool[minimumStraightCells + 1];
         for (int i = 0; i < candidatesToTry; i++)
@@ -1122,20 +1135,21 @@ public static class DungeonGraphMapBuilder
                     candidate.endDirection, attachmentBlocked, width, height, maxCorridorTurns,
                     windingChance, minimumStraightCells, random)
                 : null;
+            for (int opened = 0; opened < openedCount; opened++)
+            {
+                Vector2Int point = temporarilyOpened[opened];
+                attachmentBlocked[point.x, point.y] = previousBlockedState[opened];
+            }
+
             if (path == null)
             {
-                for (int opened = 0; opened < openedCount; opened++)
-                {
-                    Vector2Int point = temporarilyOpened[opened];
-                    attachmentBlocked[point.x, point.y] = previousBlockedState[opened];
-                }
                 continue;
             }
 
             Carve(floor, roomFloor, roomWall, door, roomExit.DirectionVector, path, corridorWidth,
                 start, room.bounds, roomBlocked, roomClearance, defaultFloor, width, height);
-            MarkCorridorCenterline(path, corridorCenterline);
-            MarkDoorwayCenterline(door, roomExit.DirectionVector, start, corridorCenterline);
+            MarkCorridorCenterline(path, corridorCenterline, corridorCells);
+            MarkDoorwayCenterline(door, roomExit.DirectionVector, start, corridorCenterline, corridorCells);
             MarkCorridorKeepout(path, corridorPathBlocked, corridorWidth, width, height);
             MarkDoorwayKeepout(door, roomExit.DirectionVector, start, corridorPathBlocked,
                 corridorWidth, width, height);
@@ -1143,6 +1157,24 @@ public static class DungeonGraphMapBuilder
             return true;
         }
         return false;
+    }
+
+    private static void InsertAttachmentCandidate(List<CorridorAttachmentCandidate> candidates,
+        CorridorAttachmentCandidate candidate, int limit)
+    {
+        int low = 0;
+        int high = candidates.Count;
+        while (low < high)
+        {
+            int middle = (low + high) >> 1;
+            if (candidates[middle].cost <= candidate.cost) low = middle + 1;
+            else high = middle;
+        }
+
+        if (low >= limit) return;
+        candidates.Insert(low, candidate);
+        if (candidates.Count > limit)
+            candidates.RemoveAt(candidates.Count - 1);
     }
 
     private static bool TryConnectRoomToCorridorAnyExit(PlacedRoom room, bool[,] roomBlocked,
@@ -1249,21 +1281,30 @@ public static class DungeonGraphMapBuilder
         return true;
     }
 
-    private static void MarkCorridorCenterline(List<Vector2Int> path, bool[,] corridorCenterline)
+    private static void MarkCorridorCenterline(List<Vector2Int> path, bool[,] corridorCenterline,
+        List<Vector2Int> corridorCells)
     {
         foreach (Vector2Int point in path)
-            corridorCenterline[point.x, point.y] = true;
+            AddCorridorCell(point, corridorCenterline, corridorCells);
     }
 
     private static void MarkDoorwayCenterline(Vector2Int door, Vector2Int direction,
-        Vector2Int pathEndpoint, bool[,] corridorCenterline)
+        Vector2Int pathEndpoint, bool[,] corridorCenterline, List<Vector2Int> corridorCells)
     {
         int distance = Mathf.Abs(pathEndpoint.x - door.x) + Mathf.Abs(pathEndpoint.y - door.y);
         for (int step = 0; step <= distance; step++)
         {
             Vector2Int point = door + direction * step;
-            corridorCenterline[point.x, point.y] = true;
+            AddCorridorCell(point, corridorCenterline, corridorCells);
         }
+    }
+
+    private static void AddCorridorCell(Vector2Int point, bool[,] corridorCenterline,
+        List<Vector2Int> corridorCells)
+    {
+        if (corridorCenterline[point.x, point.y]) return;
+        corridorCenterline[point.x, point.y] = true;
+        corridorCells.Add(point);
     }
 
     private static Vector2Int FindExitPathStart(Vector2Int door, Vector2Int direction,
@@ -1482,7 +1523,7 @@ public static class DungeonGraphMapBuilder
     private static bool TryBuildWindingPath(Vector2Int start, Vector2Int end, bool[,] blocked,
         int width, int height, System.Random random, out List<Vector2Int> winding)
     {
-        for (int attempt = 0; attempt < 24; attempt++)
+        for (int attempt = 0; attempt < MaxWindingWaypointAttempts; attempt++)
         {
             int minX = Mathf.Min(start.x, end.x), maxX = Mathf.Max(start.x, end.x);
             int minY = Mathf.Min(start.y, end.y), maxY = Mathf.Max(start.y, end.y);

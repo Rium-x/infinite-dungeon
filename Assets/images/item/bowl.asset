@@ -16,7 +16,7 @@ MonoBehaviour:
   icon: {fileID: -8620500895140490796, guid: 7ddbe88bbb5c44bd1bf924899f366570, type: 3}
   itemType: 3
   rarity: 44.9
-  maxDropCount: 10
+  maxDropCount: 1
   dropCountProbability:
     serializedVersion: 2
     m_Curve:
@@ -86,11 +86,33 @@ MonoBehaviour:
   - effectType: 0
     healAmount: 4
     buffData: {fileID: 0}
+    createTemporaryBuff: 0
+    temporaryBuff:
+      buffType: 0
+      buffName: "\u4E00\u6642\u30D0\u30D5"
+      duration: 10
+      isDebuff: 0
+      level: 1
+      healPerTick: 1
+      tickInterval: 1
+      damagePerTick: 1
+      speedMultiplier: 1.5
     randomEffects: []
     replacementItem: {fileID: 0}
   - effectType: 0
     healAmount: 4
     buffData: {fileID: 0}
+    createTemporaryBuff: 0
+    temporaryBuff:
+      buffType: 0
+      buffName: "\u4E00\u6642\u30D0\u30D5"
+      duration: 10
+      isDebuff: 0
+      level: 1
+      healPerTick: 1
+      tickInterval: 1
+      damagePerTick: 1
+      speedMultiplier: 1.5
     randomEffects: []
     replacementItem: {fileID: 0}
   legacyItemEffects: []

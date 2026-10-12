@@ -189,8 +189,22 @@ public class RandomTeleporter : MonoBehaviour
     private List<SpawnCandidate> CollectSpawnCandidates(WaterSpawnPreference preference)
     {
         List<SpawnCandidate> candidates = new List<SpawnCandidate>();
-        Tilemap[] maps = FindObjectsByType<Tilemap>();
-        TerrainMap terrainMap = FindAnyObjectByType<TerrainMap>();
+        BSPDungeonMaster dungeonMaster = FindAnyObjectByType<BSPDungeonMaster>();
+        bool hasDungeonTerrainMaps = dungeonMaster != null &&
+            (dungeonMaster.floorTilemap != null || dungeonMaster.wallTilemap != null);
+        List<Tilemap> maps = new List<Tilemap>();
+        if (hasDungeonTerrainMaps)
+        {
+            if (dungeonMaster.floorTilemap != null) maps.Add(dungeonMaster.floorTilemap);
+            if (dungeonMaster.wallTilemap != null &&
+                dungeonMaster.wallTilemap != dungeonMaster.floorTilemap)
+                maps.Add(dungeonMaster.wallTilemap);
+        }
+        else
+        {
+            maps.AddRange(FindObjectsByType<Tilemap>());
+        }
+
         Vector2 rangeMin = Vector2.Min(minRange, maxRange);
         Vector2 rangeMax = Vector2.Max(minRange, maxRange);
 
@@ -206,8 +220,19 @@ public class RandomTeleporter : MonoBehaviour
                     center.y < rangeMin.y || center.y > rangeMax.y)
                     continue;
 
-                bool isWater = IsWaterTile(tile);
-                bool isLand = !isWater && IsLandPosition(center, map, terrainMap);
+                // Tilemaps can have different Grid transforms or cell sizes. A cell
+                // coordinate belongs to its source Tilemap, so convert the world
+                // position separately for the floor and wall maps before resolving
+                // which terrain occupies the spawn location.
+                TerrainType terrain = hasDungeonTerrainMaps
+                    ? ResolveTerrainAtWorldPosition(dungeonMaster, center)
+                    : TerrainType.Unknown;
+                bool isWater = hasDungeonTerrainMaps
+                    ? terrain == TerrainType.Water
+                    : IsWaterTile(tile);
+                bool isLand = hasDungeonTerrainMaps
+                    ? terrain == TerrainType.Floor
+                    : !isWater && IsLandTile(tile, map);
                 bool matches = preference switch
                 {
                     WaterSpawnPreference.WaterLoving => isWater,
@@ -221,11 +246,42 @@ public class RandomTeleporter : MonoBehaviour
         return candidates;
     }
 
-    private static bool IsLandPosition(Vector3 position, Tilemap sourceMap, TerrainMap terrainMap)
+    private static TerrainType ResolveTerrainAtWorldPosition(BSPDungeonMaster dungeonMaster, Vector3 worldPosition)
     {
-        if (terrainMap != null)
-            return terrainMap.GetTerrainTypeAtWorldPosition(position) == TerrainType.Floor;
+        Vector3Int floorCell = dungeonMaster.floorTilemap != null
+            ? dungeonMaster.floorTilemap.WorldToCell(worldPosition)
+            : Vector3Int.zero;
+        Vector3Int wallCell = dungeonMaster.wallTilemap != null
+            ? dungeonMaster.wallTilemap.WorldToCell(worldPosition)
+            : Vector3Int.zero;
 
+        TileBase wall = dungeonMaster.wallTilemap != null
+            ? dungeonMaster.wallTilemap.GetTile(wallCell)
+            : null;
+        if (wall is TerrainTile typedWall) return typedWall.Type;
+        if (IsWaterTile(wall)) return TerrainType.Water;
+        if (wall != null) return TerrainType.Wall;
+
+        TileBase floor = dungeonMaster.floorTilemap != null
+            ? dungeonMaster.floorTilemap.GetTile(floorCell)
+            : null;
+        if (floor is TerrainTile typedFloor) return typedFloor.Type;
+        if (IsWaterTile(floor)) return TerrainType.Water;
+        if (floor != null) return TerrainType.Floor;
+
+        return TerrainType.Unknown;
+    }
+
+    private static bool IsLandTile(TileBase tile, Tilemap sourceMap)
+    {
+        if (tile is TerrainTile terrainTile)
+            return terrainTile.Type == TerrainType.Floor;
+
+        return IsLandPosition(sourceMap);
+    }
+
+    private static bool IsLandPosition(Tilemap sourceMap)
+    {
         string mapName = sourceMap.name;
         return mapName.IndexOf("ground", StringComparison.OrdinalIgnoreCase) >= 0
             || mapName.IndexOf("floor", StringComparison.OrdinalIgnoreCase) >= 0;

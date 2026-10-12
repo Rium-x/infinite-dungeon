@@ -46,9 +46,9 @@ public class EnemyHealth : MonoBehaviour
     public float normalDropRatioPercent = 50f;
 
     [Header("全体のドロップ個数")]
-    [Min(0), Tooltip("通常ドロップとモンスター固有ドロップを合算した、1体あたりのドロップ個数の上限です。")]
+    [Min(0), Tooltip("通常ドロップとモンスター固有ドロップを合算した個数の抽選設定です。確率に当選した各アイテムの最低1個分は保証されるため、当選アイテム数がこの値を超える場合があります。")]
     public int maxTotalDropCount = 20;
-    [Tooltip("横軸は通常・固有を合算したドロップ個数(0～上限)、縦軸は確率の重みです。整数個数で評価し、合計が100%になるよう正規化して抽選します。候補アイテムが1つも抽選されなかった場合はドロップしません。")]
+    [Tooltip("横軸は通常・固有を合算したドロップ個数(0～上限)、縦軸は確率の重みです。整数個数で評価し、合計が100%になるよう正規化して抽選します。当選アイテムごとの最低1個分を除いた追加個数を抽選します。")]
     public AnimationCurve totalDropCountProbability = new AnimationCurve(
         new Keyframe(0f, 5f), new Keyframe(1f, 25f), new Keyframe(2f, 30f),
         new Keyframe(3f, 20f), new Keyframe(4f, 10f), new Keyframe(5f, 5f), new Keyframe(6f, 0f),
@@ -298,7 +298,6 @@ public class EnemyHealth : MonoBehaviour
     {
         List<ItemData> normalEligibleItems = new List<ItemData>();
         List<ItemData> uniqueEligibleItems = new List<ItemData>();
-        int playerLevel = PlayerHealth.Instance != null ? PlayerHealth.Instance.PlayerLevel : 1;
         StageData stage = BSPDungeonMaster.Instance != null
             ? BSPDungeonMaster.Instance.currentStageData
             : null;
@@ -311,13 +310,13 @@ public class EnemyHealth : MonoBehaviour
                 ? dungeon.GetOrderedStages()
                 : new List<StageData> { stage };
             float falloff = stage.normalItemOrderFalloff;
-            float rampDistance = stage.normalItemEntryRampStages;
             List<ItemData> candidates = NormalItemDropCalculator.GetCandidateItems(stageOrder);
             foreach (ItemData item in candidates)
             {
                 float chance = NormalItemDropCalculator.GetStageProbability(
-                    stageOrder, stage, playerLevel, item, falloff, rampDistance);
-                chance *= GetNormalItemTypeMultiplier(item.itemType);
+                    stageOrder, stage, item, falloff);
+                MonsterItemTypeAdjustment adjustment = GetNormalItemTypeAdjustment(item.itemType);
+                chance *= GetNormalItemTypeMultiplier(adjustment);
                 if (RollDropChance(chance))
                     AddConfiguredItemAmounts(normalEligibleItems, item);
             }
@@ -328,35 +327,101 @@ public class EnemyHealth : MonoBehaviour
         {
             foreach (DropItemSetting setting in dropList)
             {
-                if (setting == null || setting.itemData == null) continue;
+                if (setting == null || setting.itemData == null || setting.maxDropCount <= 0) continue;
                 float chance = Mathf.Clamp(setting.itemData.rarity, 0f, 100f) +
                     Mathf.Clamp(setting.monsterModifier, -100f, 100f);
-                if (RollDropChance(chance))
-                    AddConfiguredItemAmounts(uniqueEligibleItems, setting.itemData);
+                int existingItemCount = CountEligibleItems(uniqueEligibleItems, setting.itemData);
+                int remainingItemCount = Mathf.Max(0, setting.maxDropCount - existingItemCount);
+                if (remainingItemCount > 0 && RollDropChance(chance))
+                    AddItemAmounts(uniqueEligibleItems, setting.itemData,
+                        Mathf.Min(RollDropCount(setting.itemData), remainingItemCount));
             }
         }
 
-        int totalCount = RollTotalDropCount();
         if (normalEligibleItems.Count == 0 && uniqueEligibleItems.Count == 0) return;
+        var guaranteedItems = new HashSet<ItemData>();
+        DropGuaranteedItems(uniqueEligibleItems, guaranteedItems);
+
+        int totalCount = Mathf.Max(0, RollTotalDropCount() - guaranteedItems.Count);
         float normalRatio = Mathf.Clamp(normalDropRatioPercent, 0f, 100f) / 100f;
+        var droppedNormalTypeCounts = new Dictionary<ItemType, int>();
         for (int i = 0; i < totalCount; i++)
         {
+            List<ItemData> selectableNormalItems = GetSelectableNormalItems(
+                normalEligibleItems, droppedNormalTypeCounts);
+            if (selectableNormalItems.Count == 0 && uniqueEligibleItems.Count == 0) break;
+
             List<ItemData> selectedPool;
-            if (normalEligibleItems.Count == 0)
+            if (selectableNormalItems.Count == 0)
                 selectedPool = uniqueEligibleItems;
             else if (uniqueEligibleItems.Count == 0)
-                selectedPool = normalEligibleItems;
+                selectedPool = selectableNormalItems;
             else
-                selectedPool = Random.value < normalRatio ? normalEligibleItems : uniqueEligibleItems;
+                selectedPool = Random.value < normalRatio ? selectableNormalItems : uniqueEligibleItems;
 
-            DropItem(selectedPool[Random.Range(0, selectedPool.Count)]);
+            int selectedIndex = Random.Range(0, selectedPool.Count);
+            ItemData selectedItem = selectedPool[selectedIndex];
+            selectedPool.RemoveAt(selectedIndex);
+            DropItem(selectedItem);
+            if (selectedPool == selectableNormalItems && selectedItem != null)
+            {
+                normalEligibleItems.Remove(selectedItem);
+                droppedNormalTypeCounts.TryGetValue(selectedItem.itemType, out int count);
+                droppedNormalTypeCounts[selectedItem.itemType] = count + 1;
+            }
         }
+    }
+
+    private void DropGuaranteedItems(List<ItemData> eligibleItems, HashSet<ItemData> guaranteedItems)
+    {
+        for (int i = 0; i < eligibleItems.Count;)
+        {
+            ItemData item = eligibleItems[i];
+            if (item == null || !guaranteedItems.Add(item))
+            {
+                i++;
+                continue;
+            }
+
+            eligibleItems.RemoveAt(i);
+            DropItem(item);
+        }
+    }
+
+    private List<ItemData> GetSelectableNormalItems(List<ItemData> eligibleItems,
+        Dictionary<ItemType, int> droppedTypeCounts)
+    {
+        var selectableItems = new List<ItemData>();
+        foreach (ItemData item in eligibleItems)
+        {
+            if (item == null) continue;
+            int maxTypeDropCount = GetNormalItemTypeMaxDropCount(GetNormalItemTypeAdjustment(item.itemType));
+            droppedTypeCounts.TryGetValue(item.itemType, out int droppedCount);
+            if (droppedCount < maxTypeDropCount)
+                selectableItems.Add(item);
+        }
+        return selectableItems;
     }
 
     private static void AddConfiguredItemAmounts(List<ItemData> eligibleItems, ItemData item)
     {
         if (item == null) return;
-        int count = RollDropCount(item);
+        AddItemAmounts(eligibleItems, item, RollDropCount(item));
+    }
+
+    private static int CountEligibleItems(List<ItemData> eligibleItems, ItemData item)
+    {
+        int count = 0;
+        foreach (ItemData eligibleItem in eligibleItems)
+            if (eligibleItem == item)
+                count++;
+        return count;
+    }
+
+    private static void AddItemAmounts(List<ItemData> eligibleItems, ItemData item, int count)
+    {
+        if (item == null) return;
+        count = Mathf.Clamp(count, 0, 100);
         for (int i = 0; i < count; i++)
             eligibleItems.Add(item);
     }
@@ -405,16 +470,28 @@ public class EnemyHealth : MonoBehaviour
         return maxCount;
     }
 
-    private float GetNormalItemTypeMultiplier(ItemType itemType)
+    private MonsterItemTypeAdjustment GetNormalItemTypeAdjustment(ItemType itemType)
     {
-        if (normalItemTypeAdjustments == null) return 1f;
+        if (normalItemTypeAdjustments == null) return null;
         for (int i = 0; i < normalItemTypeAdjustments.Count; i++)
         {
             MonsterItemTypeAdjustment adjustment = normalItemTypeAdjustments[i];
             if (adjustment != null && adjustment.itemType == itemType)
-                return Mathf.Max(0f, 1f + Mathf.Clamp(adjustment.modifier, -100f, 100f) / 100f);
+                return adjustment;
         }
-        return 1f;
+        return null;
+    }
+
+    private static float GetNormalItemTypeMultiplier(MonsterItemTypeAdjustment adjustment)
+    {
+        return adjustment == null
+            ? 1f
+            : Mathf.Max(0f, 1f + Mathf.Clamp(adjustment.modifier, -100f, 100f) / 100f);
+    }
+
+    private static int GetNormalItemTypeMaxDropCount(MonsterItemTypeAdjustment adjustment)
+    {
+        return adjustment != null ? Mathf.Clamp(adjustment.maxDropCount, 0, 100) : 100;
     }
 
     private static bool RollDropChance(float chancePercent)

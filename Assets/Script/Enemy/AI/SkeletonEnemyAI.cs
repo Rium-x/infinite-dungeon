@@ -73,6 +73,8 @@ public class SkeletonEnemyAI : MonoBehaviour
     private Vector2 moveInput;
     private float nextSightCheckTime;
     private float nextMovementDecisionTime;
+    [SerializeField, Min(0.1f)] private float playerSearchInterval = 1f;
+    private float nextPlayerSearchTime;
     private bool canSeePlayer;
 
     void Start()
@@ -82,11 +84,17 @@ public class SkeletonEnemyAI : MonoBehaviour
         moveStats = GetComponentInChildren<MoveStats>(true);
         waterEffect = GetComponentInParent<WaterTerrainEffect>();
         FindPlayer();
+        nextSightCheckTime = Time.time + Random.Range(0f, Mathf.Max(0.02f, sightCheckInterval));
+        scanTimer = Random.Range(0f, Mathf.Max(0.02f, scanInterval));
+        nextSeparationCheckTime = Time.time + Random.Range(0f, Mathf.Max(0.02f, separationCheckInterval));
         Physics2D.queriesStartInColliders = true;
     }
 
     void FindPlayer()
     {
+        if (Time.time < nextPlayerSearchTime) return;
+        nextPlayerSearchTime = Time.time + Mathf.Max(0.1f, playerSearchInterval);
+
         GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
         foreach (GameObject obj in players)
         {
@@ -101,8 +109,6 @@ public class SkeletonEnemyAI : MonoBehaviour
 
     void Update()
     {
-        if (player != null && playerWaterEffect == null)
-            playerWaterEffect = player.GetComponentInParent<WaterTerrainEffect>();
         if (Time.time >= nextSightCheckTime)
         {
             nextSightCheckTime = Time.time + Mathf.Max(0.02f, sightCheckInterval);

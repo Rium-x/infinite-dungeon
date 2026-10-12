@@ -976,10 +976,11 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 392
   sightCheckInterval: 0.15
+  movementDecisionInterval: 0.15
   rayOffset: {x: 0, y: -0.3}
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 4
-  runSpeed: 7
+  runSpeed: 6
   acceleration: 4
   checkRadius: 0.3
   turnAroundWallDistance: 5
@@ -999,6 +1000,7 @@ MonoBehaviour:
   searchTimeout: 1
   alertDuration: 7
   showDebug: 0
+  playerSearchInterval: 1
 --- !u!1 &8567873448345226266
 GameObject:
   m_ObjectHideFlags: 0

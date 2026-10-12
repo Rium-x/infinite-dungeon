@@ -73,19 +73,19 @@ MonoBehaviour:
   itemPrefab: {fileID: 2033152780260422529, guid: 9e7a5ec367f2cbe4a971c0e835f784d1, type: 3}
   normalItemTypeAdjustments:
   - itemType: 0
-    modifier: -9
+    modifier: 5
   - itemType: 1
-    modifier: -31
+    modifier: -35.2
   - itemType: 3
     modifier: 15
   - itemType: 4
     modifier: -49
   - itemType: 5
-    modifier: 25
+    modifier: 58
   - itemType: 2
     modifier: 25
-  normalDropRatioPercent: 50
-  maxTotalDropCount: 20
+  normalDropRatioPercent: 39.1
+  maxTotalDropCount: 2
   totalDropCountProbability:
     serializedVersion: 2
     m_Curve:
@@ -164,7 +164,9 @@ MonoBehaviour:
     m_PreInfinity: 2
     m_PostInfinity: 2
     m_RotationOrder: 4
-  dropList: []
+  dropList:
+  - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
+    monsterModifier: 100
 --- !u!114 &-8113948561719336268
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1315,6 +1317,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 392
   sightCheckInterval: 0.15
+  movementDecisionInterval: 0.15
   rayOffset: {x: 0, y: -0.3}
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 3
@@ -1336,6 +1339,7 @@ MonoBehaviour:
   searchTimeout: 1
   alertDuration: 7
   showDebug: 0
+  playerSearchInterval: 1
 --- !u!114 &1257060512434829963
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1379,6 +1383,7 @@ MonoBehaviour:
   outsideWaterDamagePerSecond: 5
   avoidWater: 0
   cannotLeaveWater: 0
+  individualWaterFadeObjects: []
 --- !u!114 &4739881796721921894
 MonoBehaviour:
   m_ObjectHideFlags: 0

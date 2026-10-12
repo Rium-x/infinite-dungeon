@@ -74,16 +74,22 @@ MonoBehaviour:
   normalItemTypeAdjustments:
   - itemType: 0
     modifier: -9
+    maxDropCount: 100
   - itemType: 1
     modifier: -31
+    maxDropCount: 1
   - itemType: 3
     modifier: 15
+    maxDropCount: 100
   - itemType: 4
     modifier: -49
+    maxDropCount: 100
   - itemType: 5
     modifier: 25
+    maxDropCount: 100
   - itemType: 2
     modifier: 25
+    maxDropCount: 100
   normalDropRatioPercent: 50
   maxTotalDropCount: 20
   totalDropCountProbability:
@@ -166,6 +172,7 @@ MonoBehaviour:
     m_RotationOrder: 4
   dropList:
   - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
+    maxDropCount: 100
     monsterModifier: -6
 --- !u!114 &-5732425892869942870
 MonoBehaviour:
