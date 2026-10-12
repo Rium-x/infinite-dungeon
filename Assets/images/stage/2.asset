@@ -27,7 +27,7 @@ MonoBehaviour:
     - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
       stageModifier: 4.3
     - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
-      stageModifier: 0
+      stageModifier: 26.5
     - itemData: {fileID: 11400000, guid: e73f5fc267ddd4c20acc51f649e75e75, type: 2}
       stageModifier: 16.2
     - itemData: {fileID: 11400000, guid: c578fd8f94c8ef24a9a18af02b1fc089, type: 2}
@@ -47,7 +47,7 @@ MonoBehaviour:
     - itemData: {fileID: 11400000, guid: 65b86dfb435a8444193b336181774ce5, type: 2}
       stageModifier: 0
     - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
-      stageModifier: 37.6
+      stageModifier: 34.2
   randomPlayerSpawn: 1
   playerSpawnPosition: {x: 0, y: 0}
   manualMapPrefab: {fileID: 0}

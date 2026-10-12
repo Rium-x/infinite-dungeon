@@ -87,7 +87,7 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(float damage, bool fromPlayer)
     {
-        if (!this.enabled || isDying) return;
+        if (!this.enabled || isDying || IsGhostIntangible()) return;
 
         killedByPlayer = fromPlayer;
         currentHealth -= damage;
@@ -112,7 +112,7 @@ public class EnemyHealth : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        if (!this.enabled || isDying) return;
+        if (!this.enabled || isDying || IsGhostIntangible()) return;
 
         currentHealth -= damage;
 
@@ -132,6 +132,13 @@ public class EnemyHealth : MonoBehaviour
 
         if (currentHealth <= 0)
             Die();
+    }
+
+    private bool IsGhostIntangible()
+    {
+        GhostEnemyAI ghost = GetComponent<GhostEnemyAI>();
+        if (ghost == null) ghost = GetComponentInChildren<GhostEnemyAI>(true);
+        return ghost != null && !ghost.CanReceiveDamage;
     }
 
     private IEnumerator AutoHealRoutine()
@@ -154,12 +161,22 @@ public class EnemyHealth : MonoBehaviour
         isFlashing = true;
 
         foreach (SpriteRenderer r in allRenderers)
-            if (r != null) r.color = damageColor;
+        {
+            if (r == null) continue;
+            Color flash = damageColor;
+            flash.a = r.color.a;
+            r.color = flash;
+        }
 
         yield return new WaitForSeconds(flashDuration);
 
         foreach (SpriteRenderer r in allRenderers)
-            if (r != null) r.color = Color.white;
+        {
+            if (r == null) continue;
+            Color restored = Color.white;
+            restored.a = r.color.a;
+            r.color = restored;
+        }
 
         isFlashing = false;
     }
@@ -180,6 +197,10 @@ public class EnemyHealth : MonoBehaviour
             if (col != null)
                 col.enabled = false;
         }
+
+        GhostEnemyAI ghost = GetComponent<GhostEnemyAI>();
+        if (ghost == null) ghost = GetComponentInChildren<GhostEnemyAI>(true);
+        if (ghost != null) ghost.enabled = false;
 
         DropConfiguredLoot();
 

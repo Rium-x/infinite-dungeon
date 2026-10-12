@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4ff71bbe6d35d6245b7b983d5628737c, type: 3}
   m_Name: 3
   m_EditorClassIdentifier: Assembly-CSharp::StageData
-  stageName: "Goblin's lair \\n (\u30B4\u30D6\u30EA\u30F3\u306E\u305D\u3046\u304F\u3064)"
+  stageName: "It Doesn't Say R.I.P! \\n (\u30B9\u30B1\u30EB\u30C8\u30F3\u5927\u6226\u4E89\uFF01)\u3000"
   requiredExplorationValue: 200
   playerLightRadiusPercent: 50
   normalItemOrderFalloff: 0.5

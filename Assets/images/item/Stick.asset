@@ -15,7 +15,7 @@ MonoBehaviour:
   itemName: "\u68D2"
   icon: {fileID: 7353294426574453240, guid: e358ed7bde62fd84b8295cab681fe291, type: 3}
   itemType: 1
-  rarity: 50
+  rarity: 60.7
   maxDropCount: 10
   dropCountProbability:
     serializedVersion: 2

@@ -15,25 +15,25 @@ MonoBehaviour:
   stageName: "\u68EE"
   requiredExplorationValue: 100
   playerLightRadiusPercent: 100
-  normalItemOrderFalloff: 0.613
+  normalItemOrderFalloff: 0.81
   normalItemDrops:
     items:
     - itemData: {fileID: 11400000, guid: 065895ca1990c43ab8e145b92a4ffa08, type: 2}
       stageModifier: 23.1
     - itemData: {fileID: 11400000, guid: 595b5e264859043d1a62824469565d6c, type: 2}
-      stageModifier: 20.5
+      stageModifier: 32.5
     - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
-      stageModifier: 37.6
+      stageModifier: 55.6
     - itemData: {fileID: 11400000, guid: bcdb77378297fbc4885d775f32b087a4, type: 2}
-      stageModifier: 50.4
+      stageModifier: 58.1
     - itemData: {fileID: 11400000, guid: 84dc4fff665129444abb4ad97e049461, type: 2}
-      stageModifier: 61.5
+      stageModifier: 68.4
     - itemData: {fileID: 11400000, guid: c578fd8f94c8ef24a9a18af02b1fc089, type: 2}
-      stageModifier: 50.4
+      stageModifier: 60.7
     - itemData: {fileID: 11400000, guid: b51786d276e1542bcb818eb33d2d6dbb, type: 2}
-      stageModifier: 67.5
+      stageModifier: 86.3
     - itemData: {fileID: 11400000, guid: 888cf211361fbbc43a045b2e99125cff, type: 2}
-      stageModifier: 0
+      stageModifier: 53
   randomPlayerSpawn: 1
   playerSpawnPosition: {x: 0, y: 0}
   manualMapPrefab: {fileID: 0}

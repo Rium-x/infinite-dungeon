@@ -15,19 +15,19 @@ MonoBehaviour:
   stageName: "Ancient Entrance \\n (\u907A\u8DE1\u306E\u5165\u308A\u53E3)"
   requiredExplorationValue: 100
   playerLightRadiusPercent: 100
-  normalItemOrderFalloff: 0.692
+  normalItemOrderFalloff: 0.759
   normalItemDrops:
     items:
     - itemData: {fileID: 11400000, guid: c573c7be79f06a444b5aa5cebf2b259f, type: 2}
-      stageModifier: -6.8
+      stageModifier: -0.9
     - itemData: {fileID: 11400000, guid: 595b5e264859043d1a62824469565d6c, type: 2}
-      stageModifier: -8.5
+      stageModifier: 1.7
     - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
       stageModifier: 18.8
     - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
       stageModifier: 22.2
     - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
-      stageModifier: 25
+      stageModifier: 19.7
     - itemData: {fileID: 11400000, guid: e73f5fc267ddd4c20acc51f649e75e75, type: 2}
       stageModifier: 18.8
     - itemData: {fileID: 11400000, guid: f3ba201c547854aeebcbd4efb1acb9c7, type: 2}
@@ -35,7 +35,7 @@ MonoBehaviour:
     - itemData: {fileID: 11400000, guid: 9f186eba8c3ae4722af2622b2ec53165, type: 2}
       stageModifier: -37.6
     - itemData: {fileID: 11400000, guid: d0467b1e7da534fdb8b7bbc263162f4a, type: 2}
-      stageModifier: -9.4
+      stageModifier: -19.7
     - itemData: {fileID: 11400000, guid: 96c9cdaa624ea41438bcb3adf3f785d5, type: 2}
       stageModifier: -0.9
   randomPlayerSpawn: 1
