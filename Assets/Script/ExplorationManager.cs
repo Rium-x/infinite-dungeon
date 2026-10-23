@@ -37,6 +37,8 @@ public class ExplorationManager : MonoBehaviour
     }
 
     private float nextLightRetryTime;
+    private Transform cachedPlayerHb;
+    private Light2D[] cachedPlayerLights;
 
     public void ApplyStageLightRadius()
     {
@@ -51,11 +53,10 @@ public class ExplorationManager : MonoBehaviour
         }
 
         float scale = currentStage.GetPlayerLightRadiusScale();
-        Light2D[] lights = hb.GetComponentsInChildren<Light2D>(true);
-        if (lights == null || lights.Length == 0)
-        {
-            lights = FindSceneLightsUnderHb(hb);
-        }
+        Light2D[] lights = cachedPlayerLights;
+        if (lights == null || lights.Length == 0 || cachedPlayerHb != hb)
+            lights = cachedPlayerLights = hb.GetComponentsInChildren<Light2D>(true);
+        cachedPlayerHb = hb;
 
         if (lights == null || lights.Length == 0)
         {
@@ -83,7 +84,8 @@ public class ExplorationManager : MonoBehaviour
         if (currentStage == null)
             return;
 
-        if (Time.unscaledTime >= nextLightRetryTime)
+        if ((cachedPlayerHb == null || cachedPlayerLights == null || cachedPlayerLights.Length == 0) &&
+            Time.unscaledTime >= nextLightRetryTime)
         {
             ApplyStageLightRadius();
             nextLightRetryTime = Time.unscaledTime + 0.25f;
@@ -96,16 +98,6 @@ public class ExplorationManager : MonoBehaviour
         foreach (GameObject candidate in players)
         {
             if (candidate == null)
-                continue;
-
-            Transform hb = GetPlayerHbTransform(candidate.transform);
-            if (hb != null)
-                return hb;
-        }
-
-        foreach (GameObject candidate in Resources.FindObjectsOfTypeAll<GameObject>())
-        {
-            if (candidate == null || candidate.hideFlags == HideFlags.NotEditable || candidate.hideFlags == HideFlags.HideAndDontSave)
                 continue;
 
             Transform hb = GetPlayerHbTransform(candidate.transform);
@@ -135,26 +127,6 @@ public class ExplorationManager : MonoBehaviour
         }
 
         return null;
-    }
-
-    private static Light2D[] FindSceneLightsUnderHb(Transform hb)
-    {
-        if (hb == null)
-            return null;
-
-        List<Light2D> matches = new List<Light2D>();
-        Light2D[] allLights = Resources.FindObjectsOfTypeAll<Light2D>();
-        foreach (Light2D light in allLights)
-        {
-            if (light == null)
-                continue;
-
-            Transform lightTransform = light.transform;
-            if (lightTransform == hb || lightTransform.IsChildOf(hb))
-                matches.Add(light);
-        }
-
-        return matches.ToArray();
     }
 
     public void AddProgress(int value)

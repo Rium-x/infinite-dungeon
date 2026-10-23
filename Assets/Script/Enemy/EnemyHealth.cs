@@ -65,6 +65,8 @@ public class EnemyHealth : MonoBehaviour
     private bool killedByPlayer = false;
     private CharacterSorting characterSorting;
 
+    public float HealthRatio => maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
+
     public event Action OnDestroyed;
 
     void Start()

@@ -16,6 +16,7 @@ public class TemporaryBuffSettings
 {
     public TemporaryBuffType buffType;
     public string buffName = "一時バフ";
+    public Sprite icon;
     [Min(0f)] public float duration = 10f;
     public bool isDebuff;
     [Min(1)] public int level = 1;
@@ -36,6 +37,7 @@ public class TemporaryBuffSettings
         }
         data.name = buffName;
         data.buffName = buffName;
+        data.icon = icon;
         data.duration = duration;
         data.isDebuff = isDebuff;
         data.level = level;

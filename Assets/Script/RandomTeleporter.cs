@@ -7,6 +7,15 @@ using UnityEngine.Tilemaps;
 
 public class RandomTeleporter : MonoBehaviour
 {
+    private sealed class CandidateCacheEntry
+    {
+        public BSPDungeonMaster dungeonMaster;
+        public int generation;
+        public Vector2 min;
+        public Vector2 max;
+        public List<SpawnCandidate> candidates;
+    }
+
     private struct SpawnCandidate
     {
         public Vector2 position;
@@ -40,6 +49,8 @@ public class RandomTeleporter : MonoBehaviour
     private List<BoxCollider2D> targetColliders = new List<BoxCollider2D>();
     private List<CanvasGroup> targetCanvasGroups = new List<CanvasGroup>();
     private List<MonoBehaviour> targetHealths = new List<MonoBehaviour>();
+    private static readonly Dictionary<WaterSpawnPreference, CandidateCacheEntry> candidateCache = new();
+    private readonly Collider2D[] overlapBuffer = new Collider2D[64];
     
     private Rigidbody2D rb;
     private bool isTeleporting = false;
@@ -115,18 +126,17 @@ public class RandomTeleporter : MonoBehaviour
 
     public bool TryTeleportToRandomPosition(WaterSpawnPreference preference, out bool hasPreferredTerrain)
     {
-        List<SpawnCandidate> candidates = CollectSpawnCandidates(preference);
+        List<SpawnCandidate> candidates = GetSpawnCandidates(preference);
         hasPreferredTerrain = candidates.Count > 0;
         if (!hasPreferredTerrain) return false;
 
         // タイル候補から無作為に選び、壁や敵の近くを避けます。
         int attempts = Mathf.Min(candidates.Count, 500);
+        int startIndex = UnityEngine.Random.Range(0, candidates.Count);
         for (int i = 0; i < attempts; i++)
         {
-            int index = UnityEngine.Random.Range(0, candidates.Count);
+            int index = (startIndex + i) % candidates.Count;
             SpawnCandidate spawnCandidate = candidates[index];
-            candidates[index] = candidates[candidates.Count - 1];
-            candidates.RemoveAt(candidates.Count - 1);
 
             Vector2 candidate = spawnCandidate.position;
             if (IsBlockedByWall(candidate, spawnCandidate.isWater)) continue;
@@ -142,9 +152,14 @@ public class RandomTeleporter : MonoBehaviour
 
     private bool IsBlockedByWall(Vector2 position, bool isWater)
     {
-        Collider2D[] overlaps = Physics2D.OverlapBoxAll(position, checkSize, 0f, wallLayer);
-        foreach (Collider2D overlap in overlaps)
+        ContactFilter2D wallFilter = new ContactFilter2D();
+        wallFilter.SetLayerMask(wallLayer);
+        wallFilter.useTriggers = Physics2D.queriesHitTriggers;
+        int overlapCount = Physics2D.OverlapBox(position, checkSize, 0f, wallFilter, overlapBuffer);
+        for (int i = 0; i < overlapCount; i++)
         {
+            Collider2D overlap = overlapBuffer[i];
+            if (overlap == null) continue;
             if (isWater)
             {
                 TilemapCollider2D tilemapCollider = overlap.GetComponent<TilemapCollider2D>();
@@ -186,10 +201,32 @@ public class RandomTeleporter : MonoBehaviour
         return false;
     }
 
-    private List<SpawnCandidate> CollectSpawnCandidates(WaterSpawnPreference preference)
+    private List<SpawnCandidate> GetSpawnCandidates(WaterSpawnPreference preference)
+    {
+        BSPDungeonMaster master = FindAnyObjectByType<BSPDungeonMaster>();
+        Vector2 rangeMin = Vector2.Min(minRange, maxRange);
+        Vector2 rangeMax = Vector2.Max(minRange, maxRange);
+        int generation = master != null ? BSPDungeonMaster.GenerationVersion : 0;
+        if (candidateCache.TryGetValue(preference, out CandidateCacheEntry cached) &&
+            cached.dungeonMaster == master && cached.generation == generation &&
+            cached.min.Equals(rangeMin) && cached.max.Equals(rangeMax))
+            return cached.candidates;
+
+        List<SpawnCandidate> candidates = CollectSpawnCandidates(preference, master);
+        candidateCache[preference] = new CandidateCacheEntry
+        {
+            dungeonMaster = master,
+            generation = generation,
+            min = rangeMin,
+            max = rangeMax,
+            candidates = candidates
+        };
+        return candidates;
+    }
+
+    private List<SpawnCandidate> CollectSpawnCandidates(WaterSpawnPreference preference, BSPDungeonMaster dungeonMaster)
     {
         List<SpawnCandidate> candidates = new List<SpawnCandidate>();
-        BSPDungeonMaster dungeonMaster = FindAnyObjectByType<BSPDungeonMaster>();
         bool hasDungeonTerrainMaps = dungeonMaster != null &&
             (dungeonMaster.floorTilemap != null || dungeonMaster.wallTilemap != null);
         List<Tilemap> maps = new List<Tilemap>();

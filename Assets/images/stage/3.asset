@@ -85,7 +85,7 @@ MonoBehaviour:
     maxSpawnDelay: 20
   - enemyName: Goblin
     prefab: {fileID: 298427082835796845, guid: 8aa4bf6ebfd815446b4c41a2bd2c7887, type: 3}
-    maxCount: 15
+    maxCount: 7
     spawnMode: 0
     startDelay: 40
     minSpawnDelay: 5
@@ -106,7 +106,7 @@ MonoBehaviour:
     maxSpawnDelay: 30
   - enemyName: Slime aaa
     prefab: {fileID: 298427082835796845, guid: 6366fa78279c80e41921db416348ccbf, type: 3}
-    maxCount: 15
+    maxCount: 10
     spawnMode: 0
     startDelay: 0
     minSpawnDelay: 5
@@ -127,36 +127,43 @@ MonoBehaviour:
     maxSpawnDelay: 20
   - enemyName: Goblin aaa
     prefab: {fileID: 298427082835796845, guid: 8aa4bf6ebfd815446b4c41a2bd2c7887, type: 3}
-    maxCount: 15
-    spawnMode: 3
+    maxCount: 7
+    spawnMode: 2
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
   - enemyName: Goblin aaaaaa
     prefab: {fileID: 298427082835796845, guid: 95248f27357c5594fac2432a9ac03fff, type: 3}
     maxCount: 25
-    spawnMode: 0
+    spawnMode: 3
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
   - enemyName: 4444
     prefab: {fileID: 298427082835796845, guid: 6366fa78279c80e41921db416348ccbf, type: 3}
     maxCount: 5
-    spawnMode: 2
+    spawnMode: 3
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 20
+  - enemyName: 444411351
+    prefab: {fileID: 298427082835796845, guid: 9a5f4a966518f485896c48913053f8b9, type: 3}
+    maxCount: 42
+    spawnMode: 3
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
   - enemyName: 444411351
     prefab: {fileID: 298427082835796845, guid: 83ca86b9513906e4ebf4ad89149f9936, type: 3}
     maxCount: 25
-    spawnMode: 0
+    spawnMode: 3
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
   - enemyName: 444411351
-    prefab: {fileID: 298427082835796845, guid: 83ca86b9513906e4ebf4ad89149f9936, type: 3}
-    maxCount: 30
-    spawnMode: 2
+    prefab: {fileID: 298427082835796845, guid: 7ab6057feea444ef0ba46b5f2cea5a5a, type: 3}
+    maxCount: 3
+    spawnMode: 3
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20

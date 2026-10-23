@@ -415,11 +415,9 @@ public class BSPDungeonMaster : MonoBehaviour
             Tilemap destination = IsTrapMap(sourceTilemap) ? trapTilemap :
                 IsFloorMap(sourceTilemap) ? floorTilemap : wallTilemap;
             if (destination == null) continue;
-            foreach (Vector3Int cell in sourceTilemap.cellBounds.allPositionsWithin)
-            {
-                TileBase tile = sourceTilemap.GetTile(cell);
-                if (tile != null) destination.SetTile(cell, tile);
-            }
+            BoundsInt bounds = sourceTilemap.cellBounds;
+            if (bounds.size.x <= 0 || bounds.size.y <= 0 || bounds.size.z <= 0) continue;
+            destination.SetTilesBlock(bounds, sourceTilemap.GetTilesBlock(bounds));
         }
 
         ExtractManualObjects(mapInstance);

@@ -69,13 +69,13 @@ MonoBehaviour:
     modifier: 1
     maxDropCount: 100
   - itemType: 1
-    modifier: -47.9
+    modifier: -64.1
     maxDropCount: 1
   - itemType: 3
     modifier: 49
     maxDropCount: 100
   - itemType: 4
-    modifier: -53.8
+    modifier: -59.8
     maxDropCount: 100
   - itemType: 5
     modifier: 50

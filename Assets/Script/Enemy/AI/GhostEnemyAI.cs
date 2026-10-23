@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Tilemaps;
 
 /// <summary>
 /// Ghost behavior: stalk the player, reveal an attack tell, strike, then recover.
@@ -54,13 +55,24 @@ public class GhostEnemyAI : MonoBehaviour
     [SerializeField, Range(0f, 1f)] private float alphaAtTransparentDistance = 0f;
     [SerializeField, Min(0.01f)] private float alphaSmoothTime = 0.35f;
     [SerializeField, Range(0f, 1f)] private float damageImmunityAlphaThreshold = 0.15f;
+    [Tooltip("無敵になる透明度より少し薄い位置を目標にします。")]
+    [SerializeField, Range(0f, 0.25f)] private float immunitySafetyMargin = 0.05f;
+    [SerializeField, Min(0f)] private float safeDistanceTolerance = 0.15f;
+
+    [Header("マップ境界")]
+    [SerializeField, Min(0f)] private float mapEdgePadding = 0.5f;
 
     [Header("近距離デバフ")]
     [SerializeField, Min(0f)] private float slowDebuffRange = 2.5f;
     [SerializeField, Range(0.05f, 1f)] private float slowSpeedMultiplier = 0.7f;
     [SerializeField, Min(0.1f)] private float slowDebuffDuration = 1.5f;
+    [SerializeField] private string slowDebuffName = "幽霊の冷気";
+    [SerializeField] private Sprite slowDebuffIcon;
 
     private Rigidbody2D body;
+    private BSPDungeonMaster dungeonMaster;
+    private Bounds movementBounds;
+    private bool hasMovementBounds;
     private Transform player;
     private EnemyAttack[] attacks;
     private float[] alphaVelocities;
@@ -79,6 +91,7 @@ public class GhostEnemyAI : MonoBehaviour
     private void Awake()
     {
         body = GetComponent<Rigidbody2D>();
+        dungeonMaster = FindAnyObjectByType<BSPDungeonMaster>();
         attacks = GetComponentsInChildren<EnemyAttack>(true);
         SetAttacksEnabled(false);
         alphaVelocities = ghostVisuals != null ? new float[ghostVisuals.Length] : System.Array.Empty<float>();
@@ -87,8 +100,19 @@ public class GhostEnemyAI : MonoBehaviour
         wanderDirectionTimer = Random.Range(1.5f, 3f);
     }
 
+    private void OnEnable()
+    {
+        BSPDungeonMaster.OnGenerationComplete += RefreshMovementBounds;
+    }
+
+    private void Start()
+    {
+        RefreshMovementBounds();
+    }
+
     private void OnDisable()
     {
+        BSPDungeonMaster.OnGenerationComplete -= RefreshMovementBounds;
         if (body != null) body.linearVelocity = Vector2.zero;
         SetAttacksEnabled(false);
     }
@@ -117,7 +141,7 @@ public class GhostEnemyAI : MonoBehaviour
                     if (Vector2.Distance(body.position, lastKnownPlayerPosition) <= attackRange && Time.time >= nextAttackTime)
                         ChangeState(State.Materialize);
                 }
-                else ChangeState(State.Search);
+                else if (!NeedsSafetyRepositioning()) ChangeState(State.Search);
                 break;
             case State.Materialize:
                 stateTimer -= Time.deltaTime;
@@ -153,11 +177,23 @@ public class GhostEnemyAI : MonoBehaviour
                 desiredVelocity = Steer(moveDirection) * wanderSpeed;
                 break;
             case State.Stalk:
-                if (canSeePlayer && player != null)
+                if (player != null && player.gameObject.activeInHierarchy)
                 {
-                    Vector2 toPlayer = ((Vector2)player.position + playerOffset - body.position).normalized;
-                    moveDirection = Steer(toPlayer);
-                    desiredVelocity = moveDirection * stalkSpeed;
+                    Vector2 toPlayerVector = (Vector2)player.position - body.position;
+                    float distanceToPlayer = toPlayerVector.magnitude;
+                    float preferredDistance = GetDamageSafeDistance();
+                    // Safe-distance repositioning uses a direct vector. Physical collision settings
+                    // decide whether walls block it; AI obstacle casts are intentionally bypassed.
+                    if (distanceToPlayer > preferredDistance + safeDistanceTolerance)
+                    {
+                        moveDirection = toPlayerVector.normalized;
+                        desiredVelocity = moveDirection * stalkSpeed;
+                    }
+                    else if (distanceToPlayer < preferredDistance - safeDistanceTolerance)
+                    {
+                        moveDirection = -toPlayerVector.normalized;
+                        desiredVelocity = moveDirection * stalkSpeed;
+                    }
                 }
                 else if (Vector2.Distance(body.position, lastKnownPlayerPosition) > 0.3f)
                     desiredVelocity = Steer(lastKnownPlayerPosition - body.position) * stalkSpeed;
@@ -176,7 +212,84 @@ public class GhostEnemyAI : MonoBehaviour
                 break;
         }
 
-        body.linearVelocity = Vector2.MoveTowards(body.linearVelocity, desiredVelocity, acceleration * Time.fixedDeltaTime);
+        Vector2 velocity = Vector2.MoveTowards(body.linearVelocity, desiredVelocity, acceleration * Time.fixedDeltaTime);
+        if (hasMovementBounds)
+        {
+            Vector2 currentPosition = body.position;
+            Vector2 boundedCurrent = ClampToMovementBounds(currentPosition);
+            if ((boundedCurrent - currentPosition).sqrMagnitude > 0.0001f)
+            {
+                body.position = boundedCurrent;
+                currentPosition = boundedCurrent;
+            }
+
+            float fixedDelta = Time.fixedDeltaTime;
+            if (fixedDelta > 0f)
+            {
+                Vector2 nextPosition = ClampToMovementBounds(currentPosition + velocity * fixedDelta);
+                velocity = (nextPosition - currentPosition) / fixedDelta;
+            }
+        }
+        body.linearVelocity = velocity;
+    }
+
+    private void RefreshMovementBounds()
+    {
+        if (dungeonMaster == null)
+            dungeonMaster = FindAnyObjectByType<BSPDungeonMaster>();
+        hasMovementBounds = false;
+        if (dungeonMaster == null) return;
+
+        if (dungeonMaster.IsUsingManualMap && TryGetManualMapBounds(out Bounds manualBounds))
+        {
+            movementBounds = manualBounds;
+            hasMovementBounds = true;
+            return;
+        }
+
+        dungeonMaster.GetEnemySpawnRange(out Vector2 min, out Vector2 max);
+        movementBounds = new Bounds((min + max) * 0.5f, max - min);
+        hasMovementBounds = true;
+    }
+
+    private bool TryGetManualMapBounds(out Bounds bounds)
+    {
+        bounds = default;
+        Tilemap map = dungeonMaster.floorTilemap;
+        if (map == null || map.GetUsedTilesCount() == 0)
+            map = dungeonMaster.wallTilemap != null && dungeonMaster.wallTilemap.GetUsedTilesCount() > 0
+                ? dungeonMaster.wallTilemap
+                : dungeonMaster.tilemap;
+        if (map == null || map.GetUsedTilesCount() == 0) return false;
+
+        BoundsInt cells = map.cellBounds;
+        Vector3[] corners =
+        {
+            map.CellToWorld(new Vector3Int(cells.xMin, cells.yMin, 0)),
+            map.CellToWorld(new Vector3Int(cells.xMax, cells.yMin, 0)),
+            map.CellToWorld(new Vector3Int(cells.xMin, cells.yMax, 0)),
+            map.CellToWorld(new Vector3Int(cells.xMax, cells.yMax, 0))
+        };
+        Vector3 min = corners[0];
+        Vector3 max = corners[0];
+        for (int i = 1; i < corners.Length; i++)
+        {
+            min = Vector3.Min(min, corners[i]);
+            max = Vector3.Max(max, corners[i]);
+        }
+        bounds = new Bounds((min + max) * 0.5f, max - min);
+        return true;
+    }
+
+    private Vector2 ClampToMovementBounds(Vector2 position)
+    {
+        Vector3 min3 = movementBounds.min;
+        Vector3 max3 = movementBounds.max;
+        Vector2 min = new Vector2(min3.x + mapEdgePadding, min3.y + mapEdgePadding);
+        Vector2 max = new Vector2(max3.x - mapEdgePadding, max3.y - mapEdgePadding);
+        if (min.x > max.x) min.x = max.x = movementBounds.center.x;
+        if (min.y > max.y) min.y = max.y = movementBounds.center.y;
+        return new Vector2(Mathf.Clamp(position.x, min.x, max.x), Mathf.Clamp(position.y, min.y, max.y));
     }
 
     private void FindPlayerIfNeeded()
@@ -200,15 +313,8 @@ public class GhostEnemyAI : MonoBehaviour
         Vector2 origin = body.position + eyeOffset;
         Vector2 target = (Vector2)player.position + playerOffset;
         Vector2 delta = target - origin;
-        if (delta.sqrMagnitude > detectRange * detectRange) return false;
-        if (delta.sqrMagnitude <= 0.0001f) return true;
-        RaycastHit2D hit = Physics2D.CircleCast(origin, obstacleCheckRadius, delta.normalized,
-            delta.magnitude, obstacleMask);
-        return hit.collider == null
-            || hit.collider.CompareTag("Player")
-            || hit.collider.transform == player
-            || hit.collider.transform.IsChildOf(player)
-            || player.IsChildOf(hit.collider.transform);
+        // Ghost detection is range-based and intentionally ignores walls.
+        return delta.sqrMagnitude <= detectRange * detectRange;
     }
 
     private void UpdateWander()
@@ -328,7 +434,8 @@ public class GhostEnemyAI : MonoBehaviour
             return;
 
         GhostProximitySlowBuffData debuff = ScriptableObject.CreateInstance<GhostProximitySlowBuffData>();
-        debuff.buffName = "幽霊の冷気";
+        debuff.buffName = slowDebuffName;
+        debuff.icon = slowDebuffIcon;
         debuff.duration = slowDebuffDuration;
         debuff.isDebuff = true;
         debuff.level = 1;
@@ -342,6 +449,28 @@ public class GhostEnemyAI : MonoBehaviour
         foreach (BuffInstance buff in buffController.GetBuffs())
             if (buff != null && buff.Data is GhostProximitySlowBuffData) return true;
         return false;
+    }
+
+    private bool NeedsSafetyRepositioning()
+    {
+        if (player == null || !player.gameObject.activeInHierarchy) return false;
+        float distance = Vector2.Distance(body.position, player.position);
+        float preferredDistance = GetDamageSafeDistance();
+        return distance > preferredDistance + safeDistanceTolerance
+            || distance < preferredDistance - safeDistanceTolerance;
+    }
+
+    private float GetDamageSafeDistance()
+    {
+        float nearVisibleDistance = Mathf.Min(fullyTransparentDistance, fadeStartDistance);
+        float farTransparentDistance = Mathf.Max(fullyTransparentDistance, fadeStartDistance);
+        float targetAlpha = Mathf.Clamp01(damageImmunityAlphaThreshold - immunitySafetyMargin);
+        float alphaRange = 1f - alphaAtTransparentDistance;
+        if (alphaRange <= 0.0001f || targetAlpha >= 1f)
+            return farTransparentDistance;
+
+        float t = Mathf.Clamp01((1f - targetAlpha) / alphaRange);
+        return Mathf.Lerp(nearVisibleDistance, farTransparentDistance, t);
     }
 
     private void SetTargetAlpha(float targetAlpha)

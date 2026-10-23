@@ -36,6 +36,7 @@ public class TemporaryBuffSettingsDrawer : PropertyDrawer
         {
             buffType,
             property.FindPropertyRelative("buffName"),
+            property.FindPropertyRelative("icon"),
             property.FindPropertyRelative("duration"),
             property.FindPropertyRelative("isDebuff"),
             property.FindPropertyRelative("level")

@@ -27,7 +27,7 @@ MonoBehaviour:
     - itemData: {fileID: 11400000, guid: 74e708dda83deed46bf43b6eecf35f76, type: 2}
       stageModifier: 22.2
     - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
-      stageModifier: 19.7
+      stageModifier: 12.8
     - itemData: {fileID: 11400000, guid: e73f5fc267ddd4c20acc51f649e75e75, type: 2}
       stageModifier: 18.8
     - itemData: {fileID: 11400000, guid: f3ba201c547854aeebcbd4efb1acb9c7, type: 2}
@@ -89,7 +89,7 @@ MonoBehaviour:
   - enemyName: Slime aaa
     prefab: {fileID: 298427082835796845, guid: e3a1c42963b3b284dbb370b274fb5736, type: 3}
     maxCount: 30
-    spawnMode: 0
+    spawnMode: 2
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 30

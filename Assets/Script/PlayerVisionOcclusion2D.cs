@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public sealed class PlayerVisionOcclusion2D : MonoBehaviour
+public sealed class  PlayerVisionOcclusion2D: MonoBehaviour
 {
     public enum OcclusionMode
     {
@@ -49,19 +49,6 @@ public sealed class PlayerVisionOcclusion2D : MonoBehaviour
     private MaterialPropertyBlock mpb;
     private Camera mainCamera;
     private static readonly int ColorPropertyId = Shader.PropertyToID("_Color");
-
-    [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
-    private static void CreateAtRuntime()
-    {
-        if (FindAnyObjectByType<PlayerVisionOcclusion2D>() != null)
-        {
-            return;
-        }
-
-        GameObject visionObject = new GameObject("Player Vision Occlusion 2D");
-        DontDestroyOnLoad(visionObject);
-        visionObject.AddComponent<PlayerVisionOcclusion2D>();
-    }
 
     private void Awake()
     {

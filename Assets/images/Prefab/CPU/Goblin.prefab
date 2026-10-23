@@ -145,8 +145,8 @@ MonoBehaviour:
     m_RotationOrder: 4
   dropList:
   - itemData: {fileID: 11400000, guid: a3f9ef86ebfce854498305133641023b, type: 2}
-    maxDropCount: 100
-    monsterModifier: -22
+    maxDropCount: 1
+    monsterModifier: 0
   - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
     maxDropCount: 100
     monsterModifier: 45
@@ -598,7 +598,7 @@ SpriteRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 3
   m_MaskInteraction: 0
-  m_Sprite: {fileID: 21300000, guid: 99fe5ffead1969d4ebc09e3ebda03f87, type: 3}
+  m_Sprite: {fileID: -3037268696539250818, guid: 86f3ac58e07c647129a31be828923a2a, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
   m_FlipX: 0
   m_FlipY: 0
@@ -1216,7 +1216,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentState: 0
-  detectRange: 15
+  detectRange: 20
   detectionMask:
     serializedVersion: 2
     m_Bits: 392
@@ -1226,6 +1226,8 @@ MonoBehaviour:
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 2
   runSpeed: 3
+  fleeHealthPercent: 25
+  fleePlayerDirectionPenalty: 4
   acceleration: 3
   checkRadius: 0.3
   turnAroundWallDistance: 5

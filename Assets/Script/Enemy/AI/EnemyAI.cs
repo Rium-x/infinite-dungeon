@@ -8,8 +8,23 @@ public class EnemyAI : MonoBehaviour
 private MoveStats moveStats;
     private WaterTerrainEffect waterEffect;
     private WaterTerrainEffect playerWaterEffect;
-    enum State { Idle, Chase, Alert, Search }
-    [SerializeField] private State currentState = State.Search;
+    enum State { Wander = 0, Chase = 1, Search = 2, Investigate = 3, Flee = 4 }
+    [SerializeField] private State currentState = State.Investigate;
+    private bool movementPausedByCompanion;
+
+    /// <summary>Companion AIs can observe the base AI state without owning its state machine.</summary>
+    public bool IsWandering => currentState == State.Wander;
+    public bool IsSearching => currentState == State.Search;
+    public bool IsInvestigating => currentState == State.Investigate;
+    public bool IsChasing => currentState == State.Chase;
+    public bool IsFleeing => currentState == State.Flee;
+
+    /// <summary>Temporarily pauses base-AI movement while a companion animation is playing.</summary>
+    public void SetMovementPausedByCompanion(bool paused)
+    {
+        movementPausedByCompanion = paused;
+        if (paused && rb != null) rb.linearVelocity = Vector2.zero;
+    }
 
     [Header("ターゲット設定")]
     private Transform player;
@@ -23,6 +38,10 @@ private MoveStats moveStats;
     [Header("移動設定")]
     [SerializeField] private float walkSpeed = 2.0f;
     [SerializeField] private float runSpeed = 3.0f;
+    [SerializeField, Range(0f, 100f), Tooltip("追跡開始時にこのHP割合以下なら逃げます。")]
+    private float fleeHealthPercent = 15f;
+    [SerializeField, Min(0f), Tooltip("プレイヤー方向に近い進路を避ける強さ。")]
+    private float fleePlayerDirectionPenalty = 2f;
     [SerializeField] private float acceleration = 3.0f;
     [SerializeField] private float checkRadius = 0.3f; 
     [SerializeField] private float turnAroundWallDistance = 5f;
@@ -69,10 +88,16 @@ private MoveStats moveStats;
     [SerializeField, Min(0.1f)] private float playerSearchInterval = 1f;
     private float nextPlayerSearchTime;
     private bool canSeePlayer;
+    private EnemyHealth enemyHealth;
+    [SerializeField, Min(0.1f), Tooltip("逃走判断に使うHP確認の間隔(秒)。")]
+    private float healthCheckInterval = 1f;
+    private float nextHealthCheckTime;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        enemyHealth = GetComponent<EnemyHealth>();
+        if (enemyHealth == null) enemyHealth = GetComponentInParent<EnemyHealth>();
         lastPosition = transform.position;
         moveStats =
         GetComponentInChildren<MoveStats>(true);
@@ -116,10 +141,11 @@ private MoveStats moveStats;
 
         switch (currentState)
         {
-            case State.Idle:   UpdateIdle(canSeePlayer);   break;
+            case State.Wander: UpdateWander(canSeePlayer); break;
             case State.Chase:  UpdateChase(canSeePlayer);  break;
+            case State.Investigate: UpdateInvestigate(canSeePlayer); break;
             case State.Search: UpdateSearch(canSeePlayer); break;
-            case State.Alert:  UpdateAlert(canSeePlayer);  break;
+            case State.Flee:   UpdateFlee(); break;
         }
     }
 
@@ -135,11 +161,11 @@ private MoveStats moveStats;
         return wall.collider != null && !wall.collider.CompareTag("Player") && wall.distance <= turnAroundWallDistance;
     }
 
-    void UpdateIdle(bool canSeePlayer)
+    void UpdateWander(bool canSeePlayer)
     {
         if (player == null || !player.gameObject.activeInHierarchy) FindPlayer();
 
-        if (canSeePlayer) { currentState = State.Chase; return; }
+        if (canSeePlayer) { BeginChase(); return; }
         
         scanTimer -= Time.deltaTime;
         if (scanTimer <= 0)
@@ -153,13 +179,18 @@ private MoveStats moveStats;
     {
         moveInput = GetFarthestDirection();
         if (moveInput != Vector2.zero) lastDirection = moveInput;
-        scanTimer = (currentState == State.Alert) ? fastScanInterval : scanInterval;
+        scanTimer = (currentState == State.Search) ? fastScanInterval : scanInterval;
     }
 
     void UpdateChase(bool canSeePlayer)
     {
+        if (IsHealthCheckDue() && IsBelowFleeHealthThreshold())
+        {
+            StartFlee();
+            return;
+        }
         if (!canSeePlayer) { 
-            currentState = State.Search; 
+            currentState = State.Investigate; 
             currentSearchTimer = 0;
             return;
         }
@@ -172,11 +203,91 @@ private MoveStats moveStats;
         lastDirection = moveInput;
     }
 
-    void UpdateSearch(bool canSeePlayer)
+    private void UpdateFlee()
     {
-        if (canSeePlayer) { currentState = State.Chase; return; }
+        if (!canSeePlayer)
+        {
+            BeginSearch();
+            return;
+        }
+        if (IsHealthCheckDue() && !IsBelowFleeHealthThreshold())
+        {
+            BeginSearch();
+            return;
+        }
+        if (Time.time >= nextMovementDecisionTime)
+        {
+            nextMovementDecisionTime = Time.time + Mathf.Max(0.02f, movementDecisionInterval);
+            moveInput = GetFleeDirection();
+            if (moveInput != Vector2.zero) lastDirection = moveInput;
+        }
+    }
+
+    private void BeginChase()
+    {
+        nextHealthCheckTime = Time.time + Mathf.Max(0.1f, healthCheckInterval);
+        if (IsBelowFleeHealthThreshold()) StartFlee();
+        else currentState = State.Chase;
+        nextMovementDecisionTime = 0f;
+    }
+
+    private bool IsHealthCheckDue()
+    {
+        if (Time.time < nextHealthCheckTime) return false;
+        nextHealthCheckTime = Time.time + Mathf.Max(0.1f, healthCheckInterval);
+        return true;
+    }
+
+    private bool IsBelowFleeHealthThreshold()
+    {
+        if (enemyHealth == null) return false;
+        return enemyHealth.HealthRatio * 100f <= fleeHealthPercent;
+    }
+
+    private void StartFlee()
+    {
+        currentState = State.Flee;
+        nextMovementDecisionTime = 0f;
+    }
+
+    private Vector2 GetFleeDirection()
+    {
+        Vector2 playerPos = player != null && player.gameObject.activeInHierarchy
+            ? (Vector2)player.position + playerPositionOffset
+            : (Vector2)lastPlayerPos;
+        Vector2 toPlayer = (playerPos - CenterPos).normalized;
+        Vector2 bestDir = Vector2.zero;
+        float highestScore = float.NegativeInfinity;
+
+        for (int i = 0; i < rayCount; i++)
+        {
+            float angle = i * (360f / rayCount);
+            Vector2 dir = new Vector2(Mathf.Cos(angle * Mathf.Deg2Rad), Mathf.Sin(angle * Mathf.Deg2Rad));
+            if (waterEffect != null && !waterEffect.AllowsWaterDirection(dir)) continue;
+            if (!CanTurnAround(dir)) continue;
+
+            Vector2 startPos = CenterPos + dir * rayLaunchRadius;
+            RaycastHit2D hit = Physics2D.CircleCast(startPos, checkRadius, dir, detectRange, detectionMask);
+            float distance = hit.collider != null ? hit.distance : detectRange;
+            if (showDebug)
+                Debug.DrawRay(startPos, dir * Mathf.Max(distance, 0.2f), Color.cyan, 0.1f);
+
+            // 壁までの距離を優先し、プレイヤー側を向くほど評価点を下げる。
+            float score = distance - Mathf.Max(0f, Vector2.Dot(dir, toPlayer)) * fleePlayerDirectionPenalty * detectRange;
+            if (score > highestScore)
+            {
+                highestScore = score;
+                bestDir = dir;
+            }
+        }
+        return bestDir;
+    }
+
+    void UpdateInvestigate(bool canSeePlayer)
+    {
+        if (canSeePlayer) { BeginChase(); return; }
         currentSearchTimer += Time.deltaTime;
-        if (currentSearchTimer >= searchTimeout) { ForceChangeToAlert(); return; }
+        if (currentSearchTimer >= searchTimeout) { BeginSearch(); return; }
         if (Time.time < nextMovementDecisionTime) return;
         nextMovementDecisionTime = Time.time + Mathf.Max(0.02f, movementDecisionInterval);
         Vector2 dirToLastPos = ((Vector2)lastPlayerPos - CenterPos).normalized;
@@ -184,22 +295,28 @@ private MoveStats moveStats;
         if (!CanTurnAround(moveInput)) moveInput = lastDirection;
         if (waterEffect != null && !waterEffect.AllowsWaterDirection(moveInput))
             moveInput = GetFarthestDirection();
-        if (Vector2.Distance(CenterPos, lastPlayerPos) < 0.2f) ForceChangeToAlert();
+        if (Vector2.Distance(CenterPos, lastPlayerPos) < 0.2f) BeginSearch();
     }
 
-    void ForceChangeToAlert()
+    void BeginSearch()
     {
         lastDirection = moveInput; 
         alertTimer = alertDuration;
-        currentState = State.Alert; 
+        currentState = State.Search; 
         scanTimer = 0; 
     }
 
-    void UpdateAlert(bool canSeePlayer)
+    void UpdateSearch(bool canSeePlayer)
     {
-        if (canSeePlayer) { currentState = State.Chase; return; }
+        bool healthBelowThreshold = IsHealthCheckDue() && IsBelowFleeHealthThreshold();
+        if (healthBelowThreshold && canSeePlayer)
+        {
+            StartFlee();
+            return;
+        }
+        if (canSeePlayer) { BeginChase(); return; }
         alertTimer -= Time.deltaTime;
-        if (alertTimer <= 0) { currentState = State.Idle; return; }
+        if (alertTimer <= 0) { currentState = State.Wander; return; }
         
         scanTimer -= Time.deltaTime;
         if (scanTimer <= 0)
@@ -294,6 +411,11 @@ private MoveStats moveStats;
 
     void FixedUpdate()
     {
+        if (movementPausedByCompanion)
+        {
+            if (rb != null) rb.linearVelocity = Vector2.zero;
+            return;
+        }
         CheckStuck();
 
         Vector2 separation = CalculateSeparation() * separationWeight;
@@ -304,7 +426,7 @@ private MoveStats moveStats;
             !waterEffect.AllowsWaterDirection(finalForce)) finalForce = Vector2.zero;
         
         float baseSpeed =
-    (currentState == State.Idle)
+    (currentState == State.Wander)
     ? walkSpeed
     : runSpeed;
 
@@ -362,7 +484,7 @@ if (moveStats != null)
         Gizmos.DrawWireSphere(CenterPos, rayLaunchRadius);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(CenterPos, checkRadius);
-        if (currentState == State.Search || currentState == State.Alert)
+        if (currentState == State.Investigate || currentState == State.Search)
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(lastPlayerPos, 0.3f);
