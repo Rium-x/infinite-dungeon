@@ -6,15 +6,12 @@ using UnityEngine.UI;
 using UnityEditor;
 #endif
 
-public class CraftingRecipeListWindowUI : MonoBehaviour
+public class CraftingRecipeListWindowUI : CommonWindowUI
 {
     [Header("UI参照")]
-    [SerializeField] private GameObject windowRoot;
     [SerializeField] private Transform recipeContent;
     [SerializeField] private Button openButton;
-    [SerializeField] private Button closeButton;
     [SerializeField] private TMP_Text statusText;
-    [SerializeField] private GameObject canvasToHideWhileOpen;
 
     [Header("レシピ")]
     [SerializeField] private List<CraftingRecipe> recipeAssets = new List<CraftingRecipe>();
@@ -27,10 +24,7 @@ public class CraftingRecipeListWindowUI : MonoBehaviour
 
     private const string RecipeAssetFolder = "Assets/images/Crafting Recipe";
     private readonly List<CraftingRecipe> recipes = new List<CraftingRecipe>();
-    private bool isOpen;
     private bool isSubscribed;
-    private bool canvasWasActive;
-    private bool canvasStateWasSaved;
 
     private void Awake()
     {
@@ -40,33 +34,16 @@ public class CraftingRecipeListWindowUI : MonoBehaviour
         TrySubscribe();
     }
 
-    private void OnEnable()
-    {
-        CommonWindowEvents.WindowOpened += OnWindowOpened;
-    }
-
     private void Start()
     {
         TrySubscribe();
         SetOpen(false);
     }
 
-    private void OnDisable()
-    {
-        CommonWindowEvents.WindowOpened -= OnWindowOpened;
-    }
-
     private void OnDestroy()
     {
-        CommonWindowEvents.WindowOpened -= OnWindowOpened;
         if (isSubscribed && Inventory.Instance != null)
             Inventory.Instance.InventoryUpdated -= Refresh;
-    }
-
-    private void OnWindowOpened(MonoBehaviour openedWindow)
-    {
-        if (openedWindow != this)
-            Close();
     }
 
     private void TrySubscribe()
@@ -109,49 +86,13 @@ public class CraftingRecipeListWindowUI : MonoBehaviour
     private void Refresh()
     {
         TrySubscribe();
-        if (isOpen)
+        if (IsOpen)
             RebuildRecipeList();
     }
 
-    public void Open()
+    protected override void OnWindowOpened()
     {
-        SetOpen(true);
-    }
-
-    public void Close()
-    {
-        SetOpen(false);
-    }
-
-    private void SetOpen(bool open)
-    {
-        if (open)
-        {
-            CommonWindowEvents.NotifyWindowOpened(this);
-        }
-
-        isOpen = open;
-
-        if (canvasToHideWhileOpen != null)
-        {
-            if (open)
-            {
-                canvasWasActive = canvasToHideWhileOpen.activeSelf;
-                canvasStateWasSaved = true;
-                canvasToHideWhileOpen.SetActive(false);
-            }
-            else if (canvasStateWasSaved)
-            {
-                canvasToHideWhileOpen.SetActive(canvasWasActive);
-                canvasStateWasSaved = false;
-            }
-        }
-
-        if (windowRoot != null)
-            windowRoot.SetActive(open);
-
-        if (open)
-            RebuildRecipeList();
+        RebuildRecipeList();
     }
 
     private void RebuildRecipeList()
@@ -320,13 +261,6 @@ public class CraftingRecipeListWindowUI : MonoBehaviour
     private void AddTextSeparator(Transform parent, string text)
     {
         CreateLabel(text, parent, 24, TextAlignmentOptions.Center, Vector2.zero, new Vector2(24f, itemSize.y));
-    }
-
-    private void SetupCloseButton()
-    {
-        if (closeButton == null) return;
-        closeButton.onClick.RemoveListener(Close);
-        closeButton.onClick.AddListener(Close);
     }
 
     private void SetupOpenButton()

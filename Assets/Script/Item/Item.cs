@@ -115,35 +115,39 @@ public class Item : MonoBehaviour
 
     private void PickUp()
     {
-        if (data != null)
+        if (data == null || Inventory.Instance == null) return;
+
+        bool isNewItem = !Inventory.Instance.HasItem(data);
+        bool isAdded = durability >= 0
+            ? Inventory.Instance.AddItemWithDurability(data, durability)
+            : Inventory.Instance.AddItem(data);
+
+        if (!isAdded) return;
+
+        if (data.pickupSound != null)
         {
-            if (data.pickupSound != null)
-            {
-                Vector3 spawnPos = Camera.main.transform.position;
-                spawnPos.z += 1f;
-                AudioSource.PlayClipAtPoint(data.pickupSound, spawnPos);
-            }
+            Vector3 spawnPos = Camera.main != null
+                ? Camera.main.transform.position
+                : transform.position;
+            spawnPos.z += 1f;
+            AudioSource.PlayClipAtPoint(data.pickupSound, spawnPos);
+        }
 
-            if (Inventory.Instance != null)
-            {
-                bool isNewItem = !Inventory.Instance.HasItem(data);
-                bool isAdded = durability >= 0
-                    ? Inventory.Instance.AddItemWithDurability(data, durability)
-                    : Inventory.Instance.AddItem(data);
+        Destroy(gameObject);
 
-                if (isAdded)
-                {
-                    if (isNewItem)
-                    {
-                        NotificationManager.Instance.Show("新しく" + data.itemName + "を拾った！", Color.yellow, NotificationManager.NotificationSound.Pickup);
-                    }
-                    else
-                    {
-                        NotificationManager.Instance.Show(data.itemName + "を拾った！");
-                    }
-                    Destroy(gameObject);
-                }
-            }
+        if (NotificationManager.Instance == null)
+        {
+            Debug.LogError("NotificationManager が見つからないため、拾得通知を表示できません。", this);
+            return;
+        }
+
+        if (isNewItem)
+        {
+            NotificationManager.Instance.Show("新しく" + data.itemName + "を拾った！", Color.yellow, NotificationManager.NotificationSound.Pickup);
+        }
+        else
+        {
+            NotificationManager.Instance.Show(data.itemName + "を拾った！");
         }
     }
 

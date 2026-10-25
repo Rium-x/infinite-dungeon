@@ -22,6 +22,8 @@ public class Inventory : MonoBehaviour
 {
     public static Inventory Instance;
     public GameObject itemPrefab;
+    [Header("共通サウンド")]
+    [SerializeField] private AudioClip durabilityBreakSound;
     public int maxSlots = 10;
     public List<ItemStack> items = new List<ItemStack>();
     public event Action InventoryUpdated;
@@ -498,6 +500,7 @@ public class Inventory : MonoBehaviour
             UpdateUI();
             return true;
         }
+        NotificationManager.Instance.Show("空きスロットが見つかりませんでした。", Color.red, NotificationManager.NotificationSound.Warning);
         return false;
     }
 
@@ -519,9 +522,8 @@ public class Inventory : MonoBehaviour
         stack.durability = Mathf.Max(0, stack.durability - amount);
         if (stack.durability == 0)
         {
-            AudioClip clip = stack.itemData.breakSound;
-            if (clip != null && Camera.main != null)
-                AudioSource.PlayClipAtPoint(clip, Camera.main.transform.position);
+            if (durabilityBreakSound != null)
+                AudioSource.PlayClipAtPoint(durabilityBreakSound, transform.position);
             items[index] = null;
             if (equipment != null)
             {

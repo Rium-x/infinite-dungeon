@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9fa7ddc41a71b9845947e6378f14b9c4, type: 3}
   m_Name: HealBuff 4
   m_EditorClassIdentifier: Assembly-CSharp::HealBuffData
-  buffName: Heal
+  buffName: "\u6CBB\u7652"
   duration: 10
   isDebuff: 0
   icon: {fileID: 1576330120773836886, guid: 325a2b6827952e947a55bb12178fa16d, type: 3}

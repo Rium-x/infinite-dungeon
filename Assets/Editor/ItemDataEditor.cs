@@ -53,6 +53,13 @@ public class TemporaryBuffSettingsDrawer : PropertyDrawer
         }
         else if (type == TemporaryBuffType.Speed)
             fields.Add(property.FindPropertyRelative("speedMultiplier"));
+        else if (type == TemporaryBuffType.Hunger)
+            fields.Add(property.FindPropertyRelative("mpConsumptionMultiplier"));
+        else if (type == TemporaryBuffType.Corrosion || type == TemporaryBuffType.Moisture)
+        {
+            fields.Add(property.FindPropertyRelative("tickInterval"));
+            fields.Add(property.FindPropertyRelative("mpChangePerTick"));
+        }
         return fields.ToArray();
     }
 }
@@ -115,6 +122,7 @@ public class ItemDataEditor : Editor
         {
             enterChildren = false;
             if (property.name == "armorSlot" && !isArmor) continue;
+            if (property.name == "mpCostPerAttack" && (!hasOneItemType || (ItemType)itemType.enumValueIndex != ItemType.Weapon)) continue;
             if (property.name == "useEffects" && !isConsumable) continue;
             if ((property.name == "maxDurability" || property.name == "breakSound") && !hasDurability) continue;
             if (property.name == "consumeOnUse" && !isConsumable) continue;
@@ -142,7 +150,7 @@ public class ItemEffectDataDrawer : PropertyDrawer
             return lineHeight * 2f;
 
         ItemEffectType effectType = (ItemEffectType)type.enumValueIndex;
-        if (effectType == ItemEffectType.Heal || effectType == ItemEffectType.Buff ||
+        if (effectType == ItemEffectType.Heal || effectType == ItemEffectType.RestoreMP || effectType == ItemEffectType.Buff ||
             effectType == ItemEffectType.TransformItem)
         {
             float height = lineHeight * 3f;
@@ -181,6 +189,8 @@ public class ItemEffectDataDrawer : PropertyDrawer
         ItemEffectType effectType = (ItemEffectType)type.enumValueIndex;
         if (effectType == ItemEffectType.Heal)
             EditorGUI.PropertyField(line, property.FindPropertyRelative("healAmount"), new GUIContent("回復量"));
+        else if (effectType == ItemEffectType.RestoreMP)
+            EditorGUI.PropertyField(line, property.FindPropertyRelative("mpRestoreAmount"), new GUIContent("MP回復量"));
         else if (effectType == ItemEffectType.Buff)
         {
             SerializedProperty createTemporary = property.FindPropertyRelative("createTemporaryBuff");

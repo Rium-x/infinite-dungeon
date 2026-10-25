@@ -148,8 +148,8 @@ MonoBehaviour:
     maxSpawnDelay: 20
   - enemyName: 444411351
     prefab: {fileID: 298427082835796845, guid: 9a5f4a966518f485896c48913053f8b9, type: 3}
-    maxCount: 42
-    spawnMode: 3
+    maxCount: 20
+    spawnMode: 2
     startDelay: 0
     minSpawnDelay: 5
     maxSpawnDelay: 20
@@ -163,6 +163,13 @@ MonoBehaviour:
   - enemyName: 444411351
     prefab: {fileID: 298427082835796845, guid: 7ab6057feea444ef0ba46b5f2cea5a5a, type: 3}
     maxCount: 3
+    spawnMode: 2
+    startDelay: 0
+    minSpawnDelay: 5
+    maxSpawnDelay: 20
+  - enemyName: 444411351
+    prefab: {fileID: 298427082835796845, guid: 9a5f4a966518f485896c48913053f8b9, type: 3}
+    maxCount: 20
     spawnMode: 3
     startDelay: 0
     minSpawnDelay: 5

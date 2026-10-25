@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2e2ccbda4b067ed4eb44b4759f1b2cdd, type: 3}
   m_Name: Speed  decline Buff 1
   m_EditorClassIdentifier: Assembly-CSharp::SpeedBuffData
-  buffName: Speed Decline
+  buffName: "\u9318"
   duration: 5
   isDebuff: 0
   icon: {fileID: 4559981402077070057, guid: 1c3f34499a477bf46b9f7ac2de41fbd0, type: 3}

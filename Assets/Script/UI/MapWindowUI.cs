@@ -5,12 +5,10 @@ using UnityEngine.Tilemaps;
 using UnityEngine.UI;
 
 /// <summary>床・壁Tilemapを表示する簡易ダンジョンマップウィンドウ。</summary>
-public sealed class MapWindowUI : MonoBehaviour
+public sealed class MapWindowUI : CommonWindowUI
 {
     [Header("UI参照")]
-    [SerializeField] private GameObject windowRoot;
     [SerializeField] private RawImage mapImage;
-    [SerializeField] private GameObject canvasToHideWhileOpen;
 
     [Header("マップ参照（未設定ならBSPDungeonMasterから取得）")]
     [SerializeField] private BSPDungeonMaster dungeon;
@@ -37,9 +35,6 @@ public sealed class MapWindowUI : MonoBehaviour
     [SerializeField] private Color32 wallColor = new Color32(65, 72, 82, 255);
     [SerializeField] private Color32 playerColor = new Color32(255, 190, 60, 255);
 
-    private bool isOpen;
-    private bool canvasWasActive;
-    private bool canvasStateWasSaved;
     private readonly List<Behaviour> disabledGameplayComponents = new List<Behaviour>();
     private Texture2D mapTexture;
     private Color32[] mapPixels;
@@ -66,9 +61,9 @@ public sealed class MapWindowUI : MonoBehaviour
             Debug.LogError("MapWindowUI: シーン上の Window Root / Map Image が未設定です。", this);
     }
 
-    private void OnEnable()
+    protected override void OnEnable()
     {
-        CommonWindowEvents.WindowOpened += OnWindowOpened;
+        base.OnEnable();
         BSPDungeonMaster.OnGenerationComplete += OnDungeonGenerated;
     }
 
@@ -79,7 +74,7 @@ public sealed class MapWindowUI : MonoBehaviour
         ResolveReferences();
         if (Keyboard.current != null && Keyboard.current.mKey.wasPressedThisFrame &&
             !BSPDungeonMaster.IsPlayerInputLocked)
-            SetOpen(!isOpen);
+            SetOpen(!IsOpen);
 
         if (observedGenerationVersion != BSPDungeonMaster.GenerationVersion)
         {
@@ -103,18 +98,18 @@ public sealed class MapWindowUI : MonoBehaviour
             }
         }
 
-        if (isOpen && mapDirty)
+        if (IsOpen && mapDirty)
             DrawMap();
 
-        if (isOpen && Mouse.current != null)
+        if (IsOpen && Mouse.current != null)
         {
             HandleMapMouseInput();
         }
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
-        CommonWindowEvents.WindowOpened -= OnWindowOpened;
+        base.OnDisable();
         BSPDungeonMaster.OnGenerationComplete -= OnDungeonGenerated;
         RestoreGameplayComponents();
     }
@@ -146,11 +141,6 @@ public sealed class MapWindowUI : MonoBehaviour
         }
     }
 
-    private void OnWindowOpened(MonoBehaviour openedWindow)
-    {
-        if (openedWindow != this) Close();
-    }
-
     private void OnDungeonGenerated()
     {
         visitedCells.Clear();
@@ -159,45 +149,20 @@ public sealed class MapWindowUI : MonoBehaviour
         hasExplorationCenter = false;
     }
 
-    public void Open() => SetOpen(true);
-    public void Close() => SetOpen(false);
-
-    private void SetOpen(bool open)
+    protected override void OnWindowOpened()
     {
-        if (isOpen == open) return;
-        if (open) CommonWindowEvents.NotifyWindowOpened(this);
-        isOpen = open;
+        ResolveReferences();
+        isDraggingMap = false;
+        DisableGameplayComponents();
+        DrawMap();
+        CenterMapOnPlayer();
+        UpdateMapZoom();
+    }
 
-        if (canvasToHideWhileOpen != null)
-        {
-            if (open)
-            {
-                canvasWasActive = canvasToHideWhileOpen.activeSelf;
-                canvasStateWasSaved = true;
-                canvasToHideWhileOpen.SetActive(false);
-            }
-            else if (canvasStateWasSaved)
-            {
-                canvasToHideWhileOpen.SetActive(canvasWasActive);
-                canvasStateWasSaved = false;
-            }
-        }
-
-        if (windowRoot != null) windowRoot.SetActive(open);
-        if (open)
-        {
-            ResolveReferences();
-            isDraggingMap = false;
-            DisableGameplayComponents();
-            DrawMap();
-            CenterMapOnPlayer();
-            UpdateMapZoom();
-        }
-        else
-        {
-            isDraggingMap = false;
-            RestoreGameplayComponents();
-        }
+    protected override void OnWindowClosed()
+    {
+        isDraggingMap = false;
+        RestoreGameplayComponents();
     }
 
     private void DrawMap()

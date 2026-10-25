@@ -9,10 +9,9 @@ using UnityEngine.UI;
 using UnityEditor;
 #endif
 
-public class CraftingWindowUI : MonoBehaviour
+public class CraftingWindowUI : CommonWindowUI
 {
     [Header("UI参照")]
-    [SerializeField] private GameObject windowRoot;
 
     [Tooltip("手持ちアイテムのScroll ViewのContent")]
     [SerializeField] private Transform availableRoot;
@@ -25,7 +24,6 @@ public class CraftingWindowUI : MonoBehaviour
 
     [SerializeField] private Button craftButton;
     [SerializeField] private TMP_Text statusText;
-    [SerializeField] private GameObject canvasToHideWhileOpen;
 
     private const string RecipeAssetFolder = "Assets/images/Crafting Recipe";
     private readonly List<CraftingRecipe> recipes = new List<CraftingRecipe>();
@@ -40,14 +38,10 @@ public class CraftingWindowUI : MonoBehaviour
 
     private CraftingItemAmount selectedOutput;
 
-    private bool isOpen;
     private bool isSubscribed;
 
     private PlayerControls controls;
     private InputAction craftingAction;
-
-    private bool canvasWasActive;
-    private bool canvasStateWasSaved;
 
     private void Awake()
     {
@@ -101,10 +95,9 @@ public class CraftingWindowUI : MonoBehaviour
 #endif
     }
 
-    private void OnEnable()
+    protected override void OnEnable()
     {
-        CommonWindowEvents.WindowOpened += OnWindowOpened;
-
+        base.OnEnable();
         craftingAction?.Enable();
 
         TrySubscribe();
@@ -116,10 +109,9 @@ public class CraftingWindowUI : MonoBehaviour
         SetOpen(false);
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
-        CommonWindowEvents.WindowOpened -= OnWindowOpened;
-
+        base.OnDisable();
         craftingAction?.Disable();
 
         if (isSubscribed && Inventory.Instance != null)
@@ -133,23 +125,7 @@ public class CraftingWindowUI : MonoBehaviour
     private void OnCraftingAction(InputAction.CallbackContext context)
     {
         if (BSPDungeonMaster.IsPlayerInputLocked) return;
-        SetOpen(!isOpen);
-    }
-
-    private void OnWindowOpened(MonoBehaviour openedWindow)
-    {
-        if (openedWindow != this)
-            Close();
-    }
-
-    public void Open()
-    {
-        SetOpen(true);
-    }
-
-    public void Close()
-    {
-        SetOpen(false);
+        SetOpen(!IsOpen);
     }
 
     private void TrySubscribe()
@@ -163,7 +139,7 @@ public class CraftingWindowUI : MonoBehaviour
 
     private void Refresh()
     {
-        if (!isOpen)
+        if (!IsOpen)
             return;
 
         RebuildAvailableItems();
@@ -998,57 +974,22 @@ public class CraftingWindowUI : MonoBehaviour
     // ウィンドウ
     // =========================================================
 
-    private void SetOpen(bool open)
+    protected override void OnWindowOpened()
     {
-        if (open)
-            CommonWindowEvents.NotifyWindowOpened(this);
+        DisableGameplayComponents();
+        EnsureEventSystem();
+        SetupOutputRoot();
+        RebuildAvailableItems();
+        RebuildSelectedItems();
+        RebuildOutputs();
+        UpdateRecipeStatus();
+    }
 
-        isOpen = open;
-
-        if (canvasToHideWhileOpen != null)
-        {
-            if (open)
-            {
-                canvasWasActive =
-                    canvasToHideWhileOpen.activeSelf;
-
-                canvasStateWasSaved = true;
-
-                canvasToHideWhileOpen.SetActive(false);
-            }
-            else if (canvasStateWasSaved)
-            {
-                canvasToHideWhileOpen.SetActive(
-                    canvasWasActive);
-
-                canvasStateWasSaved = false;
-            }
-        }
-
-        if (windowRoot != null)
-            windowRoot.SetActive(open);
-
-        if (open)
-        {
-            DisableGameplayComponents();
-
-            EnsureEventSystem();
-
-            SetupOutputRoot();
-
-            RebuildAvailableItems();
-            RebuildSelectedItems();
-            RebuildOutputs();
-
-            UpdateRecipeStatus();
-        }
-        else
-        {
-            selectedItems.Clear();
-            selectedOutput = null;
-
-            RestoreGameplayComponents();
-        }
+    protected override void OnWindowClosed()
+    {
+        selectedItems.Clear();
+        selectedOutput = null;
+        RestoreGameplayComponents();
     }
 
     private void DisableGameplayComponents()

@@ -142,8 +142,11 @@ public class RandomTeleporter : MonoBehaviour
             if (IsBlockedByWall(candidate, spawnCandidate.isWater)) continue;
             if (useEnemyCheck && CheckEnemyDanger(candidate)) continue;
 
-            transform.position = new Vector3(candidate.x, candidate.y, transform.position.z);
+            Transform hb = transform.Find("HB");
+            Vector3 hbOffset = hb != null ? hb.position - transform.position : Vector3.zero;
+            transform.position = new Vector3(candidate.x - hbOffset.x, candidate.y - hbOffset.y, transform.position.z);
             Physics2D.SyncTransforms();
+            RefreshWaterTerrainAtSpawn();
             return true;
         }
 
@@ -228,7 +231,7 @@ public class RandomTeleporter : MonoBehaviour
     {
         List<SpawnCandidate> candidates = new List<SpawnCandidate>();
         bool hasDungeonTerrainMaps = dungeonMaster != null &&
-            (dungeonMaster.floorTilemap != null || dungeonMaster.wallTilemap != null);
+            (dungeonMaster.floorTilemap != null || dungeonMaster.wallTilemap != null || dungeonMaster.trapTilemap != null);
         List<Tilemap> maps = new List<Tilemap>();
         if (hasDungeonTerrainMaps)
         {
@@ -236,6 +239,8 @@ public class RandomTeleporter : MonoBehaviour
             if (dungeonMaster.wallTilemap != null &&
                 dungeonMaster.wallTilemap != dungeonMaster.floorTilemap)
                 maps.Add(dungeonMaster.wallTilemap);
+            if (dungeonMaster.trapTilemap != null && !maps.Contains(dungeonMaster.trapTilemap))
+                maps.Add(dungeonMaster.trapTilemap);
         }
         else
         {
@@ -298,6 +303,12 @@ public class RandomTeleporter : MonoBehaviour
         if (wall is TerrainTile typedWall) return typedWall.Type;
         if (IsWaterTile(wall)) return TerrainType.Water;
         if (wall != null) return TerrainType.Wall;
+
+        if (dungeonMaster.trapTilemap != null)
+        {
+            Vector3Int trapCell = dungeonMaster.trapTilemap.WorldToCell(worldPosition);
+            if (IsWaterTile(dungeonMaster.trapTilemap.GetTile(trapCell))) return TerrainType.Water;
+        }
 
         TileBase floor = dungeonMaster.floorTilemap != null
             ? dungeonMaster.floorTilemap.GetTile(floorCell)
@@ -499,7 +510,17 @@ public class RandomTeleporter : MonoBehaviour
         if (!isInvalid)
         {
             transform.position = new Vector3(randomPos.x, randomPos.y, transform.position.z);
+            Physics2D.SyncTransforms();
+            RefreshWaterTerrainAtSpawn();
         }
+    }
+
+    private void RefreshWaterTerrainAtSpawn()
+    {
+        WaterTerrainEffect waterEffect = GetComponentInParent<WaterTerrainEffect>();
+        if (waterEffect == null)
+            waterEffect = GetComponentInChildren<WaterTerrainEffect>(true);
+        waterEffect?.RefreshTerrainAtSpawn();
     }
 
     private bool CheckEnemyDanger(Vector2 targetPos)

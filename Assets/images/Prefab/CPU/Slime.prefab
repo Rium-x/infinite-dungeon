@@ -184,6 +184,7 @@ MonoBehaviour:
   healAmount: 0.5
   healInterval: 2
   progressPoint: 1
+  experienceReward: 100
   audioSource: {fileID: 413102963026780021}
   damageSounds:
   - {fileID: 8300000, guid: 8ca2e0be728094ce29a0b0510840bc86, type: 3}
@@ -428,6 +429,8 @@ MonoBehaviour:
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 1
   runSpeed: 1.5
+  fleeHealthPercent: 15
+  fleePlayerDirectionPenalty: 2
   acceleration: 2
   checkRadius: 0.3
   turnAroundWallDistance: 5
@@ -446,6 +449,7 @@ MonoBehaviour:
   alertDuration: 20
   showDebug: 0
   playerSearchInterval: 1
+  healthCheckInterval: 1
 --- !u!114 &6551421918719717060
 MonoBehaviour:
   m_ObjectHideFlags: 0

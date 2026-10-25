@@ -8,8 +8,8 @@ public enum ItemRarity { Common, Rare, Epic, Legendary }
 public enum ItemType { Coin, Weapon, Consumable, Material, Armor, Garbage }
 public enum HandLayer { BehindHand, InFrontOfHand }
 public enum ArmorSlot { Hands, Body, Face, Feet }
-public enum ItemEffectType { Heal, Buff, Random, TransformItem }
-public enum TemporaryBuffType { Heal, Poison, Speed }
+public enum ItemEffectType { Heal, Buff, Random, TransformItem, RestoreMP }
+public enum TemporaryBuffType { Heal, Poison, Speed, Hunger, Corrosion, Moisture }
 
 [Serializable]
 public class TemporaryBuffSettings
@@ -24,6 +24,8 @@ public class TemporaryBuffSettings
     [Min(0.01f)] public float tickInterval = 1f;
     public float damagePerTick = 1f;
     public float speedMultiplier = 1.5f;
+    [Min(1f)] public float mpConsumptionMultiplier = 2f;
+    [Min(0f)] public float mpChangePerTick = 1f;
 
     public BuffData CreateRuntimeData()
     {
@@ -33,6 +35,9 @@ public class TemporaryBuffSettings
             case TemporaryBuffType.Heal: data = ScriptableObject.CreateInstance<HealBuffData>(); break;
             case TemporaryBuffType.Poison: data = ScriptableObject.CreateInstance<PoisonBuffData>(); break;
             case TemporaryBuffType.Speed: data = ScriptableObject.CreateInstance<SpeedBuffData>(); break;
+            case TemporaryBuffType.Hunger: data = ScriptableObject.CreateInstance<HungerBuffData>(); break;
+            case TemporaryBuffType.Corrosion: data = ScriptableObject.CreateInstance<CorrosionBuffData>(); break;
+            case TemporaryBuffType.Moisture: data = ScriptableObject.CreateInstance<MoistureBuffData>(); break;
             default: return null;
         }
         data.name = buffName;
@@ -44,6 +49,9 @@ public class TemporaryBuffSettings
         if (data is HealBuffData heal) { heal.healPerTick = healPerTick; heal.tickInterval = tickInterval; }
         if (data is PoisonBuffData poison) { poison.damagePerTick = damagePerTick; poison.tickInterval = tickInterval; }
         if (data is SpeedBuffData speed) speed.speedMultiplier = speedMultiplier;
+        if (data is HungerBuffData hunger) hunger.consumptionMultiplier = mpConsumptionMultiplier;
+        if (data is CorrosionBuffData corrosion) corrosion.mpPerTick = mpChangePerTick;
+        if (data is MoistureBuffData moisture) moisture.mpPerTick = mpChangePerTick;
         return data;
     }
 }
@@ -54,6 +62,7 @@ public class ItemEffectData
     public ItemEffectType effectType;
 
     public int healAmount = 20;
+    [Min(0f)] public float mpRestoreAmount = 5f;
 
     public BuffData buffData;
     public bool createTemporaryBuff;
@@ -69,6 +78,9 @@ public class ItemEffectData
         {
             case ItemEffectType.Heal:
                 ItemEffectDataUtility.Heal(user, healAmount);
+                return null;
+            case ItemEffectType.RestoreMP:
+                ItemEffectDataUtility.RestoreMP(user, mpRestoreAmount);
                 return null;
             case ItemEffectType.Buff:
                 ItemEffectDataUtility.ApplyBuff(user, createTemporaryBuff && temporaryBuff != null
@@ -105,6 +117,7 @@ public class ItemRandomEffectData
     [Range(0f, 100f)] public float chance = 100f;
 
     public int healAmount = 20;
+    [Min(0f)] public float mpRestoreAmount = 5f;
 
     public BuffData buffData;
     public bool createTemporaryBuff;
@@ -117,6 +130,11 @@ public class ItemRandomEffectData
         if (effectType == ItemEffectType.Heal)
         {
             ItemEffectDataUtility.Heal(user, healAmount);
+            return null;
+        }
+        else if (effectType == ItemEffectType.RestoreMP)
+        {
+            ItemEffectDataUtility.RestoreMP(user, mpRestoreAmount);
             return null;
         }
         else if (effectType == ItemEffectType.Buff)
@@ -149,6 +167,13 @@ internal static class ItemEffectDataUtility
         {
             Debug.LogWarning("PlayerHealth が見つかりません！");
         }
+    }
+
+    public static void RestoreMP(GameObject user, float amount)
+    {
+        PlayerMP mp = user != null ? user.GetComponent<PlayerMP>() : null;
+        if (mp != null) mp.Restore(amount);
+        else Debug.LogWarning("PlayerMP が見つかりません。");
     }
 
     public static void ApplyBuff(GameObject user, BuffData buffData, bool temporary = false)
@@ -202,6 +227,8 @@ public class ItemData : ScriptableObject
     public float collisionRadius = 0.5f;
 
     [Header("装備設定")]
+    [Min(0f), Tooltip("武器の攻撃1回あたりに消費するMP。100回で約5MPなら0.05に設定します。")]
+    public float mpCostPerAttack = 0.05f;
     public bool equipOnStart = false; // Whether the item should be equipped on start
     [FormerlySerializedAs("weaponPrefab")]
     [Tooltip("装備時に使うプレハブ。未指定の場合はアイテム用プレハブを使います。")]
@@ -219,7 +246,6 @@ public class ItemData : ScriptableObject
 
     [Header("耐久度")]
     [Min(1)] public int maxDurability = 100;
-    public AudioClip breakSound;
     [Header("消費設定")]
     public bool consumeOnUse = true;
     public int DurabilityLimit => maxDurability > 0 ? maxDurability : 100;

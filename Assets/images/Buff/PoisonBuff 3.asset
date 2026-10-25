@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b1ac1fae5deffa547978406dc9d0f2de, type: 3}
   m_Name: PoisonBuff 3
   m_EditorClassIdentifier: Assembly-CSharp::PoisonBuffData
-  buffName: Poison
+  buffName: "\u6BD2"
   duration: 15
   isDebuff: 1
   icon: {fileID: 7586244483859888222, guid: 25e74bd0eac49f447ac38d2b97085e09, type: 3}

@@ -134,6 +134,26 @@ public class PlayerCombat : MonoBehaviour
         }
     }
 
+    private ItemData GetEquippedItemData(Transform hand)
+    {
+        EquipmentManager equipment = EquipmentManager.Instance;
+        if (equipment == null) return null;
+        return hand == rightHand ? equipment.currentRightItem : equipment.currentLeftItem;
+    }
+
+    /// <summary>Called by player weapon hit detection after a confirmed hit.</summary>
+    public bool SpendWeaponMPForHit(Transform weaponTransform)
+    {
+        if (weaponTransform == null || PlayerMP.Instance == null) return true;
+        Transform hand;
+        if (rightHand != null && weaponTransform.IsChildOf(rightHand)) hand = rightHand;
+        else if (leftHand != null && weaponTransform.IsChildOf(leftHand)) hand = leftHand;
+        else return true;
+
+        ItemData equippedData = GetEquippedItemData(hand);
+        return PlayerMP.Instance.TrySpendAttack(equippedData != null ? equippedData.mpCostPerAttack : 0f);
+    }
+
     private bool TryUseConsumable(Transform hand)
     {
         if (Inventory.Instance == null || EquipmentManager.Instance == null) return false;
@@ -174,6 +194,9 @@ public class PlayerCombat : MonoBehaviour
 
         // 手そのもの、またはその子供から IWeapon を探す
         IWeapon weapon = hand.GetComponentInChildren<IWeapon>();
+
+        if (weapon is not ShieldAction && PlayerMP.Instance != null && PlayerMP.Instance.IsExhausted)
+            return;
         
         if (weapon != null)
         {

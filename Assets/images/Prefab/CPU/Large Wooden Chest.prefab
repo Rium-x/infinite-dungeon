@@ -54,6 +54,7 @@ MonoBehaviour:
   healAmount: 0.5
   healInterval: 2
   progressPoint: 10
+  experienceReward: 0
   audioSource: {fileID: 1713671143878138686}
   damageSounds:
   - {fileID: 8300000, guid: dff9d3008fe114be094e20b44d258491, type: 3}

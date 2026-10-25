@@ -6,13 +6,11 @@ using UnityEngine.InputSystem;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
-public class InventoryWindowUI : MonoBehaviour
+public class InventoryWindowUI : CommonWindowUI
 {
     [Header("UI参照")]
-    [SerializeField] private GameObject windowRoot;
     [SerializeField] private Transform gridRoot;
     [SerializeField] private GameObject descriptionObject;
-    [SerializeField] private GameObject canvasToHideWhileOpen;
 
     [Header("表示設定")]
     [SerializeField] private int columns = 5;
@@ -46,7 +44,6 @@ public class InventoryWindowUI : MonoBehaviour
     private readonly List<Behaviour> disabledGameplayComponents =
         new List<Behaviour>();
 
-    private bool isOpen;
     private bool isSubscribed;
     private PlayerControls controls;
     private InputAction inventoryAction;
@@ -54,9 +51,6 @@ public class InventoryWindowUI : MonoBehaviour
         new List<TextMeshProUGUI>();
     private GameObject durabilityGaugeObject;
     private Image durabilityGaugeImage;
-    private bool canvasWasActive;
-    private bool canvasStateWasSaved;
-
     private void Awake()
     {
         if (instance != null && instance != this)
@@ -84,9 +78,9 @@ public class InventoryWindowUI : MonoBehaviour
         SetupGrid();
     }
 
-    private void OnEnable()
+    protected override void OnEnable()
     {
-        CommonWindowEvents.WindowOpened += OnWindowOpened;
+        base.OnEnable();
         inventoryAction?.Enable();
         TrySubscribe();
     }
@@ -97,9 +91,9 @@ public class InventoryWindowUI : MonoBehaviour
         SetOpen(false);
     }
 
-    private void OnDisable()
+    protected override void OnDisable()
     {
-        CommonWindowEvents.WindowOpened -= OnWindowOpened;
+        base.OnDisable();
         inventoryAction?.Disable();
 
         if (isSubscribed && Inventory.Instance != null)
@@ -112,7 +106,7 @@ public class InventoryWindowUI : MonoBehaviour
 
     private void Update()
     {
-        if (isOpen)
+        if (IsOpen)
         {
             RefreshSelection();
         }
@@ -121,18 +115,7 @@ public class InventoryWindowUI : MonoBehaviour
     private void OnInventoryAction(InputAction.CallbackContext context)
     {
         if (BSPDungeonMaster.IsPlayerInputLocked) return;
-        SetOpen(!isOpen);
-    }
-
-    private void OnWindowOpened(MonoBehaviour openedWindow)
-    {
-        if (openedWindow != this)
-            Close();
-    }
-
-    public void Close()
-    {
-        SetOpen(false);
+        SetOpen(!IsOpen);
     }
 
     // =========================================================
@@ -213,7 +196,7 @@ public class InventoryWindowUI : MonoBehaviour
 
     private void Refresh()
     {
-        if (!isOpen)
+        if (!IsOpen)
             return;
 
         RebuildGrid();
@@ -544,50 +527,19 @@ public class InventoryWindowUI : MonoBehaviour
     // Open / Close
     // =========================================================
 
-    private void SetOpen(bool open)
+    protected override void OnWindowOpened()
     {
-        if (open)
-            CommonWindowEvents.NotifyWindowOpened(this);
+        DisableGameplayComponents();
+        SetupGrid();
+        RebuildGrid();
+        EnsureEventSystem();
+        RefreshSelection();
+        RefreshDescription();
+    }
 
-        isOpen = open;
-
-        if (canvasToHideWhileOpen != null)
-        {
-            if (open)
-            {
-                canvasWasActive = canvasToHideWhileOpen.activeSelf;
-                canvasStateWasSaved = true;
-                canvasToHideWhileOpen.SetActive(false);
-            }
-            else if (canvasStateWasSaved)
-            {
-                canvasToHideWhileOpen.SetActive(canvasWasActive);
-                canvasStateWasSaved = false;
-            }
-        }
-
-        if (windowRoot != null)
-        {
-            windowRoot.SetActive(open);
-        }
-
-        if (open)
-        {
-            DisableGameplayComponents();
-
-            SetupGrid();
-
-            RebuildGrid();
-
-            EnsureEventSystem();
-
-            RefreshSelection();
-            RefreshDescription();
-        }
-        else
-        {
-            RestoreGameplayComponents();
-        }
+    protected override void OnWindowClosed()
+    {
+        RestoreGameplayComponents();
     }
 
     // =========================================================

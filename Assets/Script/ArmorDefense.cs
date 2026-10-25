@@ -22,6 +22,8 @@ public class ArmorDefense : MonoBehaviour
 
     private float nextBlockTime;
     private PlayerHealth playerHealth;
+    public float DefenseChance => defenseChance;
+    public float DamageReductionPercent => damageReductionPercent;
 
     private void Awake()
     {

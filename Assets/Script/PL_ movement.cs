@@ -14,6 +14,7 @@ public class PL_movement : MonoBehaviour
     private Vector2 currentVelocity;
     private MoveStats moveStats;
     private CharacterSorting characterSorting;
+    private PlayerMP playerMP;
 
     // Input System用
     private PlayerControls controls;
@@ -49,6 +50,7 @@ public class PL_movement : MonoBehaviour
     {
         rb = GetComponent<Rigidbody2D>();
         moveStats = GetComponentInParent<MoveStats>();
+        playerMP = GetComponentInParent<PlayerMP>();
 
         characterSorting = GetComponent<CharacterSorting>();
         if (characterSorting == null)
@@ -101,6 +103,7 @@ public class PL_movement : MonoBehaviour
         // -------------------------------------------------------------
         // 3. 移動速度の計算と反映
         // -------------------------------------------------------------
+        if (playerMP != null) playerMP.TickWalking(isMoving);
         if (isMoving)
         {
             float finalSpeed = maxSpeed;
@@ -110,6 +113,7 @@ public class PL_movement : MonoBehaviour
             {
                 finalSpeed = moveStats.ApplySpeed(finalSpeed);
             }
+            if (playerMP != null) finalSpeed *= playerMP.SpeedMultiplier;
 
             // 目標速度を計算（入力の強さ × 最終速度）
             float targetSpeed = targetSpeedPercentage * finalSpeed;

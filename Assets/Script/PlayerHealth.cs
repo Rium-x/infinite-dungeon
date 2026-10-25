@@ -12,6 +12,26 @@ public class PlayerHealth : MonoBehaviour
     private int playerLevel = 1;
     public int PlayerLevel => Mathf.Max(1, playerLevel);
 
+    [Header("レベル・経験値")]
+    [SerializeField, Min(0)] private int experiencePoints;
+    [SerializeField, Min(1)] private int experienceToNextLevel = 100;
+    [SerializeField, Min(0)] private int experienceRequiredIncreasePerLevel = 50;
+    [SerializeField, Min(0f)] private float maxHealthPerLevel = 10f;
+    [SerializeField, Min(0f)] private float maxMPPerLevel = 5f;
+    [SerializeField, Min(0f)] private float attackPowerPerLevel = 1f;
+    [SerializeField, Min(0f)] private float defensePerLevel = 1f;
+    private int basePlayerLevel = 1;
+    private float baseMaxHealth;
+    public int ExperiencePoints => experiencePoints;
+    public int ExperienceToNextLevel => experienceToNextLevel;
+    public bool CanLevelUp => experiencePoints >= experienceToNextLevel;
+    public float CurrentHealth => currentHealth;
+    public float MaximumHealth => maxHealth;
+    public float MaximumHealthBonus => (PlayerLevel - basePlayerLevel) * maxHealthPerLevel;
+    public float MaximumMPBonus => (PlayerLevel - basePlayerLevel) * maxMPPerLevel;
+    public float AttackPowerBonus => (PlayerLevel - basePlayerLevel) * attackPowerPerLevel;
+    public float DefenseBonus => (PlayerLevel - basePlayerLevel) * defensePerLevel;
+
     public bool IsAtFullHealth => currentHealth >= maxHealth;
     
     [Header("HPバーの設定")]
@@ -31,6 +51,12 @@ public class PlayerHealth : MonoBehaviour
 
     [Header("ドロップ設定")]
     public GameObject itemPrefab;
+
+    void Awake()
+    {
+        basePlayerLevel = PlayerLevel;
+        baseMaxHealth = maxHealth;
+    }
 
     void Start()
     {
@@ -68,6 +94,34 @@ public class PlayerHealth : MonoBehaviour
         playerLevel = Mathf.Max(1, level);
     }
 
+    public void AddExperience(int amount)
+    {
+        if (amount <= 0) return;
+        experiencePoints += amount;
+        NotificationManager.Instance?.Show($"経験値 +{amount}");
+    }
+
+    public bool TryLevelUp()
+    {
+        if (!CanLevelUp) return false;
+
+        experiencePoints -= experienceToNextLevel;
+        playerLevel++;
+        experienceToNextLevel += experienceRequiredIncreasePerLevel;
+
+        maxHealth = baseMaxHealth + (playerLevel - basePlayerLevel) * maxHealthPerLevel;
+        currentHealth = Mathf.Min(maxHealth, currentHealth + maxHealthPerLevel);
+        if (hpSlider != null)
+        {
+            hpSlider.maxValue = maxHealth;
+            hpSlider.value = currentHealth;
+        }
+
+        PlayerMP.Instance?.IncreaseMaximum(maxMPPerLevel);
+        NotificationManager.Instance?.Show($"レベルアップ！ Lv.{playerLevel}");
+        return true;
+    }
+
     void HandleDungeonGenerated()
     {
         RandomTeleporter tp = GetComponentInChildren<RandomTeleporter>();
@@ -84,6 +138,7 @@ public class PlayerHealth : MonoBehaviour
                     stageData.playerSpawnPosition.y,
                     transform.position.z);
                 Physics2D.SyncTransforms();
+                GetComponent<WaterTerrainEffect>()?.RefreshTerrainAtSpawn();
             }
             else
             {
@@ -107,6 +162,9 @@ public class PlayerHealth : MonoBehaviour
             if (finalDamage < damageBeforeArmor)
                 armorDefended = true;
         }
+
+        if (isEnemyDamage)
+            finalDamage = Mathf.Max(0f, finalDamage - DefenseBonus);
 
         if (EquipmentManager.Instance != null)
         {

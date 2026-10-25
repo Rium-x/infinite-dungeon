@@ -201,6 +201,59 @@ public sealed class WaterTerrainEffect : MonoBehaviour
     public bool IsInWaterNow => isInWater;
     public bool AvoidsWater => avoidWater;
 
+    public void RefreshTerrainAtSpawn()
+    {
+        CacheSceneTerrain();
+        Vector3 checkPosition = hitboxRoot != null ? hitboxRoot.position : characterRoot.position;
+        TerrainType terrain = TerrainType.Unknown;
+        BSPDungeonMaster dungeonMaster = BSPDungeonMaster.Instance;
+        if (dungeonMaster != null &&
+            (dungeonMaster.floorTilemap != null || dungeonMaster.wallTilemap != null || dungeonMaster.trapTilemap != null))
+        {
+            Vector3Int floorCell = dungeonMaster.floorTilemap != null
+                ? dungeonMaster.floorTilemap.WorldToCell(checkPosition)
+                : Vector3Int.zero;
+            Vector3Int wallCell = dungeonMaster.wallTilemap != null
+                ? dungeonMaster.wallTilemap.WorldToCell(checkPosition)
+                : Vector3Int.zero;
+            terrain = TerrainMap.ResolveTerrainType(
+                dungeonMaster.floorTilemap, dungeonMaster.wallTilemap, floorCell);
+            if (dungeonMaster.wallTilemap != null)
+            {
+                TileBase wall = dungeonMaster.wallTilemap.GetTile(wallCell);
+                if (wall is TerrainTile typedWall) terrain = typedWall.Type;
+                else if (IsWaterTile(wall)) terrain = TerrainType.Water;
+                else if (wall != null) terrain = TerrainType.Wall;
+            }
+            if (dungeonMaster.trapTilemap != null)
+            {
+                Vector3Int trapCell = dungeonMaster.trapTilemap.WorldToCell(checkPosition);
+                if (IsWaterTile(dungeonMaster.trapTilemap.GetTile(trapCell))) terrain = TerrainType.Water;
+            }
+        }
+
+        bool wasInWater = isInWater;
+        isInWater = terrain != TerrainType.Unknown
+            ? terrain == TerrainType.Water
+            : IsInWater();
+        lastWaterCheckPosition = checkPosition;
+        hasWaterCheckPosition = true;
+        nextWaterCheckTime = Time.time + waterCheckInterval;
+        nextTerrainDamageTime = Time.time + terrainDamageInterval;
+        targetFollowLowerAmount = isInWater ? waterFollowLowerAmount : 0f;
+        foreach (FollowAnchor item in followAnchors)
+        {
+            item.currentLowerAmount = targetFollowLowerAmount;
+            item.lowerAmountVelocity = 0f;
+            if (item.anchor != null && item.originalTarget != null)
+                item.anchor.position = item.originalTarget.position + Vector3.down * targetFollowLowerAmount;
+        }
+        currentWaterFade = isInWater ? 1f : 0f;
+        ApplyWaterFade();
+        if (moveStats != null && (wasInWater != isInWater || enemyHealth != null))
+            moveStats.SetEnvironmentSpeedMultiplier(GetWaterSpeedMultiplier());
+    }
+
     public float GetFollowLowerAmountFor(Follow_WithAnimation follower)
     {
         if (follower == null) return 0f;
@@ -258,8 +311,7 @@ public sealed class WaterTerrainEffect : MonoBehaviour
         if (terrainMap != null)
         {
             TerrainType terrain = terrainMap.GetTerrainTypeAtWorldPosition(position);
-            if (terrain != TerrainType.Unknown)
-                return terrain == TerrainType.Water;
+            if (terrain == TerrainType.Water) return true;
         }
 
         if (tilemaps == null) return false;

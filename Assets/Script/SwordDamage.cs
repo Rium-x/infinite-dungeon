@@ -71,11 +71,15 @@ public class SwordAttack : MonoBehaviour
                     if (playerHitOrigin == null || IsBlockedByWall(other)) return;
                 }
 
-                enemy.TakeDamage(attackDamage, true);
+                PlayerCombat playerCombat = GetComponentInParent<PlayerCombat>();
+                float levelBonus = playerCombat != null && PlayerHealth.Instance != null
+                    ? PlayerHealth.Instance.AttackPowerBonus
+                    : 0f;
+                enemy.TakeDamage(attackDamage + levelBonus, true);
 
                 if (!durabilityAppliedThisAttack)
                 {
-                    PlayerCombat playerCombat = GetComponentInParent<PlayerCombat>();
+                    if (playerCombat != null) playerCombat.SpendWeaponMPForHit(transform);
                     if (playerCombat != null)
                         playerCombat.DamageWeaponDurability(transform);
                     durabilityAppliedThisAttack = true;

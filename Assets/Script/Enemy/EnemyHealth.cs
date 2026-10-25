@@ -21,6 +21,8 @@ public class EnemyHealth : MonoBehaviour
 
     [Header("攻略率")]
     [SerializeField] private int progressPoint = 1;
+    [Header("経験値")]
+    [SerializeField, Min(0)] private int experienceReward = 10;
 
     [Header("サウンド")]
     [SerializeField] private AudioSource audioSource;
@@ -223,6 +225,7 @@ public class EnemyHealth : MonoBehaviour
 
             NotificationManager.Instance.Show(message);
             ExplorationManager.Instance?.AddProgress(progressPoint);
+            PlayerHealth.Instance?.AddExperience(experienceReward);
         }
 
         OnDestroyed?.Invoke();
