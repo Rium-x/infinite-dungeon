@@ -46,7 +46,7 @@ public class Item : MonoBehaviour
 
     private void Update()
     {
-        if (BSPDungeonMaster.IsPlayerInputLocked) return;
+        if (BSPDungeonMaster.IsPlayerInputLocked || ShopWindowUI.IsShopOpen) return;
 
         // ★Input.GetKeyDown(KeyCode.X) を controls.Player.PickUp.triggered に変更
         if (isPlayerNearby && controls.Player.PickUp.triggered)

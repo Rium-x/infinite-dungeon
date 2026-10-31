@@ -24,6 +24,8 @@ public class Inventory : MonoBehaviour
     public GameObject itemPrefab;
     [Header("共通サウンド")]
     [SerializeField] private AudioClip durabilityBreakSound;
+    [Header("G（暫定通貨）")]
+    [Min(0)] public int gBalance;
     public int maxSlots = 10;
     public List<ItemStack> items = new List<ItemStack>();
     public event Action InventoryUpdated;
@@ -212,6 +214,48 @@ public class Inventory : MonoBehaviour
             if (stack != null && stack.itemData == data) return true;
         }
         return false;
+    }
+
+    public int GetItemAmount(ItemData data)
+    {
+        if (data == null || items == null) return 0;
+        int amount = 0;
+        foreach (ItemStack stack in items)
+            if (stack != null && stack.itemData == data)
+                amount += Mathf.Max(0, stack.amount);
+        return amount;
+    }
+
+    public bool RemoveItemAmount(ItemData data, int amount)
+    {
+        if (data == null || amount <= 0 || GetItemAmount(data) < amount) return false;
+
+        EquipmentManager equipment = EquipmentManager.Instance;
+        bool previousSuppressAutoEquip = equipment != null && equipment.suppressAutoEquip;
+        if (equipment != null) equipment.suppressAutoEquip = true;
+
+        for (int i = items.Count - 1; i >= 0 && amount > 0; i--)
+        {
+            ItemStack stack = items[i];
+            if (stack == null || stack.itemData != data) continue;
+            int removed = Mathf.Min(amount, Mathf.Max(1, stack.amount));
+            stack.amount -= removed;
+            amount -= removed;
+            if (stack.amount <= 0)
+            {
+                items[i] = null;
+                if (equipment != null)
+                {
+                    if (equipment.currentRightSlot == i) equipment.UnequipItem(false);
+                    if (equipment.currentLeftSlot == i) equipment.UnequipItem(true);
+                    equipment.UnequipArmorAtSlot(i);
+                }
+            }
+        }
+
+        if (equipment != null) equipment.suppressAutoEquip = previousSuppressAutoEquip;
+        UpdateUI();
+        return true;
     }
 
     public bool TryCraft(CraftingRecipe recipe)

@@ -13,17 +13,17 @@ public class PlayerHealth : MonoBehaviour
     public int PlayerLevel => Mathf.Max(1, playerLevel);
 
     [Header("レベル・経験値")]
-    [SerializeField, Min(0)] private int experiencePoints;
-    [SerializeField, Min(1)] private int experienceToNextLevel = 100;
-    [SerializeField, Min(0)] private int experienceRequiredIncreasePerLevel = 50;
+    [SerializeField, Min(0f)] private float experiencePoints;
+    [SerializeField, Min(1f)] private float experienceToNextLevel = 100f;
+    [SerializeField, Min(0f)] private float experienceRequiredIncreasePerLevel = 50f;
     [SerializeField, Min(0f)] private float maxHealthPerLevel = 10f;
     [SerializeField, Min(0f)] private float maxMPPerLevel = 5f;
     [SerializeField, Min(0f)] private float attackPowerPerLevel = 1f;
     [SerializeField, Min(0f)] private float defensePerLevel = 1f;
     private int basePlayerLevel = 1;
     private float baseMaxHealth;
-    public int ExperiencePoints => experiencePoints;
-    public int ExperienceToNextLevel => experienceToNextLevel;
+    public float ExperiencePoints => experiencePoints;
+    public float ExperienceToNextLevel => experienceToNextLevel;
     public bool CanLevelUp => experiencePoints >= experienceToNextLevel;
     public float CurrentHealth => currentHealth;
     public float MaximumHealth => maxHealth;
@@ -94,11 +94,11 @@ public class PlayerHealth : MonoBehaviour
         playerLevel = Mathf.Max(1, level);
     }
 
-    public void AddExperience(int amount)
+    public void AddExperience(float amount)
     {
-        if (amount <= 0) return;
+        if (amount <= 0f) return;
         experiencePoints += amount;
-        NotificationManager.Instance?.Show($"経験値 +{amount}");
+        NotificationManager.Instance?.Show($"経験値 +{amount:F2}");
     }
 
     public bool TryLevelUp()

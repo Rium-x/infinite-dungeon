@@ -20,9 +20,9 @@ public class EnemyHealth : MonoBehaviour
     private Coroutine healCoroutine;
 
     [Header("攻略率")]
-    [SerializeField] private int progressPoint = 1;
+    [SerializeField, Min(0f)] private float progressPoint = 1f;
     [Header("経験値")]
-    [SerializeField, Min(0)] private int experienceReward = 10;
+    [SerializeField, Min(0f)] private float experienceReward = 10f;
 
     [Header("サウンド")]
     [SerializeField] private AudioSource audioSource;

@@ -26,15 +26,15 @@ public class StageData : ScriptableObject
 
     [Header("ステージクリア条件")]
     [Min(0), Tooltip("このステージで次のステージへ進むために必要な探索値。0で即時に進めます。")]
-    public int requiredExplorationValue = 100;
+    public float requiredExplorationValue = 100f;
 
     [Header("ステージの明るさ")]
     [Range(0f, 200f), Tooltip("プレイヤーの HB 配下の Light2D の半径をパーセンテージで調整します。50=半分、120=1.2倍、100=標準です。")]
     public float playerLightRadiusPercent = 100f;
 
-    public int GetRequiredExplorationValueForNextStage()
+    public float GetRequiredExplorationValueForNextStage()
     {
-        return Mathf.Max(0, requiredExplorationValue);
+        return Mathf.Max(0f, requiredExplorationValue);
     }
 
     public float GetPlayerLightRadiusScale()

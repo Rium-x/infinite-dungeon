@@ -75,16 +75,22 @@ MonoBehaviour:
   normalItemTypeAdjustments:
   - itemType: 0
     modifier: 34
+    maxDropCount: 100
   - itemType: 1
     modifier: -100
+    maxDropCount: 100
   - itemType: 3
     modifier: -75.7
+    maxDropCount: 100
   - itemType: 4
     modifier: -100
+    maxDropCount: 100
   - itemType: 5
     modifier: 100
+    maxDropCount: 100
   - itemType: 2
     modifier: -20.6
+    maxDropCount: 100
   normalDropRatioPercent: 67.6
   maxTotalDropCount: 20
   totalDropCountProbability:
@@ -131,10 +137,13 @@ MonoBehaviour:
     m_RotationOrder: 4
   dropList:
   - itemData: {fileID: 11400000, guid: 82316af56353b154388415d0c1914125, type: 2}
+    maxDropCount: 100
     monsterModifier: 37
   - itemData: {fileID: 11400000, guid: 7fa0a788a0497a64497a8cf83875622c, type: 2}
+    maxDropCount: 100
     monsterModifier: 37
   - itemData: {fileID: 11400000, guid: 9f186eba8c3ae4722af2622b2ec53165, type: 2}
+    maxDropCount: 100
     monsterModifier: 37
 --- !u!114 &-5732425892869942870
 MonoBehaviour:
@@ -1212,6 +1221,8 @@ MonoBehaviour:
   playerPositionOffset: {x: 0, y: -0.3}
   walkSpeed: 5
   runSpeed: 6
+  fleeHealthPercent: 15
+  fleePlayerDirectionPenalty: 2
   acceleration: 3
   checkRadius: 0.3
   turnAroundWallDistance: 5
@@ -1230,6 +1241,7 @@ MonoBehaviour:
   alertDuration: 7
   showDebug: 0
   playerSearchInterval: 1
+  healthCheckInterval: 1
 --- !u!114 &1257060512434829963
 MonoBehaviour:
   m_ObjectHideFlags: 0

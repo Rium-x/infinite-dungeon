@@ -3,7 +3,6 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
-using UnityEngine.Rendering.Universal;
 using UnityEngine.UI;
 
 /// <summary>Controls the player information UI authored in SampleScene.</summary>
@@ -16,6 +15,7 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
     [SerializeField] private Button launcherButton;
     [SerializeField] private Button levelUpButton;
     [SerializeField] private Button closeButton;
+    [SerializeField] private GameObject canvasToHideWhileOpen;
     [SerializeField] private TMP_Text statsText;
     [SerializeField] private TMP_Text levelUpButtonText;
     [SerializeField] private RawImage characterPreview;
@@ -24,8 +24,9 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
     private readonly List<Behaviour> disabledGameplayComponents = new List<Behaviour>();
     private InputAction toggleAction;
     private bool isOpen;
+    private bool canvasVisibilityWasSaved;
+    private bool canvasWasActive;
     private RenderTexture previewTexture;
-    private int previewLightLayerMask;
 
     private void Awake()
     {
@@ -87,6 +88,8 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
     private void Update()
     {
         if (!isOpen) return;
+        if (canvasVisibilityWasSaved && canvasToHideWhileOpen != null && canvasToHideWhileOpen.activeSelf)
+            canvasToHideWhileOpen.SetActive(false);
         RefreshPlayerInformation();
         UpdatePreviewCamera();
     }
@@ -95,6 +98,7 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
     {
         CommonWindowEvents.WindowOpened -= HandleOtherWindowOpened;
         toggleAction?.Disable();
+        SetCanvasToHideVisibility(false);
         RestoreGameplayComponents();
     }
 
@@ -134,15 +138,18 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
         windowRoot.SetActive(open);
         if (open)
         {
-            if (previewCamera != null) RefreshPreviewLightLayerMask();
             DisableGameplayComponents();
             RefreshPlayerInformation();
             UpdatePreviewCamera();
+            // Hide the designated gameplay Canvas after closing other windows and
+            // completing this window's open work, so their cleanup cannot re-enable it.
+            SetCanvasToHideVisibility(true);
         }
         else
         {
             if (previewCamera != null) previewCamera.enabled = false;
             RestoreGameplayComponents();
+            SetCanvasToHideVisibility(false);
         }
     }
 
@@ -152,6 +159,32 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
     }
 
     private void OnToggleAction(InputAction.CallbackContext context) => SetOpen(!isOpen);
+
+    private void SetCanvasToHideVisibility(bool hide)
+    {
+        if (canvasToHideWhileOpen == null) return;
+
+        if (hide)
+        {
+            // Do not hide a Canvas that contains this controller or its window.
+            Transform target = canvasToHideWhileOpen.transform;
+            if (transform == target || transform.IsChildOf(target) ||
+                windowRoot.transform == target || windowRoot.transform.IsChildOf(target))
+            {
+                Debug.LogWarning("PlayerInfoWindowUI: 非表示対象Canvas内にウィンドウがあるため、そのCanvasは維持します。", this);
+                return;
+            }
+
+            canvasWasActive = canvasToHideWhileOpen.activeSelf;
+            canvasVisibilityWasSaved = true;
+            canvasToHideWhileOpen.SetActive(false);
+        }
+        else if (canvasVisibilityWasSaved)
+        {
+            canvasToHideWhileOpen.SetActive(canvasWasActive);
+            canvasVisibilityWasSaved = false;
+        }
+    }
 
     private void RefreshPlayerInformation()
     {
@@ -166,8 +199,8 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
 
         if (statsText != null) statsText.text =
             $"レベル　　　　{player.PlayerLevel}\n" +
-            $"経験値ポイント　{player.ExperiencePoints} pt\n" +
-            $"次のレベル　　　{player.ExperienceToNextLevel} pt\n\n" +
+            $"経験値ポイント　{player.ExperiencePoints:F2} pt\n" +
+            $"次のレベル　　　{player.ExperienceToNextLevel:F2} pt\n\n" +
             $"HP　　　　　　{player.CurrentHealth:F2} / {player.MaximumHealth:F2}\n" +
             $"MP　　　　　　{mp.CurrentMP:F2} / {mp.MaximumMP:F2}\n" +
             $"最大HP上昇　　+{player.MaximumHealthBonus:F2} / Lv\n" +
@@ -179,8 +212,8 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
         if (levelUpButton != null) levelUpButton.interactable = player.CanLevelUp;
         if (levelUpButtonText != null)
             levelUpButtonText.text = player.CanLevelUp
-                ? $"レベルアップ（{player.ExperienceToNextLevel} pt）"
-                : $"ポイント不足（あと {player.ExperienceToNextLevel - player.ExperiencePoints} pt）";
+                ? $"レベルアップ（{player.ExperienceToNextLevel:F2} pt）"
+                : $"ポイント不足（あと {player.ExperienceToNextLevel - player.ExperiencePoints:F2} pt）";
     }
 
     private static string BuildWeaponLines(float attackBonus)
@@ -223,12 +256,10 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
         SpriteRenderer[] renderers = player.GetComponentsInChildren<SpriteRenderer>(true);
         bool hasBounds = false;
         Bounds bounds = default;
-        int layerMask = 0;
         foreach (SpriteRenderer spriteRenderer in renderers)
         {
             if (spriteRenderer == null || !spriteRenderer.enabled || !spriteRenderer.gameObject.activeInHierarchy ||
                 spriteRenderer.sprite == null) continue;
-            layerMask |= 1 << spriteRenderer.gameObject.layer;
             if (!hasBounds)
             {
                 bounds = spriteRenderer.bounds;
@@ -246,22 +277,11 @@ public sealed class PlayerInfoWindowUI : MonoBehaviour
         previewCamera.nearClipPlane = 0.01f;
         previewCamera.farClipPlane = 100f;
         previewCamera.depth = -100f;
-        // 2D lights are culled by the camera too. Their GameObjects can use a
-        // different layer from the player's sprite objects, so include those layers.
-        previewCamera.cullingMask = layerMask | previewLightLayerMask;
+        // The preview camera must include every player and lighting layer.
+        previewCamera.cullingMask = ~0;
         previewCamera.orthographicSize = Mathf.Max(bounds.extents.y, bounds.extents.x / aspect) * 1.15f;
         previewCamera.transform.position = bounds.center + new Vector3(0f, 0f, -10f);
         previewCamera.enabled = true;
-    }
-
-    private void RefreshPreviewLightLayerMask()
-    {
-        previewLightLayerMask = 0;
-        foreach (Light2D light2D in FindObjectsByType<Light2D>(FindObjectsSortMode.None))
-        {
-            if (light2D != null && light2D.isActiveAndEnabled)
-                previewLightLayerMask |= 1 << light2D.gameObject.layer;
-        }
     }
 
     private void DisableGameplayComponents()

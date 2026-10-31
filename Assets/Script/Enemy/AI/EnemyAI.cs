@@ -4,20 +4,44 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody2D))]
 public class EnemyAI : MonoBehaviour
 {
+    // All enemies share one player lookup. Searching the whole scene once per enemy
+    // quickly becomes expensive in stages with many spawned enemies.
+    private static Transform sharedPlayer;
+    private static WaterTerrainEffect sharedPlayerWaterEffect;
+    private static float nextSharedPlayerSearchTime;
     
 private MoveStats moveStats;
     private WaterTerrainEffect waterEffect;
     private WaterTerrainEffect playerWaterEffect;
-    enum State { Wander = 0, Chase = 1, Search = 2, Investigate = 3, Flee = 4 }
-    [SerializeField] private State currentState = State.Investigate;
+    [SerializeField] private EnemyAIState currentState = EnemyAIState.Investigate;
     private bool movementPausedByCompanion;
+    private readonly List<EnemyAIExtension> extensions = new List<EnemyAIExtension>();
+    private EnemyAIExtension activeCustomExtension;
+    private EnemyAIExtension commandOwner;
+    private string activeCustomStateId;
+    private float extensionBaseSpeed = -1f;
+
+    public EnemyAIState CurrentState => currentState;
+    public string ActiveCustomStateId => activeCustomStateId;
+    public Transform PlayerTransform => player;
+    public bool CanSeePlayer => canSeePlayer;
+    public bool IsInCustomState => activeCustomExtension != null;
+    public Vector2 CenterPosition => CenterPos;
+    public Vector2 LastKnownPlayerPosition => lastPlayerPos;
+    public Vector2 DirectionToPlayer => player != null && player.gameObject.activeInHierarchy
+        ? (((Vector2)player.position + playerPositionOffset) - CenterPos).normalized
+        : (((Vector2)lastPlayerPos) - CenterPos).normalized;
+    public float DistanceToPlayer => Vector2.Distance(CenterPos,
+        player != null && player.gameObject.activeInHierarchy
+            ? (Vector2)player.position + playerPositionOffset
+            : (Vector2)lastPlayerPos);
 
     /// <summary>Companion AIs can observe the base AI state without owning its state machine.</summary>
-    public bool IsWandering => currentState == State.Wander;
-    public bool IsSearching => currentState == State.Search;
-    public bool IsInvestigating => currentState == State.Investigate;
-    public bool IsChasing => currentState == State.Chase;
-    public bool IsFleeing => currentState == State.Flee;
+    public bool IsWandering => currentState == EnemyAIState.Wander;
+    public bool IsSearching => currentState == EnemyAIState.Search;
+    public bool IsInvestigating => currentState == EnemyAIState.Investigate;
+    public bool IsChasing => currentState == EnemyAIState.Chase;
+    public bool IsFleeing => currentState == EnemyAIState.Flee;
 
     /// <summary>Temporarily pauses base-AI movement while a companion animation is playing.</summary>
     public void SetMovementPausedByCompanion(bool paused)
@@ -86,7 +110,6 @@ private MoveStats moveStats;
     private float nextSightCheckTime;
     private float nextMovementDecisionTime;
     [SerializeField, Min(0.1f)] private float playerSearchInterval = 1f;
-    private float nextPlayerSearchTime;
     private bool canSeePlayer;
     private EnemyHealth enemyHealth;
     [SerializeField, Min(0.1f), Tooltip("逃走判断に使うHP確認の間隔(秒)。")]
@@ -102,6 +125,22 @@ private MoveStats moveStats;
         moveStats =
         GetComponentInChildren<MoveStats>(true);
         waterEffect = GetComponentInParent<WaterTerrainEffect>();
+        extensions.Clear();
+        extensions.AddRange(GetComponents<EnemyAIExtension>());
+        // Stable priority sort: equal-priority extensions retain their component order.
+        for (int i = 1; i < extensions.Count; i++)
+        {
+            EnemyAIExtension current = extensions[i];
+            int insertAt = i;
+            while (insertAt > 0 && extensions[insertAt - 1].Priority < current.Priority)
+            {
+                extensions[insertAt] = extensions[insertAt - 1];
+                insertAt--;
+            }
+            extensions[insertAt] = current;
+        }
+        foreach (EnemyAIExtension extension in extensions)
+            if (extension != null) extension.Initialize(this);
         FindPlayer();
         nextSightCheckTime = Time.time + Random.Range(0f, Mathf.Max(0.02f, sightCheckInterval));
         scanTimer = Random.Range(0f, Mathf.Max(0.02f, scanInterval));
@@ -111,23 +150,29 @@ private MoveStats moveStats;
 
     void FindPlayer()
     {
-        if (Time.time < nextPlayerSearchTime) return;
-        nextPlayerSearchTime = Time.time + Mathf.Max(0.1f, playerSearchInterval);
-
-        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
-        foreach (GameObject obj in players)
+        if (sharedPlayer == null && Time.time >= nextSharedPlayerSearchTime)
         {
-            if (obj.GetComponent<RandomTeleporter>() != null)
+            nextSharedPlayerSearchTime = Time.time + Mathf.Max(0.1f, playerSearchInterval);
+
+            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+            foreach (GameObject obj in players)
             {
-                player = obj.transform;
-                playerWaterEffect = obj.GetComponentInParent<WaterTerrainEffect>();
-                break;
+                if (obj != null && obj.GetComponent<RandomTeleporter>() != null)
+                {
+                    sharedPlayer = obj.transform;
+                    sharedPlayerWaterEffect = obj.GetComponentInParent<WaterTerrainEffect>();
+                    break;
+                }
             }
         }
+
+        player = sharedPlayer;
+        playerWaterEffect = sharedPlayerWaterEffect;
     }
 
     void Update()
     {
+        extensionBaseSpeed = -1f;
         if (Time.time >= nextSightCheckTime)
         {
             nextSightCheckTime = Time.time + Mathf.Max(0.02f, sightCheckInterval);
@@ -139,17 +184,131 @@ private MoveStats moveStats;
                 lastPlayerPos = player.position + (Vector3)playerPositionOffset;
         }
 
+        if (activeCustomExtension != null)
+        {
+            if (!activeCustomExtension.isActiveAndEnabled)
+                ExitCustomState();
+            else
+            {
+                InvokeCustomStateUpdate(activeCustomExtension, activeCustomStateId);
+                return;
+            }
+        }
+        if (TryEnterCustomState()) return;
+
         switch (currentState)
         {
-            case State.Wander: UpdateWander(canSeePlayer); break;
-            case State.Chase:  UpdateChase(canSeePlayer);  break;
-            case State.Investigate: UpdateInvestigate(canSeePlayer); break;
-            case State.Search: UpdateSearch(canSeePlayer); break;
-            case State.Flee:   UpdateFlee(); break;
+            case EnemyAIState.Wander: UpdateWander(canSeePlayer); break;
+            case EnemyAIState.Chase:  UpdateChase(canSeePlayer);  break;
+            case EnemyAIState.Investigate: UpdateInvestigate(canSeePlayer); break;
+            case EnemyAIState.Search: UpdateSearch(canSeePlayer); break;
+            case EnemyAIState.Flee:   UpdateFlee(); break;
         }
     }
 
     private Vector2 CenterPos => (Vector2)transform.position + rayOffset;
+
+    private bool TryEnterCustomState()
+    {
+        foreach (EnemyAIExtension extension in extensions)
+        {
+            if (extension == null || !extension.isActiveAndEnabled) continue;
+            commandOwner = extension;
+            bool wantsState = extension.TryEnterState(extension.Context, out string stateId);
+            commandOwner = null;
+            if (!wantsState || string.IsNullOrWhiteSpace(stateId)) continue;
+
+            activeCustomExtension = extension;
+            activeCustomStateId = stateId;
+            InvokeCustomStateEntered(extension, stateId);
+            if (activeCustomExtension == extension && activeCustomStateId == stateId)
+                InvokeCustomStateUpdate(extension, stateId);
+            return true;
+        }
+        return false;
+    }
+
+    private bool TryRunStateOverride(EnemyAIState state)
+    {
+        foreach (EnemyAIExtension extension in extensions)
+        {
+            if (extension == null || !extension.isActiveAndEnabled || !extension.OverridesState(state)) continue;
+            commandOwner = extension;
+            extension.OnStandardStateUpdate(extension.Context, state);
+            commandOwner = null;
+            return true;
+        }
+        return false;
+    }
+
+    private void InvokeCustomStateEntered(EnemyAIExtension extension, string stateId)
+    {
+        commandOwner = extension;
+        extension.OnStateEntered(extension.Context, stateId);
+        commandOwner = null;
+    }
+
+    private void InvokeCustomStateUpdate(EnemyAIExtension extension, string stateId)
+    {
+        commandOwner = extension;
+        extension.OnCustomStateUpdate(extension.Context, stateId);
+        commandOwner = null;
+    }
+
+    private void ExitCustomState()
+    {
+        EnemyAIExtension previous = activeCustomExtension;
+        string previousId = activeCustomStateId;
+        activeCustomExtension = null;
+        activeCustomStateId = null;
+        if (previous == null) return;
+        commandOwner = previous;
+        previous.OnStateExited(previous.Context, previousId);
+        commandOwner = null;
+    }
+
+    internal void SetExtensionMovement(EnemyAIExtension owner, Vector2 direction, float? baseSpeed)
+    {
+        if (owner == null || owner != commandOwner) return;
+        moveInput = direction.sqrMagnitude > 1f ? direction.normalized : direction;
+        if (moveInput != Vector2.zero) lastDirection = moveInput;
+        if (baseSpeed.HasValue) extensionBaseSpeed = baseSpeed.Value;
+    }
+
+    internal void RequestStandardState(EnemyAIExtension owner, EnemyAIState state)
+    {
+        if (owner == null || owner != commandOwner) return;
+        ExitCustomState();
+        currentState = state;
+        moveInput = Vector2.zero;
+        nextMovementDecisionTime = 0f;
+    }
+
+    internal void RequestCustomState(EnemyAIExtension owner, string stateId)
+    {
+        if (owner == null || owner != commandOwner || string.IsNullOrWhiteSpace(stateId)) return;
+        if (activeCustomExtension == owner && activeCustomStateId == stateId) return;
+        if (activeCustomExtension != null) ExitCustomState();
+        activeCustomExtension = owner;
+        activeCustomStateId = stateId;
+        InvokeCustomStateEntered(owner, stateId);
+    }
+
+    internal Vector2 GetFarthestDirectionForExtension() => GetFarthestDirection();
+
+    internal Vector2 ChooseDirectionForExtension(Vector2 desiredDirection)
+    {
+        if (desiredDirection.sqrMagnitude <= 0.0001f) return Vector2.zero;
+        if (waterEffect != null && !waterEffect.AllowsWaterDirection(desiredDirection))
+            return GetFarthestDirection();
+        if (!CanTurnAround(desiredDirection)) return GetFarthestDirection();
+        Vector2 origin = CenterPos + desiredDirection.normalized * rayLaunchRadius;
+        RaycastHit2D hit = Physics2D.CircleCast(origin, checkRadius, desiredDirection.normalized,
+            detectRange, detectionMask);
+        return hit.collider != null && !hit.collider.CompareTag("Player")
+            ? GetFarthestDirection()
+            : desiredDirection.normalized;
+    }
 
     private bool CanTurnAround(Vector2 direction)
     {
@@ -166,6 +325,7 @@ private MoveStats moveStats;
         if (player == null || !player.gameObject.activeInHierarchy) FindPlayer();
 
         if (canSeePlayer) { BeginChase(); return; }
+        if (TryRunStateOverride(EnemyAIState.Wander)) return;
         
         scanTimer -= Time.deltaTime;
         if (scanTimer <= 0)
@@ -179,7 +339,7 @@ private MoveStats moveStats;
     {
         moveInput = GetFarthestDirection();
         if (moveInput != Vector2.zero) lastDirection = moveInput;
-        scanTimer = (currentState == State.Search) ? fastScanInterval : scanInterval;
+        scanTimer = (currentState == EnemyAIState.Search) ? fastScanInterval : scanInterval;
     }
 
     void UpdateChase(bool canSeePlayer)
@@ -190,10 +350,11 @@ private MoveStats moveStats;
             return;
         }
         if (!canSeePlayer) { 
-            currentState = State.Investigate; 
+            currentState = EnemyAIState.Investigate; 
             currentSearchTimer = 0;
             return;
         }
+        if (TryRunStateOverride(EnemyAIState.Chase)) return;
         if (Time.time < nextMovementDecisionTime) return;
         nextMovementDecisionTime = Time.time + Mathf.Max(0.02f, movementDecisionInterval);
         moveInput = ((Vector2)player.position + playerPositionOffset - CenterPos).normalized;
@@ -215,6 +376,7 @@ private MoveStats moveStats;
             BeginSearch();
             return;
         }
+        if (TryRunStateOverride(EnemyAIState.Flee)) return;
         if (Time.time >= nextMovementDecisionTime)
         {
             nextMovementDecisionTime = Time.time + Mathf.Max(0.02f, movementDecisionInterval);
@@ -227,7 +389,7 @@ private MoveStats moveStats;
     {
         nextHealthCheckTime = Time.time + Mathf.Max(0.1f, healthCheckInterval);
         if (IsBelowFleeHealthThreshold()) StartFlee();
-        else currentState = State.Chase;
+        else currentState = EnemyAIState.Chase;
         nextMovementDecisionTime = 0f;
     }
 
@@ -246,7 +408,7 @@ private MoveStats moveStats;
 
     private void StartFlee()
     {
-        currentState = State.Flee;
+        currentState = EnemyAIState.Flee;
         nextMovementDecisionTime = 0f;
     }
 
@@ -288,6 +450,7 @@ private MoveStats moveStats;
         if (canSeePlayer) { BeginChase(); return; }
         currentSearchTimer += Time.deltaTime;
         if (currentSearchTimer >= searchTimeout) { BeginSearch(); return; }
+        if (TryRunStateOverride(EnemyAIState.Investigate)) return;
         if (Time.time < nextMovementDecisionTime) return;
         nextMovementDecisionTime = Time.time + Mathf.Max(0.02f, movementDecisionInterval);
         Vector2 dirToLastPos = ((Vector2)lastPlayerPos - CenterPos).normalized;
@@ -302,7 +465,7 @@ private MoveStats moveStats;
     {
         lastDirection = moveInput; 
         alertTimer = alertDuration;
-        currentState = State.Search; 
+        currentState = EnemyAIState.Search; 
         scanTimer = 0; 
     }
 
@@ -316,7 +479,8 @@ private MoveStats moveStats;
         }
         if (canSeePlayer) { BeginChase(); return; }
         alertTimer -= Time.deltaTime;
-        if (alertTimer <= 0) { currentState = State.Wander; return; }
+        if (alertTimer <= 0) { currentState = EnemyAIState.Wander; return; }
+        if (TryRunStateOverride(EnemyAIState.Search)) return;
         
         scanTimer -= Time.deltaTime;
         if (scanTimer <= 0)
@@ -425,8 +589,9 @@ private MoveStats moveStats;
             (finalForce - moveInput).sqrMagnitude > 0.01f &&
             !waterEffect.AllowsWaterDirection(finalForce)) finalForce = Vector2.zero;
         
-        float baseSpeed =
-    (currentState == State.Wander)
+        float baseSpeed = extensionBaseSpeed >= 0f
+    ? extensionBaseSpeed
+    : (currentState == EnemyAIState.Wander)
     ? walkSpeed
     : runSpeed;
 
@@ -484,7 +649,7 @@ if (moveStats != null)
         Gizmos.DrawWireSphere(CenterPos, rayLaunchRadius);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(CenterPos, checkRadius);
-        if (currentState == State.Investigate || currentState == State.Search)
+        if (currentState == EnemyAIState.Investigate || currentState == EnemyAIState.Search)
         {
             Gizmos.color = Color.red;
             Gizmos.DrawWireSphere(lastPlayerPos, 0.3f);

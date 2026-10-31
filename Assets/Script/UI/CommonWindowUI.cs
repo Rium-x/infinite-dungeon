@@ -94,7 +94,12 @@ public abstract class CommonWindowUI : MonoBehaviour
             return;
         }
 
-        closeButton = CreateCloseButton(windowRoot.transform);
+        Transform existingCloseButton = windowRoot.transform.Find("CloseButton");
+        closeButton = existingCloseButton != null
+            ? existingCloseButton.GetComponent<Button>()
+            : null;
+        if (closeButton == null)
+            closeButton = CreateCloseButton(windowRoot.transform);
         closeButton.onClick.RemoveListener(Close);
         closeButton.onClick.AddListener(Close);
         closeButtonInitialized = true;

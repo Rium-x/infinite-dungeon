@@ -441,6 +441,11 @@ public sealed class WaterTerrainEffect : MonoBehaviour
 
     private void ApplyWaterFade()
     {
+        // Most characters spend nearly all of their time outside water. Avoid walking
+        // every child renderer on every frame when there is no fade to apply.
+        if (!isInWater && currentWaterFade <= 0.001f)
+            return;
+
         float characterCutoffY = hitboxRoot != null
             ? hitboxRoot.position.y - 0.6f
             : characterRoot.position.y - 0.6f;
@@ -450,7 +455,6 @@ public sealed class WaterTerrainEffect : MonoBehaviour
             if (state.renderer == null) continue;
             bool individuallyCut = IsIndividuallyCutRenderer(state.renderer);
             if (IsHandRenderer(state.renderer) && !individuallyCut) continue;
-            if (!isInWater && currentWaterFade <= 0.001f) continue;
             float cutoffY = individuallyCut
                 ? state.renderer.bounds.center.y
                 : characterCutoffY;

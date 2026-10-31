@@ -9,11 +9,11 @@ public class ExplorationManager : MonoBehaviour
     private readonly Dictionary<Light2D, float> originalLightRadiusMap = new Dictionary<Light2D, float>();
 
     [SerializeField] private StageData currentStage;
-    [SerializeField] private int currentProgress;
-    [SerializeField] private int requiredProgress = 100;
+    [SerializeField, Min(0f)] private float currentProgress;
+    [SerializeField, Min(0f)] private float requiredProgress = 100f;
 
-    public int CurrentProgress => currentProgress;
-    public int RequiredProgress => requiredProgress;
+    public float CurrentProgress => currentProgress;
+    public float RequiredProgress => requiredProgress;
 
     private void Awake()
     {
@@ -28,7 +28,7 @@ public class ExplorationManager : MonoBehaviour
         ApplyStageLightRadius();
     }
 
-    public int GetRequiredExplorationValue(StageData stage)
+    public float GetRequiredExplorationValue(StageData stage)
     {
         if (stage == null)
             return requiredProgress;
@@ -129,13 +129,13 @@ public class ExplorationManager : MonoBehaviour
         return null;
     }
 
-    public void AddProgress(int value)
+    public void AddProgress(float value)
     {
+        if (value <= 0f) return;
         currentProgress += value;
 
-
         Debug.Log(
-            $"攻略率 {currentProgress}/{requiredProgress}"
+            $"攻略率 {currentProgress:F2}/{requiredProgress:F2}"
         );
 
         if (currentProgress >= requiredProgress)
