@@ -2,6 +2,12 @@ using UnityEngine;
 
 public class Follow_WithAnimation : MonoBehaviour
 {
+    private enum HorizontalDirection
+    {
+        Right,
+        Left
+    }
+
     [Header("追跡設定")]
     [SerializeField] private Transform target; 
     [SerializeField] private float smoothTime = 0.1f;
@@ -18,6 +24,10 @@ public class Follow_WithAnimation : MonoBehaviour
 
     [Header("歩行アニメーション設定")]
     [SerializeField] private Rigidbody2D playerRb;
+    [Header("移動方向での反転")]
+    [SerializeField] private bool flipByMoveDirection = false;
+    [SerializeField] private HorizontalDirection flipWhenMoving = HorizontalDirection.Right;
+    [SerializeField] private SpriteRenderer spriteRenderer;
     [SerializeField] private float bobAmount = 0.2f; 
     [SerializeField] private float phaseOffset = 0f;
 
@@ -36,6 +46,7 @@ public class Follow_WithAnimation : MonoBehaviour
     private float timer = 0f;
     private float currentBobAmount = 0f;
     private float currentBobSpeed = 0f;
+    private bool initialSpriteFlipX;
 
     // --- ここで1つにまとめました ---
     void Start()
@@ -45,6 +56,11 @@ public class Follow_WithAnimation : MonoBehaviour
         {
             playerRb = GetComponentInParent<Rigidbody2D>();
         }
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer != null)
+            initialSpriteFlipX = spriteRenderer.flipX;
 
         // ターゲットがいる場合は初期位置を合わせる
         if (target != null)
@@ -62,6 +78,20 @@ public class Follow_WithAnimation : MonoBehaviour
 
         // Rigidbody2Dの最新のプロパティ名(velocity)を使用
         float moveSpeed = playerRb.linearVelocity.magnitude;
+
+        // 水平方向の速度を移動方向として扱い、指定方向のときだけ反転します。
+        if (flipByMoveDirection && spriteRenderer != null)
+        {
+            float horizontalSpeed = playerRb.linearVelocity.x;
+            if (Mathf.Abs(horizontalSpeed) > 0.01f)
+            {
+                bool movingRight = horizontalSpeed > 0f;
+                bool shouldFlip = flipWhenMoving == HorizontalDirection.Right
+                    ? movingRight
+                    : !movingRight;
+                spriteRenderer.flipX = initialSpriteFlipX ^ shouldFlip;
+            }
+        }
 
         // 速度計算
         float targetSpeed = moveSpeed * speedMultiplier;

@@ -70,6 +70,7 @@ public class EnemyHealth : MonoBehaviour
     public float HealthRatio => maxHealth > 0f ? Mathf.Clamp01(currentHealth / maxHealth) : 0f;
 
     public event Action OnDestroyed;
+    public static event Action<EnemyHealth, bool> OnAnyEnemyDestroyed;
 
     void Start()
     {
@@ -230,6 +231,7 @@ public class EnemyHealth : MonoBehaviour
 
         OnDestroyed?.Invoke();
         OnDestroyed = null;
+        OnAnyEnemyDestroyed?.Invoke(this, killedByPlayer);
 
         StartCoroutine(FadeAndDestroy());
     }
