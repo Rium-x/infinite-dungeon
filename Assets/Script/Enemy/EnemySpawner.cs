@@ -4,8 +4,14 @@ using System.Collections.Generic;
 
 public class EnemySpawner : MonoBehaviour
 {
+    [Header("スポーン負荷")]
+    [Tooltip("一括生成モードを含む全スポーン設定で、1フレームに生成する敵の上限です。")]
+    [SerializeField, Min(1)] private int maxSpawnsPerFrame = 2;
+
     private BSPDungeonMaster dungeonMaster;
     private int handledGenerationVersion = -1;
+    private int spawnFrame = -1;
+    private int spawnsThisFrame;
     
     // 【重要】設定データ（インスタンス）そのものをキーにして、個別にカウントを管理
     private Dictionary<EnemySpawnSettings, int> activeCounts = new Dictionary<EnemySpawnSettings, int>();
@@ -45,6 +51,8 @@ public class EnemySpawner : MonoBehaviour
         StopAllCoroutines();
         activeCounts.Clear(); // 辞書をまっさらにリセット
         missingPreferredTerrain.Clear();
+        spawnFrame = -1;
+        spawnsThisFrame = 0;
 
         if (dungeonMaster == null || dungeonMaster.currentStageData == null) return;
         if (dungeonMaster.IsUsingManualMap && !dungeonMaster.currentStageData.spawnEnemiesOnManualMap) return;
@@ -70,7 +78,7 @@ public class EnemySpawner : MonoBehaviour
         switch (setting.spawnMode)
         {
             case EnemySpawnSettings.SpawnMode.ImmediateAll:
-                SpawnToMax(setting, false);
+                yield return StartCoroutine(SpawnToMax(setting, false));
                 break;
 
             case EnemySpawnSettings.SpawnMode.GradualOnce:
@@ -82,22 +90,43 @@ public class EnemySpawner : MonoBehaviour
                 break;
 
             case EnemySpawnSettings.SpawnMode.Constant:
-                SpawnToMax(setting, true);
+                yield return StartCoroutine(SpawnToMax(setting, true));
                 yield return StartCoroutine(SpawnRoutine(setting, true));
                 break;
         }
     }
 
-    private void SpawnToMax(EnemySpawnSettings setting, bool canRespawn)
+    private IEnumerator SpawnToMax(EnemySpawnSettings setting, bool canRespawn)
     {
-        // この設定枠の最大数に達するまで生成
         while (activeCounts[setting] < setting.maxCount && !missingPreferredTerrain.Contains(setting))
         {
+            yield return StartCoroutine(WaitForSpawnSlot());
             if (!SpawnEnemy(setting, canRespawn, out bool hasPreferredTerrain))
             {
                 if (!hasPreferredTerrain) missingPreferredTerrain.Add(setting);
                 break;
             }
+
+        }
+    }
+
+    private IEnumerator WaitForSpawnSlot()
+    {
+        while (true)
+        {
+            if (spawnFrame != Time.frameCount)
+            {
+                spawnFrame = Time.frameCount;
+                spawnsThisFrame = 0;
+            }
+
+            if (spawnsThisFrame < Mathf.Max(1, maxSpawnsPerFrame))
+            {
+                spawnsThisFrame++;
+                yield break;
+            }
+
+            yield return null;
         }
     }
 

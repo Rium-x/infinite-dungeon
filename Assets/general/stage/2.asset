@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 2
   m_EditorClassIdentifier: Assembly-CSharp::StageData
   stageName: "Goblin's lair \\n (\u30B4\u30D6\u30EA\u30F3\u306E\u305D\u3046\u304F\u3064)"
+  backgroundMusic: {fileID: 8300000, guid: 2396e432979e69c45a690182bac34d3b, type: 3}
   requiredExplorationValue: 200
   playerLightRadiusPercent: 87
   normalItemOrderFalloff: 0.5

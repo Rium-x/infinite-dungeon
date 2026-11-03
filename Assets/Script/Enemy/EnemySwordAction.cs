@@ -5,22 +5,21 @@ using UnityEngine;
 /// 概要:
 /// ・プレイヤーが射程内にいて、間に障害物（LayerMaskで判定）が無い場合のみ自動的に攻撃する
 /// ・攻撃間隔はランダム（min〜max）
-/// ・攻撃時は「手（HB優先）」を基準にプレイヤー方向へ剣が振られ、終了後は手元へ滑らかに戻る
+/// ・攻撃時は手のTransformをプレイヤー方向へ動かし、終了後は追従動作を再開する
 /// ・このスクリプトは剣自身にアタッチする想定。Start時に自動で「手」の子オブジェクトになる
 ///
 /// 前提（既存プロジェクトに依存する箇所）:
 /// ・IWeapon インターフェースは Attack() / SpecialAbility() を持つ想定
 ///   （NewSwordAction と同じシグネチャを踏襲）
 /// ・プレイヤーには "Player" タグが付いている想定（未設定なら player フィールドへ手動アサイン可）
-/// ・敵の階層内に "HB" という名前のオブジェクトがあれば、それを手の基準として最優先で使用する
-///   （見つからない場合は enemyRoot＝敵の親オブジェクトを手の基準として使う）
+/// ・敵の階層内に "Hand_R" があれば手として使用し、なければ "HB" を探す
 public class EnemySwordAction : MonoBehaviour, IWeapon
 {
     [Header("参照設定")]
     [Tooltip("プレイヤー。未設定の場合は Player タグから自動取得")]
     [SerializeField] private Transform player;
 
-    [Tooltip("剣を振る基準となる「手」。未設定の場合は enemyRoot 配下の \"HB\" を自動検索")]
+    [Tooltip("剣と一緒に動かす「手」。未設定の場合は敵階層から Hand_R、次にHBを検索")]
     [SerializeField] private Transform targetHand;
 
     [Tooltip("敵本体（親オブジェクト）。未設定の場合は親Transformを自動取得")]
@@ -59,23 +58,29 @@ public class EnemySwordAction : MonoBehaviour, IWeapon
     private Vector3 attackTargetPos;
     private float attackTimer;
     private float nextAttackTime;
-    private Vector3 handLocalOffset; // 「手元」＝剣の基準位置（ローカル座標）
-    private float fixedZ;
+    private Vector3 handReturnOffset;
+    private Quaternion handReturnRotation;
+    private Follow_WithAnimation handFollow;
 
     public bool IsAttacking => currentState != State.Idle;
 
     private void Awake()
     {
-        // 敵本体（親）の自動取得
-        if (enemyRoot == null)
-            enemyRoot = transform.parent != null ? transform.parent : transform;
-
-        // 手（targetHand）の自動取得。"HB" を優先的に探す
+        // 手（targetHand）の自動取得。見た目の手を先に探し、なければHBを使う
         if (targetHand == null)
         {
-            Transform hb = FindChildByName(enemyRoot, handObjectName);
-            targetHand = hb != null ? hb : enemyRoot;
+            Transform searchRoot = enemyRoot != null ? enemyRoot : transform.root;
+            Transform hand = FindChildByName(searchRoot, "Hand_R");
+            if (hand == null) hand = FindChildByName(searchRoot, handObjectName);
+            targetHand = hand != null ? hand : searchRoot;
         }
+
+        // 剣の親(手)ではなく、手を含む敵本体を基準にする。
+        if (enemyRoot == null)
+            enemyRoot = targetHand != null && targetHand.parent != null ? targetHand.parent : transform.root;
+
+        if (targetHand != null)
+            handFollow = targetHand.GetComponent<Follow_WithAnimation>();
 
         // プレイヤーの自動取得
         if (player == null)
@@ -91,8 +96,13 @@ public class EnemySwordAction : MonoBehaviour, IWeapon
         if (targetHand != null && transform.parent != targetHand)
             transform.SetParent(targetHand, true);
 
-        fixedZ = transform.position.z;
-        handLocalOffset = transform.localPosition; // これが「手元＝基準位置」
+        Transform returnAnchor = GetHandReturnAnchor();
+        handReturnOffset = returnAnchor != null
+            ? returnAnchor.InverseTransformPoint(targetHand.position)
+            : targetHand.position - transform.root.position;
+        handReturnRotation = returnAnchor != null
+            ? Quaternion.Inverse(returnAnchor.rotation) * targetHand.rotation
+            : targetHand.rotation;
 
         ScheduleNextAttack();
     }
@@ -106,7 +116,7 @@ public class EnemySwordAction : MonoBehaviour, IWeapon
 
     public void SpecialAbility() { }
 
-    private void Update()
+    private void LateUpdate()
     {
         if (player == null || targetHand == null) return;
 
@@ -125,21 +135,27 @@ public class EnemySwordAction : MonoBehaviour, IWeapon
 
             case State.Attacking:
                 attackTimer += Time.deltaTime;
-                RotateSmoothly(attackTargetPos);
-                transform.position = Vector3.SmoothDamp(
-                    transform.position, attackTargetPos, ref currentVelocity, attackSmoothTime);
+                RotateHandSmoothly(attackTargetPos);
+                targetHand.position = Vector3.SmoothDamp(
+                    targetHand.position, attackTargetPos, ref currentVelocity, attackSmoothTime);
 
                 if (attackTimer >= attackDuration)
                     currentState = State.Returning;
                 break;
 
             case State.Returning:
-                Vector3 returnDest = targetHand.TransformPoint(handLocalOffset);
-                RotateSmoothlyToZero();
-                transform.position = Vector3.SmoothDamp(
-                    transform.position, returnDest, ref currentVelocity, returnSmoothTime);
+                Transform returnAnchor = GetHandReturnAnchor();
+                Vector3 returnDest = returnAnchor != null
+                    ? returnAnchor.TransformPoint(handReturnOffset)
+                    : transform.root.position + handReturnOffset;
+                Quaternion returnRotation = returnAnchor != null
+                    ? returnAnchor.rotation * handReturnRotation
+                    : handReturnRotation;
+                RotateHandSmoothlyTo(returnRotation.eulerAngles.z);
+                targetHand.position = Vector3.SmoothDamp(
+                    targetHand.position, returnDest, ref currentVelocity, returnSmoothTime);
 
-                if (Vector3.Distance(transform.position, returnDest) < stopThreshold)
+                if (Vector3.Distance(targetHand.position, returnDest) < stopThreshold)
                     FinishReturn(returnDest);
                 break;
         }
@@ -147,6 +163,9 @@ public class EnemySwordAction : MonoBehaviour, IWeapon
 
     private void StartAttack()
     {
+        if (handFollow != null)
+            handFollow.enabled = false;
+
         if (audioSource != null && attackSound != null)
             audioSource.PlayOneShot(attackSound);
 
@@ -171,7 +190,7 @@ public class EnemySwordAction : MonoBehaviour, IWeapon
         float dist = Mathf.Min(Vector3.Distance(targetHand.position, player.position), reachDistance);
 
         attackTargetPos = targetHand.position + direction * dist;
-        attackTargetPos.z = fixedZ;
+        attackTargetPos.z = targetHand.position.z;
     }
 
     /// <summary>
@@ -202,31 +221,36 @@ public class EnemySwordAction : MonoBehaviour, IWeapon
         nextAttackTime = Time.time + Random.Range(minAttackInterval, maxAttackInterval);
     }
 
-    private void RotateSmoothly(Vector3 target)
+    private void RotateHandSmoothly(Vector3 target)
     {
-        Vector2 dir = target - transform.position;
+        Vector2 dir = target - targetHand.position;
         if (dir.sqrMagnitude > 0.001f)
         {
             float targetAngle = Mathf.Atan2(dir.y, dir.x) * Mathf.Rad2Deg - 90f;
-            ApplySmoothRotation(targetAngle);
+            ApplySmoothHandRotation(targetAngle);
         }
     }
 
-    private void RotateSmoothlyToZero() => ApplySmoothRotation(0f);
+    private void RotateHandSmoothlyTo(float targetAngle) => ApplySmoothHandRotation(targetAngle);
 
-    private void ApplySmoothRotation(float targetAngle)
+    private void ApplySmoothHandRotation(float targetAngle)
     {
-        float currentAngle = transform.eulerAngles.z;
+        float currentAngle = targetHand.eulerAngles.z;
         float newAngle = Mathf.SmoothDampAngle(currentAngle, targetAngle, ref currentRotationVelocity, rotationSmoothTime);
-        transform.rotation = Quaternion.Euler(0, 0, newAngle);
+        targetHand.rotation = Quaternion.Euler(0, 0, newAngle);
     }
 
     private void FinishReturn(Vector3 snapPos)
     {
-        transform.position = snapPos;
-        transform.rotation = Quaternion.Euler(0, 0, 0);
+        targetHand.position = snapPos;
+        Transform returnAnchor = GetHandReturnAnchor();
+        targetHand.rotation = returnAnchor != null
+            ? returnAnchor.rotation * handReturnRotation
+            : handReturnRotation;
 
         currentState = State.Idle;
+        if (handFollow != null)
+            handFollow.enabled = true;
         ScheduleNextAttack();
     }
 
@@ -242,6 +266,14 @@ public class EnemySwordAction : MonoBehaviour, IWeapon
         return null;
     }
 
+    private Transform GetHandReturnAnchor()
+    {
+        if (handFollow != null && handFollow.FollowTarget != null)
+            return handFollow.FollowTarget;
+
+        return enemyRoot;
+    }
+
     private void OnDrawGizmosSelected()
     {
         Vector3 origin = targetHand != null ? targetHand.position : transform.position;
@@ -251,5 +283,11 @@ public class EnemySwordAction : MonoBehaviour, IWeapon
 
         Gizmos.color = new Color(1f, 1f, 0f, 0.5f);
         Gizmos.DrawWireSphere(origin, Mathf.Clamp(attackReachDistance, 0f, maxAttackDistance));
+    }
+
+    private void OnDestroy()
+    {
+        if (handFollow != null)
+            handFollow.enabled = true;
     }
 }

@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: 10
   m_EditorClassIdentifier: Assembly-CSharp::StageData
   stageName: "Chittering Hollow \\n (\u87F2\u9CF4\u308B\u6E7F\u6D1E)"
-  playerLevelOrderPerLevel: 0.1
+  backgroundMusic: {fileID: 8300000, guid: 2396e432979e69c45a690182bac34d3b, type: 3}
+  requiredExplorationValue: 100
+  playerLightRadiusPercent: 100
   normalItemOrderFalloff: 0.5
-  normalItemEntryRampStages: 2
   normalItemDrops:
     items: []
   randomPlayerSpawn: 1

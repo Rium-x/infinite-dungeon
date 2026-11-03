@@ -2,6 +2,19 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem; // Input Systemをインポート
 
+public static class InputKeyboardFallback
+{
+    public static bool WasPressedThisFrame(KeyCode key)
+    {
+        return Input.GetKeyDown(key);
+    }
+
+    public static bool IsHeld(KeyCode key)
+    {
+        return Input.GetKey(key);
+    }
+}
+
 public class PlayerCombat : MonoBehaviour
 {
     public Transform rightHand;
@@ -47,6 +60,57 @@ public class PlayerCombat : MonoBehaviour
     }
 
     private void OnEnable() => controls.Player.Enable();
+
+    private void Update()
+    {
+        if (BSPDungeonMaster.IsPlayerInputLocked) return;
+
+        if (controls != null)
+        {
+            UpdateKeyboardFallbackForHand(
+                KeyCode.C,
+                rightHand,
+                ref isRightHeld,
+                () => HandleUseStarted(rightHand),
+                () => HandleUseCanceled(rightHand),
+                controls.Player.UseRight
+            );
+
+            UpdateKeyboardFallbackForHand(
+                KeyCode.Z,
+                leftHand,
+                ref isLeftHeld,
+                () => HandleUseStarted(leftHand),
+                () => HandleUseCanceled(leftHand),
+                controls.Player.UseLeft
+            );
+        }
+    }
+
+    private void UpdateKeyboardFallbackForHand(
+        KeyCode key,
+        Transform hand,
+        ref bool heldState,
+        System.Action onPressed,
+        System.Action onReleased,
+        UnityEngine.InputSystem.InputAction action)
+    {
+        if (hand == null || action == null) return;
+
+        bool inputSystemPressed = action.IsPressed();
+        if (!inputSystemPressed && InputKeyboardFallback.WasPressedThisFrame(key))
+        {
+            heldState = true;
+            onPressed();
+            return;
+        }
+
+        if (heldState && !inputSystemPressed && !InputKeyboardFallback.IsHeld(key))
+        {
+            heldState = false;
+            onReleased();
+        }
+    }
 
     private void OnDisable()
     {

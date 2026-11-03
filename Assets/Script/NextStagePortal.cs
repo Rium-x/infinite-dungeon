@@ -18,8 +18,8 @@ public class NextStagePortal : MonoBehaviour
         if (BSPDungeonMaster.IsPlayerInputLocked) return;
         if (!playerInside) return;
 
-        // ★Input.GetKeyDown(KeyCode.X) から変更
-        if (controls.Player.PickUp.triggered)
+        bool pickUpPressed = controls.Player.PickUp.IsPressed();
+        if (pickUpPressed || (!pickUpPressed && InputKeyboardFallback.WasPressedThisFrame(KeyCode.X)))
         {
             if (!ExplorationManager.Instance.CanGoNextStage())
             {

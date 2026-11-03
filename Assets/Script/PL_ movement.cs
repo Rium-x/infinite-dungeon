@@ -70,6 +70,14 @@ public class PL_movement : MonoBehaviour
         // マウスを画面内に閉じ込める（PC操作用）
         Cursor.lockState = CursorLockMode.Confined;
 
+        // タッチ中の指位置をマウス位置として扱い、既存の移動操作を使う。
+        bool isTouching = false;
+        if (Touchscreen.current != null && Touchscreen.current.primaryTouch.press.isPressed)
+        {
+            mousePositionInput = Touchscreen.current.primaryTouch.position.ReadValue();
+            isTouching = true;
+        }
+
         Vector2 targetDirection = Vector2.zero;
         float targetSpeedPercentage = 0f;
         bool isMoving = false;
@@ -86,7 +94,7 @@ public class PL_movement : MonoBehaviour
         // -------------------------------------------------------------
         // 2. マウスの処理（左クリックされているか）※コントローラー未操作時
         // -------------------------------------------------------------
-        else if (isMouseClicking)
+        else if (isMouseClicking || isTouching)
         {
             Vector2 screenCenter = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
             Vector2 offset = mousePositionInput - screenCenter;

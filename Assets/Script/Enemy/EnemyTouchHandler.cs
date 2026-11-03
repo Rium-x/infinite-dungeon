@@ -27,8 +27,8 @@ public class EnemyTouchHandler : MonoBehaviour
     {
         if (BSPDungeonMaster.IsPlayerInputLocked) return;
 
-        // ★Input.GetKeyDown(KeyCode.X) から変更
-        if (isTouchingPlayer && controls.Player.PickUp.triggered)
+        bool pickUpPressed = controls.Player.PickUp.IsPressed();
+        if (isTouchingPlayer && (pickUpPressed || (!pickUpPressed && InputKeyboardFallback.WasPressedThisFrame(KeyCode.X))))
         {
             if (enemyHealth != null)
             {

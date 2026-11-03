@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 0
   m_EditorClassIdentifier: Assembly-CSharp::StageData
   stageName: "\u68EE"
+  backgroundMusic: {fileID: 8300000, guid: 2396e432979e69c45a690182bac34d3b, type: 3}
   requiredExplorationValue: 100
   playerLightRadiusPercent: 100
   normalItemOrderFalloff: 0.81

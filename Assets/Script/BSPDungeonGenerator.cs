@@ -32,6 +32,8 @@ public class BSPDungeonMaster : MonoBehaviour
     public Image fadePanel;
     public TextMeshProUGUI stageText;
     public float fadeDuration = 0.5f;
+    [SerializeField, Tooltip("ステージ生成時に加算表示するロード画面シーン名")]
+    private string loadingScreenSceneName = "LoadingScene";
 
     [Header("Tilemap Settings")]
     [Tooltip("旧シーンとの互換用。wallTilemap 未設定時に使用")]
@@ -79,6 +81,7 @@ public class BSPDungeonMaster : MonoBehaviour
     [Header("Generation Safety")]
     [Min(0), Tooltip("削除される通常部屋がこの数以下なら配置を再試行しません。保証部屋の接続失敗時は常に再試行します。")]
     public int removedRoomRetryThreshold = 3;
+
     private readonly List<GameObject> manualMapObjects = new List<GameObject>();
     private readonly List<GameObject> generatedRoomObjects = new List<GameObject>();
     private readonly List<RandomTeleporter> pausedManualMapTeleporters = new List<RandomTeleporter>();
@@ -134,6 +137,7 @@ public class BSPDungeonMaster : MonoBehaviour
         int clampedIndex = Mathf.Clamp(stageIndex, 0, stageOrder.Count - 1);
         currentStageData = stageOrder[clampedIndex];
         ExplorationManager.Instance?.SetCurrentStage(currentStageData);
+        BGMManager.PlayStageMusic(currentStageData);
 
         if (stageText != null)
             stageText.text = currentStageData != null ? currentStageData.stageName : stageText.text;
@@ -161,11 +165,19 @@ public class BSPDungeonMaster : MonoBehaviour
         Time.timeScale = 0;
         IsPlayerInputLocked = true;
 
+        // If this gameplay scene was opened directly, show the same authored loading
+        // scene used by the title flow before starting the expensive map generation.
+        // When the title flow already owns a loading scene, it remains responsible
+        // for closing it after generation completes.
+        bool openedStartupLoadingScreen = !LoadingScreenController.HasActiveOverlay;
+        if (openedStartupLoadingScreen)
+            yield return StartCoroutine(LoadingScreenController.OpenOverlayRoutine(loadingScreenSceneName));
+
         // 1. 最初は真っ暗＆文字が表示された状態にする
         if (fadePanel != null) fadePanel.color = Color.black;
         if (stageText != null)
         {
-            stageText.text = currentStageData.stageName;
+            stageText.text = $"{currentStageData.stageName}\nマップ生成中...";
             stageText.color = Color.white;
             // 明示的に不透明度を1にする（念のため）
             fadePanel.canvasRenderer.SetAlpha(1);
@@ -173,12 +185,17 @@ public class BSPDungeonMaster : MonoBehaviour
         }
 
         // 2. ダンジョン生成
-        GenerateDungeon();
+        yield return StartCoroutine(GenerateDungeonRoutine());
+        BGMManager.PlayStageMusic(currentStageData);
+
+        if (openedStartupLoadingScreen)
+            yield return StartCoroutine(LoadingScreenController.CloseOverlayRoutine());
+        else
+            while (LoadingScreenController.HasActiveOverlay)
+                yield return null;
 
         // 3. 画面が真っ暗な状態で少し待機（ロード待ちやプレイヤーに心の準備をさせる）
         yield return new WaitForSecondsRealtime(3.5f);
-
-
 
         // 4. 徐々に透明にしていく（fadeDuration秒かけて消える）
         yield return StartCoroutine(Fade(0));
@@ -266,13 +283,15 @@ public class BSPDungeonMaster : MonoBehaviour
 
         if (nextStage != null)
         {
+            yield return StartCoroutine(LoadingScreenController.OpenOverlayRoutine(loadingScreenSceneName));
             currentStageData = nextStage;
             ExplorationManager.Instance?.SetCurrentStage(currentStageData);
-            GenerateDungeon();
+            yield return StartCoroutine(GenerateDungeonRoutine());
+            BGMManager.PlayStageMusic(currentStageData);
+            yield return StartCoroutine(LoadingScreenController.CloseOverlayRoutine());
         }
 
         yield return new WaitForSecondsRealtime(3.5f);
-
         yield return StartCoroutine(Fade(0));
 
         Time.timeScale = 1;
@@ -302,6 +321,11 @@ public class BSPDungeonMaster : MonoBehaviour
 
     public void GenerateDungeon()
     {
+        StartCoroutine(GenerateDungeonRoutine());
+    }
+
+    private IEnumerator GenerateDungeonRoutine()
+    {
         HasCompletedGeneration = false;
         AlignOutputTilemaps();
         ClearManualMapObjects();
@@ -310,12 +334,16 @@ public class BSPDungeonMaster : MonoBehaviour
 
         if (!IsUsingManualMap)
         {
-            GenerateAutomaticMap();
+            yield return StartCoroutine(GenerateAutomaticMapRoutine());
         }
         else
         {
             LoadManualMap();
+            yield return null;
         }
+
+        if (stageText != null && currentStageData != null)
+            stageText.text = currentStageData.stageName;
 
         var col = wallTilemap != null ? wallTilemap.GetComponent<TilemapCollider2D>() : null;
         if (col != null) col.ProcessTilemapChanges();
@@ -360,19 +388,19 @@ public class BSPDungeonMaster : MonoBehaviour
         }
     }
 
-    private void GenerateAutomaticMap()
+    private IEnumerator GenerateAutomaticMapRoutine()
     {
         ClearOutputTilemaps();
         if (currentStageData.roomLibrary == null)
         {
             Debug.LogError("StageData に DungeonRoomLibrary が設定されていません。", currentStageData);
-            return;
+            yield break;
         }
 
         if (floorTilemap == null || wallTilemap == null)
         {
             Debug.LogError("自動生成には床用・壁用の Tilemap が必要です。", this);
-            return;
+            yield break;
         }
 
         int generationWidth = overrideMapSize ? mapWidth : currentStageData.mapWidth;
@@ -380,14 +408,23 @@ public class BSPDungeonMaster : MonoBehaviour
         int seed = layoutSeed < 0 ? UnityEngine.Random.Range(0, int.MaxValue) : layoutSeed;
         TileBase stageFloor = currentStageData.groundTile != null ? currentStageData.groundTile : floorTile;
         TileBase stageWall = currentStageData.wallTile != null ? currentStageData.wallTile : wallTile;
-        if (!DungeonGraphMapBuilder.Generate(generationWidth, generationHeight,
+        bool generationSucceeded = false;
+        Action<string, float> updateProgress = (message, progress) =>
+        {
+            if (stageText != null)
+                stageText.text = $"{currentStageData.stageName}\n{message}";
+            LoadingScreenController.ReportMapProgress(message, progress);
+        };
+        yield return DungeonGraphMapBuilder.GenerateRoutine(generationWidth, generationHeight,
                 currentStageData.roomLibrary, roomPlacementPadding, floorTilemap, wallTilemap, trapTilemap,
                 stageFloor, currentStageData.groundTileWeights, currentStageData.randomizeRoomFloors,
                 stageWall, seed, transform, generatedRoomObjects, roomCount,
                 roomEncounterMultiplier, maxRoomDensity,
                 Mathf.Max(3, corridorWidth), extraBranchCount, branchChance,
                 maxRoomLinkDistance, maxCorridorTurns, windingCorridorChance,
-                outsideFloorPadding, removedRoomRetryThreshold))
+                outsideFloorPadding, removedRoomRetryThreshold,
+                result => generationSucceeded = result, updateProgress);
+        if (!generationSucceeded)
             Debug.LogError("ダンジョン生成に失敗しました。Room Libraryと部屋Prefabを確認してください。", currentStageData);
     }
 

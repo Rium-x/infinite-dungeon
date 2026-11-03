@@ -24,6 +24,10 @@ public class StageData : ScriptableObject
 {
     public string stageName;
 
+    [Header("BGM")]
+    [Tooltip("このステージで再生するBGM。未設定ならBGMManagerのゲーム用既定曲を使用します。")]
+    public AudioClip backgroundMusic;
+
     [Header("ステージクリア条件")]
     [Min(0), Tooltip("このステージで次のステージへ進むために必要な探索値。0で即時に進めます。")]
     public float requiredExplorationValue = 100f;

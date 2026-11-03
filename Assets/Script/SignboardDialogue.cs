@@ -75,7 +75,8 @@ public class SignboardDialogue : MonoBehaviour
             StartDialogue();
         }
 
-        if (triggerOnPickup && playerIsTouching && controls.Player.PickUp.triggered)
+        bool pickUpPressed = controls.Player.PickUp.IsPressed();
+        if (triggerOnPickup && playerIsTouching && (pickUpPressed || (!pickUpPressed && InputKeyboardFallback.WasPressedThisFrame(KeyCode.X))))
         {
             if (!dialogueStarted)
                 StartDialogue();

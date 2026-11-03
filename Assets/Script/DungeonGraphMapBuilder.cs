@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Tilemaps;
@@ -6,10 +7,22 @@ using UnityEngine.Tilemaps;
 /// <summary>Places authored room prefabs, connects them as a graph, and paints separate floor/wall maps.</summary>
 public static class DungeonGraphMapBuilder
 {
-    private const int MaxLayoutRetryDepth = 2;
+    // Keep at most one alternate layout on the call stack. Recursive retries retain
+    // the previous attempt's grids until the new layout returns, increasing WebGL peak memory.
+    private const int MaxLayoutRetryDepth = 1;
     private const int MaxMapDimension = 512;
     private const long MaxMapCellCount = (long)MaxMapDimension * MaxMapDimension;
     private const int MaxWindingWaypointAttempts = 6;
+
+    private static bool UsesWebGlFrameBudget()
+    {
+        return Application.platform == RuntimePlatform.WebGLPlayer;
+    }
+
+    private static int GetYieldInterval(int desktopInterval, int webglInterval)
+    {
+        return UsesWebGlFrameBudget() ? webglInterval : desktopInterval;
+    }
 
     private sealed class PlacedRoom
     {
@@ -44,22 +57,28 @@ public static class DungeonGraphMapBuilder
         public float cost;
     }
 
-    public static bool Generate(int mapWidth, int mapHeight, DungeonRoomLibrary library,
+    public static IEnumerator GenerateRoutine(int mapWidth, int mapHeight, DungeonRoomLibrary library,
         int placementPadding, Tilemap floorMap, Tilemap wallMap, Tilemap trapMap, TileBase defaultFloor,
         List<GroundTileWeight> groundTileWeights, bool randomizeRoomFloors,
         TileBase defaultWall, int seed, Transform roomObjectsParent, List<GameObject> generatedObjects,
         int targetRoomCount, float roomEncounterMultiplier, float maxRoomDensity, int corridorWidth,
         int maxExtraConnections, float branchChance, int maxRoomLinkDistance,
         int maxCorridorTurns, float windingChance,
-        int outsideFloorPadding, int removedRoomRetryThreshold)
+        int outsideFloorPadding, int removedRoomRetryThreshold, Action<bool> onComplete,
+        Action<string, float> onProgress)
     {
-        if (library == null || floorMap == null || wallMap == null) return false;
+        if (library == null || floorMap == null || wallMap == null)
+        {
+            onComplete?.Invoke(false);
+            yield break;
+        }
         int width = Mathf.Max(20, mapWidth);
         int height = Mathf.Max(20, mapHeight);
         if (width > MaxMapDimension || height > MaxMapDimension || (long)width * height > MaxMapCellCount)
         {
             Debug.LogError($"マップ生成を中止しました。クラッシュ防止の上限は {MaxMapDimension}×{MaxMapDimension} マスです（指定: {width}×{height}）。", library);
-            return false;
+            onComplete?.Invoke(false);
+            yield break;
         }
         System.Random random = new System.Random(seed);
         LogInvalidTemplates(library);
@@ -67,19 +86,29 @@ public static class DungeonGraphMapBuilder
         if (allRules.Count == 0)
         {
             Debug.LogError("Room Library に有効な部屋ルールがありません。", library);
-            return false;
+            onComplete?.Invoke(false);
+            yield break;
         }
 
         int corridorWidthClamped = Mathf.Clamp(corridorWidth, 3, 9);
         int edgePadding = corridorWidthClamped + corridorWidthClamped + 2;
-        List<PlacedRoom> rooms = PlaceRooms(width, height, library, placementPadding, edgePadding, random,
-            targetRoomCount, roomEncounterMultiplier, maxRoomDensity, allRules);
-        if (rooms == null) return false;
+        onProgress?.Invoke("部屋を配置中...", 0.03f);
+        List<PlacedRoom> rooms = null;
+        yield return PlaceRoomsRoutine(width, height, library, placementPadding, edgePadding, random,
+            targetRoomCount, roomEncounterMultiplier, maxRoomDensity, allRules,
+            result => rooms = result);
+        yield return null;
+        if (rooms == null)
+        {
+            onComplete?.Invoke(false);
+            yield break;
+        }
         int guaranteedRoomsPlaced = CountGuaranteedRooms(rooms);
         if (rooms.Count < 2)
         {
             Debug.LogError($"2部屋以上を配置できませんでした（{rooms.Count}部屋）。部屋Prefabとマップ寸法を確認してください。", library);
-            return false;
+            onComplete?.Invoke(false);
+            yield break;
         }
 
         bool[,] blocked = new bool[width, height];
@@ -91,10 +120,16 @@ public static class DungeonGraphMapBuilder
         bool[,] corridorCenterline = new bool[width, height];
         TileBase[,] roomFloor = new TileBase[width, height];
         TileBase[,] roomWall = new TileBase[width, height];
+        int edgeScanYieldInterval = GetYieldInterval(64, 256);
         for (int x = 0; x < width; x++)
+        {
             for (int y = 0; y < height; y++)
                 corridorPathBlocked[x, y] = x < corridorEdgeMargin || y < corridorEdgeMargin ||
                     x >= width - corridorEdgeMargin || y >= height - corridorEdgeMargin;
+            if ((x & (edgeScanYieldInterval - 1)) == (edgeScanYieldInterval - 1)) yield return null;
+        }
+        int preparedRoomCount = 0;
+        int roomPrepareYieldInterval = GetYieldInterval(4, 16);
         foreach (PlacedRoom room in rooms)
         {
             CopyRoom(room, width, height, floor, roomFloor, roomWall);
@@ -110,10 +145,11 @@ public static class DungeonGraphMapBuilder
             for (int x = corridorBuffer.xMin; x < corridorBuffer.xMax; x++)
                 for (int y = corridorBuffer.yMin; y < corridorBuffer.yMax; y++)
                     if (Inside(x, y, width, height)) corridorPathBlocked[x, y] = true;
+            if ((++preparedRoomCount & (roomPrepareYieldInterval - 1)) == (roomPrepareYieldInterval - 1)) yield return null;
         }
 
-        // Preserve the complete room layout and retry only corridor routing if a random
-        // route order strands many rooms. Keep the attempt that connects the most rooms.
+        // Try one route first. Spend the remaining attempts only if the result fails
+        // the configured removed-room threshold or leaves a guaranteed room unconnected.
         List<PlacedRoom> plannedRooms = new List<PlacedRoom>(rooms);
         List<bool[]> initialUsedExits = new List<bool[]>(plannedRooms.Count);
         List<bool[]> initialSelectedExits = new List<bool[]>(plannedRooms.Count);
@@ -148,8 +184,6 @@ public static class DungeonGraphMapBuilder
         const int maxConnectionAttempts = 3;
         for (int attempt = 0; attempt < maxConnectionAttempts; attempt++)
         {
-            if (attempt > 0 && bestTopologyComplete && bestConnectedCount >= plannedRooms.Count - 2) break;
-
             CopyGrid(baseBlocked, blocked);
             CopyGrid(baseRoomClearance, roomClearance);
             CopyGrid(baseCorridorPathBlocked, corridorPathBlocked);
@@ -178,10 +212,15 @@ public static class DungeonGraphMapBuilder
                 }
             }
 
-            bool topologyComplete = ConnectAllRooms(rooms, blocked, roomClearance, corridorPathBlocked,
+            float attemptProgressBase = 0.08f + 0.62f * attempt / maxConnectionAttempts;
+            onProgress?.Invoke($"通路を接続中 ({attempt + 1}/{maxConnectionAttempts})", attemptProgressBase);
+            bool topologyComplete = false;
+            Action<string, float> reportAttemptProgress = (message, fraction) =>
+                onProgress?.Invoke(message, attemptProgressBase + 0.62f / maxConnectionAttempts * fraction);
+            yield return ConnectAllRoomsRoutine(rooms, blocked, roomClearance, corridorPathBlocked,
                 floor, corridorCenterline, width, height, library, routeRandom, roomFloor, defaultFloor,
                 defaultWall, corridorWidth, roomWall, maxExtraConnections, branchChance, maxRoomLinkDistance,
-                maxCorridorTurns, windingChance);
+                maxCorridorTurns, windingChance, value => topologyComplete = value, reportAttemptProgress);
             connectionAttempts++;
             if (rooms.Count > bestConnectedCount ||
                 (rooms.Count == bestConnectedCount && topologyComplete && !bestTopologyComplete))
@@ -204,6 +243,13 @@ public static class DungeonGraphMapBuilder
                 bestRoomFloor = CloneGrid(roomFloor);
                 bestRoomWall = CloneGrid(roomWall);
             }
+
+            yield return null;
+
+            int currentRetiredRoomCount = plannedRooms.Count - bestConnectedCount;
+            bool currentResultAccepted = bestTopologyComplete &&
+                currentRetiredRoomCount <= Mathf.Max(0, removedRoomRetryThreshold);
+            if (currentResultAccepted) break;
 
             if (bestConnectedCount == plannedRooms.Count && bestTopologyComplete) break;
         }
@@ -233,43 +279,32 @@ public static class DungeonGraphMapBuilder
                 ? "保証部屋の接続に失敗したため"
                 : $"削除された部屋がしきい値 {Mathf.Max(0, removedRoomRetryThreshold)} を超えたため";
             Debug.LogWarning($"{retryReason}、部屋配置から別レイアウトを試します（削除 {retiredRoomCount}部屋）。", library);
-            PaintGeneratedMap(width, height, floor, roomFloor, roomWall, floorMap, wallMap, trapMap,
+            onProgress?.Invoke("マップを描画中...", 0.76f);
+            yield return PaintGeneratedMapRoutine(width, height, floor, roomFloor, roomWall, floorMap, wallMap, trapMap,
                 defaultFloor, groundTileWeights, randomizeRoomFloors, defaultWall, random, outsideFloorPadding);
             if (!randomizeRoomFloors)
-                PaintRoomTrapTiles(rooms, width, height, trapMap);
+                yield return PaintRoomTrapTilesRoutine(rooms, width, height, trapMap);
             int paintedVersionBeforeRetry = paintedLayoutVersion;
-            int generatedObjectCountBeforeRetry = generatedObjects != null ? generatedObjects.Count : 0;
             layoutRetryDepth++;
-            bool retryProducedMap;
-            bool retryThrew = false;
+            bool retryProducedMap = false;
             try
             {
-                retryProducedMap = Generate(mapWidth, mapHeight, library, placementPadding,
+                yield return GenerateRoutine(mapWidth, mapHeight, library, placementPadding,
                     floorMap, wallMap, trapMap, defaultFloor, groundTileWeights, randomizeRoomFloors,
                     defaultWall, nextSeed, roomObjectsParent, generatedObjects, targetRoomCount,
                     roomEncounterMultiplier, maxRoomDensity, corridorWidth, maxExtraConnections, branchChance,
                     maxRoomLinkDistance, maxCorridorTurns, windingChance, outsideFloorPadding,
-                    removedRoomRetryThreshold);
-            }
-            catch (Exception exception)
-            {
-                retryThrew = true;
-                Debug.LogError($"別レイアウトの再試行に失敗しました。現在の生成結果を使います。\n{exception}", library);
-                if (generatedObjects != null)
-                {
-                    for (int i = generatedObjects.Count - 1; i >= generatedObjectCountBeforeRetry; i--)
-                    {
-                        if (generatedObjects[i] != null) UnityEngine.Object.Destroy(generatedObjects[i]);
-                        generatedObjects.RemoveAt(i);
-                    }
-                }
-                retryProducedMap = false;
+                    removedRoomRetryThreshold, value => retryProducedMap = value, onProgress);
             }
             finally
             {
                 layoutRetryDepth--;
             }
-            if (!retryThrew && paintedLayoutVersion != paintedVersionBeforeRetry) return retryProducedMap;
+            if (paintedLayoutVersion != paintedVersionBeforeRetry)
+            {
+                onComplete?.Invoke(retryProducedMap);
+                yield break;
+            }
             // The new room layout could not be placed at all. Keep this attempt's valid map.
         }
         if (retiredRoomCount > 0)
@@ -277,16 +312,24 @@ public static class DungeonGraphMapBuilder
         if (!bestTopologyComplete)
             Debug.LogError("保証部屋をすべて通路ネットワークへ接続できませんでした。接続試行後も保証部屋は削除せず残しています。", library);
         Debug.Log($"部屋生成: {rooms.Count}部屋 / 保証部屋 {guaranteedRoomsPlaced}個を配置しました。", library);
+        onProgress?.Invoke("部屋オブジェクトを配置中...", 0.72f);
+        int copiedRoomCount = 0;
+        int roomObjectYieldInterval = GetYieldInterval(2, 8);
         foreach (PlacedRoom room in rooms)
+        {
             CopyRoomObjects(room, width, height, roomObjectsParent, generatedObjects);
-        PaintGeneratedMap(width, height, floor, roomFloor, roomWall, floorMap, wallMap, trapMap,
+            if ((++copiedRoomCount & (roomObjectYieldInterval - 1)) == (roomObjectYieldInterval - 1)) yield return null;
+        }
+        onProgress?.Invoke("マップを描画中...", 0.76f);
+        yield return PaintGeneratedMapRoutine(width, height, floor, roomFloor, roomWall, floorMap, wallMap, trapMap,
             defaultFloor, groundTileWeights, randomizeRoomFloors, defaultWall, random, outsideFloorPadding);
         if (!randomizeRoomFloors)
-            PaintRoomTrapTiles(rooms, width, height, trapMap);
-        return allRoomsConnected;
+            yield return PaintRoomTrapTilesRoutine(rooms, width, height, trapMap);
+        onProgress?.Invoke("準備完了", 1f);
+        onComplete?.Invoke(allRoomsConnected);
     }
 
-    private static void PaintGeneratedMap(int width, int height, bool[,] floor,
+    private static IEnumerator PaintGeneratedMapRoutine(int width, int height, bool[,] floor,
         TileBase[,] roomFloor, TileBase[,] roomWall, Tilemap floorMap, Tilemap wallMap, Tilemap trapMap,
         TileBase defaultFloor, List<GroundTileWeight> groundTileWeights,
         bool randomizeRoomFloors, TileBase defaultWall, System.Random random, int outsideFloorPadding)
@@ -303,11 +346,15 @@ public static class DungeonGraphMapBuilder
         TileBase[] floorTiles = new TileBase[paintWidth * paintHeight];
         TileBase[] wallTiles = new TileBase[paintWidth * paintHeight];
         TileBase[] trapTiles = trapMap != null ? new TileBase[paintWidth * paintHeight] : null;
+        int mapScanYieldInterval = GetYieldInterval(64, 256);
+        int padScanYieldInterval = GetYieldInterval(32, 128);
+        int setTileBatchYieldInterval = GetYieldInterval(8, 32);
 
         // Keep the same random-number order as before: paint the generated map first,
         // then choose decorative tiles for the outside padding. SetTilesBlock batches
         // thousands of per-cell Unity calls into one update for each Tilemap.
         for (int x = 0; x < width; x++)
+        {
             for (int y = 0; y < height; y++)
             {
                 int index = (x + padding) + (y + padding) * paintWidth;
@@ -342,8 +389,11 @@ public static class DungeonGraphMapBuilder
                     wallTiles[index] = roomWall[x, y] != null ? roomWall[x, y] : defaultWall;
                 }
             }
+            if ((x & (mapScanYieldInterval - 1)) == (mapScanYieldInterval - 1)) yield return null;
+        }
 
         for (int x = 0; x < paintWidth; x++)
+        {
             for (int y = 0; y < paintHeight; y++)
             {
                 if (x >= padding && x < padding + width &&
@@ -355,18 +405,36 @@ public static class DungeonGraphMapBuilder
                 else if (trapTiles != null)
                     trapTiles[index] = selected.tile;
             }
+            if ((x & (padScanYieldInterval - 1)) == (padScanYieldInterval - 1)) yield return null;
+        }
 
-        BoundsInt paintBounds = new BoundsInt(-offsetX - padding, -offsetY - padding, 0,
-            paintWidth, paintHeight, 1);
-        floorMap.SetTilesBlock(paintBounds, floorTiles);
-        wallMap.SetTilesBlock(paintBounds, wallTiles);
-        if (trapMap != null) trapMap.SetTilesBlock(paintBounds, trapTiles);
+        const int rowsPerBatch = 8;
+        int appliedBatchCount = 0;
+        for (int row = 0; row < paintHeight; row += rowsPerBatch)
+        {
+            int batchHeight = Mathf.Min(rowsPerBatch, paintHeight - row);
+            int batchLength = paintWidth * batchHeight;
+            TileBase[] floorBatch = new TileBase[batchLength];
+            TileBase[] wallBatch = new TileBase[batchLength];
+            TileBase[] trapBatch = trapMap != null ? new TileBase[batchLength] : null;
+            Array.Copy(floorTiles, row * paintWidth, floorBatch, 0, batchLength);
+            Array.Copy(wallTiles, row * paintWidth, wallBatch, 0, batchLength);
+            if (trapBatch != null) Array.Copy(trapTiles, row * paintWidth, trapBatch, 0, batchLength);
+
+            BoundsInt batchBounds = new BoundsInt(-offsetX - padding, -offsetY - padding + row, 0,
+                paintWidth, batchHeight, 1);
+            floorMap.SetTilesBlock(batchBounds, floorBatch);
+            wallMap.SetTilesBlock(batchBounds, wallBatch);
+            if (trapMap != null) trapMap.SetTilesBlock(batchBounds, trapBatch);
+            if ((++appliedBatchCount & (setTileBatchYieldInterval - 1)) == (setTileBatchYieldInterval - 1)) yield return null;
+        }
         paintedLayoutVersion++;
     }
 
-    private static void PaintRoomTrapTiles(List<PlacedRoom> rooms, int width, int height, Tilemap trapMap)
+    private static IEnumerator PaintRoomTrapTilesRoutine(List<PlacedRoom> rooms, int width, int height, Tilemap trapMap)
     {
-        if (trapMap == null || rooms == null) return;
+        if (trapMap == null || rooms == null) yield break;
+        int processedCells = 0;
         foreach (PlacedRoom room in rooms)
         {
             Tilemap source = room != null && room.template != null ? room.template.trapTilemap : null;
@@ -379,6 +447,11 @@ public static class DungeonGraphMapBuilder
                 if (tile != null && x >= -width / 2 && x < width - width / 2 &&
                     y >= -height / 2 && y < height - height / 2)
                     trapMap.SetTile(new Vector3Int(x, y, sourceCell.z), tile);
+                if (++processedCells >= 2048)
+                {
+                    processedCells = 0;
+                    yield return null;
+                }
             }
         }
     }
@@ -416,6 +489,10 @@ public static class DungeonGraphMapBuilder
         Transform parent, List<GameObject> generatedObjects)
     {
         if (parent == null || generatedObjects == null) return;
+        // Most room templates contain only floor, wall, and trap Tilemaps. Avoid
+        // instantiating those large Tilemap hierarchies just to discover there are
+        // no child objects to keep.
+        if (!HasNonTilemapSubtree(room.template.transform)) return;
 
         Vector3 position = new Vector3(room.offset.x - width / 2, room.offset.y - height / 2, 0f);
         GameObject instance = UnityEngine.Object.Instantiate(room.template.gameObject, position, Quaternion.identity);
@@ -428,6 +505,17 @@ public static class DungeonGraphMapBuilder
             generatedObjects.Add(roomObject.gameObject);
         }
         UnityEngine.Object.Destroy(instance);
+    }
+
+    private static bool HasNonTilemapSubtree(Transform parent)
+    {
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            Transform child = parent.GetChild(i);
+            if (child.GetComponentInChildren<Tilemap>(true) == null || HasNonTilemapSubtree(child))
+                return true;
+        }
+        return false;
     }
 
     private static void CollectNonTilemapSubtrees(Transform parent, List<Transform> results)
@@ -486,10 +574,10 @@ public static class DungeonGraphMapBuilder
         return count;
     }
 
-    private static List<PlacedRoom> PlaceRooms(int width, int height, DungeonRoomLibrary library,
+    private static IEnumerator PlaceRoomsRoutine(int width, int height, DungeonRoomLibrary library,
         int padding, int edgePadding, System.Random random, int targetRoomCount,
         float roomEncounterMultiplier, float maxRoomDensity,
-        List<DungeonRoomSpawnRule> rules)
+        List<DungeonRoomSpawnRule> rules, Action<List<PlacedRoom>> onComplete)
     {
         List<PlacedRoom> placed = new List<PlacedRoom>();
         int maximumRoomArea = Mathf.RoundToInt(width * height * Mathf.Clamp(maxRoomDensity, 0.05f, 0.8f));
@@ -516,30 +604,33 @@ public static class DungeonGraphMapBuilder
         DungeonRoomSpawnRule startRule = ChooseStartRule(startCandidates, random);
         if (startRule == null)
             startRule = ChooseStartRule(rules, random);
-        if (startRule == null) return placed;
+        if (startRule == null) { onComplete?.Invoke(placed); yield break; }
 
         if (!TryPlaceRoom(startRule, true, true, width, height, padding, edgePadding,
                 random, placed, ref currentRoomArea, maximumRoomArea))
         {
             Debug.LogError($"開始部屋「{startRule.prefab.name}」をマップ中央に配置できません。", library);
-            return null;
+            onComplete?.Invoke(null); yield break;
         }
         int requiredStartIndex = required.IndexOf(startRule);
         bool startIsGuaranteed = requiredStartIndex >= 0;
         placed[0].isGuaranteed = startIsGuaranteed;
         if (startIsGuaranteed) required.RemoveAt(requiredStartIndex);
 
+        int placedSinceYield = 0;
+        int roomPlacementYieldInterval = GetYieldInterval(32, 128);
         foreach (DungeonRoomSpawnRule rule in required)
         {
             if (TryPlaceRoom(rule, false, false, width, height, padding, edgePadding,
                     random, placed, ref currentRoomArea, maximumRoomArea))
             {
                 placed[placed.Count - 1].isGuaranteed = true;
+                if ((++placedSinceYield & (roomPlacementYieldInterval - 1)) == (roomPlacementYieldInterval - 1)) yield return null;
                 continue;
             }
 
             Debug.LogError($"保証部屋「{rule.prefab.name}」を必要数配置できませんでした。マップサイズ・部屋間隔・保証数を確認してください。", library);
-            return null;
+            onComplete?.Invoke(null); yield break;
         }
 
         // Do not stop the entire fill because one randomly selected large room no
@@ -550,15 +641,20 @@ public static class DungeonGraphMapBuilder
             DungeonRoomSpawnRule rule = ChooseWeighted(remainingRules, random);
             if (rule == null) break;
             if (TryPlaceRoom(rule, false, true, width, height, padding, edgePadding,
-                    random, placed, ref currentRoomArea, maximumRoomArea)) continue;
+                    random, placed, ref currentRoomArea, maximumRoomArea))
+            {
+                if ((++placedSinceYield & (roomPlacementYieldInterval - 1)) == (roomPlacementYieldInterval - 1)) yield return null;
+                continue;
+            }
             remainingRules.Remove(rule);
+            if ((++placedSinceYield & (roomPlacementYieldInterval - 1)) == (roomPlacementYieldInterval - 1)) yield return null;
         }
 
         if (placed.Count < target)
         {
             Debug.LogWarning($"部屋配置数を {placed.Count}/{target} に減らしました。マップが狭いか、部屋Prefabが大きすぎます。保証部屋はすべて配置されています。", library);
         }
-        return placed;
+        onComplete?.Invoke(placed);
     }
 
     private static bool TryPlaceRoom(DungeonRoomSpawnRule rule, bool center, bool enforceDensity,
@@ -726,14 +822,23 @@ public static class DungeonGraphMapBuilder
             }
     }
 
-    private static void RebuildPathMasks(List<PlacedRoom> rooms, bool[] activeRooms,
+    private static void RebuildPathMasksInRegion(List<PlacedRoom> rooms, bool[] activeRooms,
         bool[,] corridorCenterline, bool[,] blocked, bool[,] roomClearance,
-        bool[,] corridorPathBlocked, int corridorRadius, int corridorWidth,
-        int width, int height)
+        bool[,] corridorPathBlocked, RectInt removedBounds, int corridorRadius,
+        int corridorWidth, int width, int height)
     {
+        // Removing a room only invalidates masks around that room. Rebuild that
+        // bounded area instead of clearing and scanning the complete map.
         int edgeMargin = GetCorridorEdgeMargin(corridorWidth);
-        for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
+        int keepoutRadius = Mathf.Max((corridorWidth - 1) / 2, corridorWidth / 2) * 2 + 1;
+        RectInt expanded = Expand(removedBounds, corridorRadius + 1);
+        int xMin = Mathf.Clamp(expanded.xMin, 0, width);
+        int xMax = Mathf.Clamp(expanded.xMax, 0, width);
+        int yMin = Mathf.Clamp(expanded.yMin, 0, height);
+        int yMax = Mathf.Clamp(expanded.yMax, 0, height);
+
+        for (int x = xMin; x < xMax; x++)
+            for (int y = yMin; y < yMax; y++)
             {
                 blocked[x, y] = false;
                 roomClearance[x, y] = false;
@@ -745,23 +850,23 @@ public static class DungeonGraphMapBuilder
         {
             if (!activeRooms[i]) continue;
             RectInt bounds = rooms[i].bounds;
-            for (int x = bounds.xMin; x < bounds.xMax; x++)
-                for (int y = bounds.yMin; y < bounds.yMax; y++)
-                    if (Inside(x, y, width, height)) blocked[x, y] = true;
+            for (int x = Mathf.Max(xMin, bounds.xMin); x < Mathf.Min(xMax, bounds.xMax); x++)
+                for (int y = Mathf.Max(yMin, bounds.yMin); y < Mathf.Min(yMax, bounds.yMax); y++)
+                    blocked[x, y] = true;
 
             RectInt clearance = Expand(bounds, 1);
-            for (int x = clearance.xMin; x < clearance.xMax; x++)
-                for (int y = clearance.yMin; y < clearance.yMax; y++)
-                    if (Inside(x, y, width, height)) roomClearance[x, y] = true;
+            for (int x = Mathf.Max(xMin, clearance.xMin); x < Mathf.Min(xMax, clearance.xMax); x++)
+                for (int y = Mathf.Max(yMin, clearance.yMin); y < Mathf.Min(yMax, clearance.yMax); y++)
+                    roomClearance[x, y] = true;
 
             RectInt corridorBuffer = Expand(bounds, corridorRadius + 1);
-            for (int x = corridorBuffer.xMin; x < corridorBuffer.xMax; x++)
-                for (int y = corridorBuffer.yMin; y < corridorBuffer.yMax; y++)
-                    if (Inside(x, y, width, height)) corridorPathBlocked[x, y] = true;
+            for (int x = Mathf.Max(xMin, corridorBuffer.xMin); x < Mathf.Min(xMax, corridorBuffer.xMax); x++)
+                for (int y = Mathf.Max(yMin, corridorBuffer.yMin); y < Mathf.Min(yMax, corridorBuffer.yMax); y++)
+                    corridorPathBlocked[x, y] = true;
         }
 
-        for (int x = 0; x < width; x++)
-            for (int y = 0; y < height; y++)
+        for (int x = Mathf.Max(0, xMin - keepoutRadius); x < Mathf.Min(width, xMax + keepoutRadius); x++)
+            for (int y = Mathf.Max(0, yMin - keepoutRadius); y < Mathf.Min(height, yMax + keepoutRadius); y++)
                 if (corridorCenterline[x, y])
                     MarkCorridorKeepoutCell(new Vector2Int(x, y), corridorPathBlocked,
                         corridorWidth, width, height);
@@ -779,12 +884,13 @@ public static class DungeonGraphMapBuilder
         Array.Copy(source, destination, source.Length);
     }
 
-    private static bool ConnectAllRooms(List<PlacedRoom> rooms, bool[,] blocked, bool[,] roomClearance,
+    private static IEnumerator ConnectAllRoomsRoutine(List<PlacedRoom> rooms, bool[,] blocked, bool[,] roomClearance,
         bool[,] corridorPathBlocked, bool[,] floor, bool[,] corridorCenterline,
         int width, int height, DungeonRoomLibrary library, System.Random random,
         TileBase[,] roomFloor, TileBase defaultFloor, TileBase defaultWall, int corridorWidth, TileBase[,] roomWall,
         int maxExtraConnections,
-        float branchChance, int maxRoomLinkDistance, int maxCorridorTurns, float windingChance)
+        float branchChance, int maxRoomLinkDistance, int maxCorridorTurns, float windingChance,
+        Action<bool> onComplete, Action<string, float> onProgress)
     {
         HashSet<int> connected = new HashSet<int> { 0 };
         HashSet<long> treeEdges = new HashSet<long>();
@@ -796,6 +902,8 @@ public static class DungeonGraphMapBuilder
         List<Vector2Int> corridorCells = GetCorridorCells(corridorCenterline, width, height);
         while (connected.Count < activeRoomCount)
         {
+            float connectionProgress = activeRoomCount > 0 ? (float)connected.Count / activeRoomCount : 1f;
+            onProgress?.Invoke($"部屋を通路へ接続中 ({connected.Count}/{activeRoomCount})", connectionProgress);
             bool hasUnconnectedGuaranteedRoom = false;
             for (int i = 0; i < rooms.Count; i++)
                 if (activeRooms[i] && rooms[i].isGuaranteed && !connected.Contains(i))
@@ -824,10 +932,12 @@ public static class DungeonGraphMapBuilder
                 bool attachedToCorridor = false;
                 foreach (int roomIndex in attachmentOrder)
                 {
-                    if (!TryConnectRoomToCorridorAnyExit(rooms[roomIndex], blocked, roomClearance,
+                    bool connectedToCorridor = false;
+                    yield return TryConnectRoomToCorridorAnyExitRoutine(rooms[roomIndex], blocked, roomClearance,
                             corridorPathBlocked, floor, corridorCenterline, corridorCells, width, height,
                             roomFloor, roomWall, defaultFloor, defaultWall, corridorWidth, maxCorridorTurns,
-                            windingChance, random)) continue;
+                            windingChance, random, value => connectedToCorridor = value);
+                    if (!connectedToCorridor) continue;
                     connected.Add(roomIndex);
                     attachedToCorridor = true;
                     break;
@@ -870,13 +980,19 @@ public static class DungeonGraphMapBuilder
 
             candidates.Sort((left, right) => left.cost.CompareTo(right.cost));
             bool linked = false;
-            foreach (ConnectionCandidate candidate in candidates)
+            int connectionCandidateYieldInterval = GetYieldInterval(16, 64);
+            for (int candidateIndex = 0; candidateIndex < candidates.Count; candidateIndex++)
             {
-                if (!TryConnect(rooms[candidate.roomA], candidate.exitA,
+                ConnectionCandidate candidate = candidates[candidateIndex];
+                bool connectedRooms = false;
+                yield return TryConnectRoutine(rooms[candidate.roomA], candidate.exitA,
                         rooms[candidate.roomB], candidate.exitB, blocked, roomClearance,
                         corridorPathBlocked, floor, corridorCenterline, corridorCells, width, height,
                         roomFloor, roomWall, defaultFloor,
-                        corridorWidth, maxCorridorTurns, windingChance, random)) continue;
+                        corridorWidth, maxCorridorTurns, windingChance, random,
+                        value => connectedRooms = value);
+                if ((candidateIndex & (connectionCandidateYieldInterval - 1)) == (connectionCandidateYieldInterval - 1)) yield return null;
+                if (!connectedRooms) continue;
 
                 connected.Add(candidate.roomB);
                 treeEdges.Add(EdgeKey(candidate.roomA, candidate.roomB));
@@ -892,10 +1008,12 @@ public static class DungeonGraphMapBuilder
                 {
                     if (!activeRooms[roomIndex] || connected.Contains(roomIndex)) continue;
                     if (hasUnconnectedGuaranteedRoom && !rooms[roomIndex].isGuaranteed) continue;
-                    if (!TryConnectRoomToCorridorAnyExit(rooms[roomIndex], blocked, roomClearance,
+                    bool connectedToCorridor = false;
+                    yield return TryConnectRoomToCorridorAnyExitRoutine(rooms[roomIndex], blocked, roomClearance,
                             corridorPathBlocked, floor, corridorCenterline, corridorCells, width, height,
                             roomFloor, roomWall, defaultFloor, defaultWall, corridorWidth, maxCorridorTurns,
-                            windingChance, random)) continue;
+                            windingChance, random, value => connectedToCorridor = value);
+                    if (!connectedToCorridor) continue;
 
                     connected.Add(roomIndex);
                     linked = true;
@@ -922,10 +1040,12 @@ public static class DungeonGraphMapBuilder
                     ClearRoomFootprint(rooms[roomToRemove], floor, roomFloor, roomWall, width, height);
                     activeRooms[roomToRemove] = false;
                     activeRoomCount--;
-                    RebuildPathMasks(rooms, activeRooms, corridorCenterline, blocked,
-                        roomClearance, corridorPathBlocked, corridorRadius, corridorWidth, width, height);
+                    RebuildPathMasksInRegion(rooms, activeRooms, corridorCenterline, blocked,
+                        roomClearance, corridorPathBlocked, rooms[roomToRemove].bounds,
+                        corridorRadius, corridorWidth, width, height);
                 }
             }
+            yield return null;
         }
 
         int addedConnections = 0;
@@ -939,14 +1059,18 @@ public static class DungeonGraphMapBuilder
         {
             if (addedConnections >= maxExtraConnections) break;
             if (random.NextDouble() >= branchChance) continue;
-            if (TryConnectRoomToCorridor(rooms[roomIndex], blocked, roomClearance,
+            bool branchConnected = false;
+            yield return TryConnectRoomToCorridorRoutine(rooms[roomIndex], blocked, roomClearance,
                 corridorPathBlocked, floor, corridorCenterline, corridorCells, width, height,
                 roomFloor, roomWall, defaultFloor, corridorWidth, maxCorridorTurns,
-                windingChance, random))
+                windingChance, random, 128, value => branchConnected = value);
+            if (branchConnected)
                 addedConnections++;
+            yield return null;
         }
 
         List<Vector2Int> extras = new List<Vector2Int>();
+        int extraRoomPairYieldInterval = GetYieldInterval(16, 64);
         for (int a = 0; a < rooms.Count; a++)
         {
             if (!activeRooms[a]) continue;
@@ -954,6 +1078,7 @@ public static class DungeonGraphMapBuilder
                 if (activeRooms[b] && !treeEdges.Contains(EdgeKey(a, b)) &&
                     Vector2.Distance(rooms[a].Center, rooms[b].Center) <= maxRoomLinkDistance)
                     extras.Add(new Vector2Int(a, b));
+            if ((a & (extraRoomPairYieldInterval - 1)) == (extraRoomPairYieldInterval - 1)) yield return null;
         }
         Shuffle(extras, random);
 
@@ -962,16 +1087,19 @@ public static class DungeonGraphMapBuilder
             if (addedConnections >= maxExtraConnections) break;
             if (random.NextDouble() >= branchChance) continue;
             if (!ChooseExits(rooms[extra.x], rooms[extra.y], out int exitA, out int exitB)) continue;
-            if (TryConnect(rooms[extra.x], exitA, rooms[extra.y], exitB,
+            bool extraConnected = false;
+            yield return TryConnectRoutine(rooms[extra.x], exitA, rooms[extra.y], exitB,
                 blocked, roomClearance, corridorPathBlocked, floor, corridorCenterline, corridorCells,
                 width, height, roomFloor, roomWall, defaultFloor, corridorWidth,
-                maxCorridorTurns, windingChance, random))
+                maxCorridorTurns, windingChance, random, value => extraConnected = value);
+            if (extraConnected)
                 addedConnections++;
+            yield return null;
         }
 
         for (int i = rooms.Count - 1; i >= 0; i--)
             if (!activeRooms[i]) rooms.RemoveAt(i);
-        return !failedToConnectGuaranteedRoom;
+        onComplete?.Invoke(!failedToConnectGuaranteedRoom);
     }
 
     private static List<Vector2Int> GetCorridorCells(bool[,] corridorCenterline, int width, int height)
@@ -993,12 +1121,12 @@ public static class DungeonGraphMapBuilder
         return nearest;
     }
 
-    private static bool TryConnect(PlacedRoom roomA, int exitA, PlacedRoom roomB, int exitB,
+    private static IEnumerator TryConnectRoutine(PlacedRoom roomA, int exitA, PlacedRoom roomB, int exitB,
         bool[,] blocked, bool[,] roomClearance, bool[,] corridorPathBlocked, bool[,] floor,
         bool[,] corridorCenterline, List<Vector2Int> corridorCells,
         int width, int height, TileBase[,] roomFloor, TileBase[,] roomWall,
         TileBase defaultFloor, int corridorWidth,
-        int maxCorridorTurns, float windingChance, System.Random random)
+        int maxCorridorTurns, float windingChance, System.Random random, Action<bool> onComplete)
     {
         DungeonRoomExit a = roomA.template.exits[exitA];
         DungeonRoomExit b = roomB.template.exits[exitB];
@@ -1012,12 +1140,14 @@ public static class DungeonGraphMapBuilder
             corridorPathBlocked, corridorWidth, width, height);
         Vector2Int end = FindExitPathStart(doorB, b.DirectionVector, roomB.bounds,
             corridorPathBlocked, corridorWidth, width, height);
-        if (!Inside(start.x, start.y, width, height) || !Inside(end.x, end.y, width, height)) return false;
+        if (!Inside(start.x, start.y, width, height) || !Inside(end.x, end.y, width, height))
+        { onComplete?.Invoke(false); yield break; }
         int minimumStraightCells = Mathf.Clamp(corridorWidth, 3, 9) + 1;
-        List<Vector2Int> path = FindPath(start, end, a.DirectionVector, -b.DirectionVector,
+        List<Vector2Int> path = null;
+        yield return FindPathRoutine(start, end, a.DirectionVector, -b.DirectionVector,
             corridorPathBlocked, width, height, maxCorridorTurns, windingChance,
-            minimumStraightCells, random);
-        if (path == null) return false;
+            minimumStraightCells, random, value => path = value);
+        if (path == null) { onComplete?.Invoke(false); yield break; }
 
         Carve(floor, roomFloor, roomWall, doorA, a.DirectionVector, path, corridorWidth,
             start, roomA.bounds, blocked, roomClearance, defaultFloor, width, height);
@@ -1033,19 +1163,60 @@ public static class DungeonGraphMapBuilder
             corridorWidth, width, height);
         roomA.usedExits[exitA] = true;
         roomB.usedExits[exitB] = true;
-        return true;
+        onComplete?.Invoke(true);
     }
 
-    private static bool TryConnectRoomToCorridor(PlacedRoom room, bool[,] roomBlocked,
+    private static IEnumerator TryConnectRoomToCorridorRoutine(PlacedRoom room, bool[,] roomBlocked,
         bool[,] roomClearance, bool[,] corridorPathBlocked, bool[,] floor,
         bool[,] corridorCenterline, List<Vector2Int> corridorCells, int width, int height,
         TileBase[,] roomFloor, TileBase[,] roomWall,
         TileBase defaultFloor, int corridorWidth, int maxCorridorTurns,
-        float windingChance, System.Random random, int maxCandidateAttempts = 128)
+        float windingChance, System.Random random, int maxCandidateAttempts,
+        Action<bool> onComplete)
+    {
+        bool connected = false;
+        // Most rooms can join a nearby hallway. Search a small area first so each
+        // attachment does not walk the entire (growing) corridor list.
+        int nearbyLimit = Mathf.Min(maxCandidateAttempts, 8);
+        yield return TryConnectRoomToCorridorSearchRoutine(room, roomBlocked, roomClearance,
+            corridorPathBlocked, floor, corridorCenterline, corridorCells, width, height,
+            roomFloor, roomWall, defaultFloor, corridorWidth, maxCorridorTurns, windingChance,
+            random, nearbyLimit, 24, value => connected = value);
+        if (connected) { onComplete?.Invoke(true); yield break; }
+
+        // Preserve a full-map fallback for layouts where nearby corridors are blocked.
+        yield return TryConnectRoomToCorridorSearchRoutine(room, roomBlocked, roomClearance,
+            corridorPathBlocked, floor, corridorCenterline, corridorCells, width, height,
+            roomFloor, roomWall, defaultFloor, corridorWidth, maxCorridorTurns, windingChance,
+            random, maxCandidateAttempts, -1, value => connected = value);
+        onComplete?.Invoke(connected);
+    }
+
+    private static IEnumerator TryConnectRoomToCorridorSearchRoutine(PlacedRoom room, bool[,] roomBlocked,
+        bool[,] roomClearance, bool[,] corridorPathBlocked, bool[,] floor,
+        bool[,] corridorCenterline, List<Vector2Int> corridorCells, int width, int height,
+        TileBase[,] roomFloor, TileBase[,] roomWall,
+        TileBase defaultFloor, int corridorWidth, int maxCorridorTurns,
+        float windingChance, System.Random random, int maxCandidateAttempts, int searchRadius,
+        Action<bool> onComplete)
     {
         List<CorridorAttachmentCandidate> candidates = new List<CorridorAttachmentCandidate>();
         int candidateLimit = Mathf.Max(1, maxCandidateAttempts);
         int corridorSize = Mathf.Clamp(corridorWidth, 3, 9);
+        List<Vector2Int> nearbyCorridorCells = null;
+        if (searchRadius >= 0)
+        {
+            nearbyCorridorCells = new List<Vector2Int>();
+            int centerX = Mathf.RoundToInt(room.Center.x);
+            int centerY = Mathf.RoundToInt(room.Center.y);
+            int minX = Mathf.Max(1, centerX - searchRadius);
+            int maxX = Mathf.Min(width - 2, centerX + searchRadius);
+            int minY = Mathf.Max(1, centerY - searchRadius);
+            int maxY = Mathf.Min(height - 2, centerY + searchRadius);
+            for (int x = minX; x <= maxX; x++)
+                for (int y = minY; y <= maxY; y++)
+                    if (corridorCenterline[x, y]) nearbyCorridorCells.Add(new Vector2Int(x, y));
+        }
         for (int exit = 0; exit < room.usedExits.Length; exit++)
         {
             if (room.usedExits[exit]) continue;
@@ -1055,10 +1226,16 @@ public static class DungeonGraphMapBuilder
                 corridorPathBlocked, corridorWidth, width, height);
             if (!Inside(start.x, start.y, width, height)) continue;
 
-            foreach (Vector2Int corridorCell in corridorCells)
+            int scanned = 0;
+            int corridorScanYieldInterval = GetYieldInterval(8192, 65536);
+            List<Vector2Int> searchCells = nearbyCorridorCells ?? corridorCells;
+            foreach (Vector2Int corridorCell in searchCells)
             {
                 foreach (Vector2Int outward in CardinalDirections)
                 {
+                    // Keep each WebGL frame's corridor scan bounded. A large centerline
+                    // can contain tens of thousands of cells in a single room search.
+                    if ((++scanned & (corridorScanYieldInterval - 1)) == (corridorScanYieldInterval - 1)) yield return null;
                     // Place the new corridor centerline one corridor-width away. Its
                     // footprint then meets the existing corridor edge without overlap.
                     Vector2Int target = corridorCell + outward * corridorSize;
@@ -1130,11 +1307,11 @@ public static class DungeonGraphMapBuilder
                 openedCount++;
                 attachmentBlocked[approachCell.x, approachCell.y] = false;
             }
-            List<Vector2Int> path = approachIsClear
-                ? FindPath(start, candidate.target, roomExit.DirectionVector,
+            List<Vector2Int> path = null;
+            if (approachIsClear)
+                yield return FindPathRoutine(start, candidate.target, roomExit.DirectionVector,
                     candidate.endDirection, attachmentBlocked, width, height, maxCorridorTurns,
-                    windingChance, minimumStraightCells, random)
-                : null;
+                    windingChance, minimumStraightCells, random, value => path = value);
             for (int opened = 0; opened < openedCount; opened++)
             {
                 Vector2Int point = temporarilyOpened[opened];
@@ -1143,6 +1320,7 @@ public static class DungeonGraphMapBuilder
 
             if (path == null)
             {
+                if ((i & (GetYieldInterval(16, 64) - 1)) == (GetYieldInterval(16, 64) - 1)) yield return null;
                 continue;
             }
 
@@ -1154,9 +1332,10 @@ public static class DungeonGraphMapBuilder
             MarkDoorwayKeepout(door, roomExit.DirectionVector, start, corridorPathBlocked,
                 corridorWidth, width, height);
             room.usedExits[candidate.exit] = true;
-            return true;
+            onComplete?.Invoke(true);
+            yield break;
         }
-        return false;
+        onComplete?.Invoke(false);
     }
 
     private static void InsertAttachmentCandidate(List<CorridorAttachmentCandidate> candidates,
@@ -1177,16 +1356,18 @@ public static class DungeonGraphMapBuilder
             candidates.RemoveAt(candidates.Count - 1);
     }
 
-    private static bool TryConnectRoomToCorridorAnyExit(PlacedRoom room, bool[,] roomBlocked,
+    private static IEnumerator TryConnectRoomToCorridorAnyExitRoutine(PlacedRoom room, bool[,] roomBlocked,
         bool[,] roomClearance, bool[,] corridorPathBlocked, bool[,] floor,
         bool[,] corridorCenterline, List<Vector2Int> corridorCells, int width, int height,
         TileBase[,] roomFloor, TileBase[,] roomWall,
         TileBase defaultFloor, TileBase defaultWall, int corridorWidth, int maxCorridorTurns,
-        float windingChance, System.Random random)
+        float windingChance, System.Random random, Action<bool> onComplete)
     {
-        if (TryConnectRoomToCorridor(room, roomBlocked, roomClearance, corridorPathBlocked,
+        bool connected = false;
+        yield return TryConnectRoomToCorridorRoutine(room, roomBlocked, roomClearance, corridorPathBlocked,
                 floor, corridorCenterline, corridorCells, width, height, roomFloor, roomWall, defaultFloor,
-                corridorWidth, maxCorridorTurns, windingChance, random, 64)) return true;
+                corridorWidth, maxCorridorTurns, windingChance, random, 64, value => connected = value);
+        if (connected) { onComplete?.Invoke(true); yield break; }
 
         bool[] originalSelected = (bool[])room.selectedExits.Clone();
         bool[] originalUsed = (bool[])room.usedExits.Clone();
@@ -1197,7 +1378,7 @@ public static class DungeonGraphMapBuilder
             if (originalSelected[i]) selected.Add(i);
             else alternatives.Add(i);
         }
-        if (selected.Count == 0 || alternatives.Count == 0) return false;
+        if (selected.Count == 0 || alternatives.Count == 0) { onComplete?.Invoke(false); yield break; }
         Shuffle(selected, random);
         Shuffle(alternatives, random);
 
@@ -1212,15 +1393,17 @@ public static class DungeonGraphMapBuilder
             room.usedExits[newExit] = false;
             ApplyRoomExitWallMask(room, width, height, roomWall, defaultWall);
 
-            if (TryConnectRoomToCorridor(room, roomBlocked, roomClearance, corridorPathBlocked,
+            connected = false;
+            yield return TryConnectRoomToCorridorRoutine(room, roomBlocked, roomClearance, corridorPathBlocked,
                     floor, corridorCenterline, corridorCells, width, height, roomFloor, roomWall, defaultFloor,
-                    corridorWidth, maxCorridorTurns, windingChance, random, 32)) return true;
+                    corridorWidth, maxCorridorTurns, windingChance, random, 32, value => connected = value);
+            if (connected) { onComplete?.Invoke(true); yield break; }
         }
 
         Array.Copy(originalSelected, room.selectedExits, originalSelected.Length);
         Array.Copy(originalUsed, room.usedExits, originalUsed.Length);
         ApplyRoomExitWallMask(room, width, height, roomWall, defaultWall);
-        return false;
+        onComplete?.Invoke(false);
     }
 
     private static void ApplyRoomExitWallMask(PlacedRoom room, int width, int height,
@@ -1397,10 +1580,10 @@ public static class DungeonGraphMapBuilder
         return ((long)low << 32) | (uint)high;
     }
 
-    private static List<Vector2Int> FindPath(Vector2Int start, Vector2Int end,
+    private static IEnumerator FindPathRoutine(Vector2Int start, Vector2Int end,
         Vector2Int startDirection, Vector2Int endDirection,
         bool[,] blocked, int width, int height, int maxTurns, float windingChance,
-        int minimumStraightCells, System.Random random)
+        int minimumStraightCells, System.Random random, Action<List<Vector2Int>> onComplete)
     {
         // Prefer the direct one-turn routes first. Winding routes are optional variety and
         // must not replace a valid simple route just because their chance roll succeeded.
@@ -1410,29 +1593,32 @@ public static class DungeonGraphMapBuilder
             : new Vector2Int(start.x, end.y);
         if (maxTurns >= 1 && TryBuildAxisPath(start, corner, end, blocked, width, height, out List<Vector2Int> direct) &&
             IsCorridorPathValid(direct, startDirection, endDirection, maxTurns, minimumStraightCells))
-            return direct;
+            { onComplete?.Invoke(direct); yield break; }
         Vector2Int alternateCorner = horizontalFirst
             ? new Vector2Int(start.x, end.y)
             : new Vector2Int(end.x, start.y);
         if (maxTurns >= 1 && TryBuildAxisPath(start, alternateCorner, end, blocked, width, height, out direct) &&
             IsCorridorPathValid(direct, startDirection, endDirection, maxTurns, minimumStraightCells))
-            return direct;
+            { onComplete?.Invoke(direct); yield break; }
 
         if (maxTurns >= 2 && random.NextDouble() < windingChance &&
             TryBuildWindingPath(start, end, blocked, width, height, random, out List<Vector2Int> winding) &&
             IsCorridorPathValid(winding, startDirection, endDirection, maxTurns, minimumStraightCells))
-            return winding;
+            { onComplete?.Invoke(winding); yield break; }
 
         // Use constrained grid search only after both direct routes and the optional
         // winding attempt fail their obstacle and minimum-straight-run checks.
-        List<Vector2Int> constrained = FindConstrainedPath(start, end, startDirection,
-            endDirection, blocked, width, height, maxTurns, minimumStraightCells);
-        return constrained;
+        List<Vector2Int> constrained = null;
+        yield return FindConstrainedPathRoutine(start, end, startDirection,
+            endDirection, blocked, width, height, maxTurns, minimumStraightCells,
+            value => constrained = value);
+        onComplete?.Invoke(constrained);
     }
 
-    private static List<Vector2Int> FindConstrainedPath(Vector2Int start, Vector2Int end,
+    private static IEnumerator FindConstrainedPathRoutine(Vector2Int start, Vector2Int end,
         Vector2Int startDirection, Vector2Int endDirection, bool[,] blocked,
-        int width, int height, int maxTurns, int minimumStraightCells)
+        int width, int height, int maxTurns, int minimumStraightCells,
+        Action<List<Vector2Int>> onComplete)
     {
         Vector2Int[] directions = { Vector2Int.up, Vector2Int.right, Vector2Int.down, Vector2Int.left };
         int turnStateCount = Mathf.Max(0, maxTurns) + 1;
@@ -1443,6 +1629,8 @@ public static class DungeonGraphMapBuilder
         queue.Enqueue(startState);
         int endState = -1;
 
+        int processedStates = 0;
+        int pathStateYieldInterval = GetYieldInterval(8192, 65536);
         while (queue.Count > 0 && endState < 0)
         {
             int state = queue.Dequeue();
@@ -1484,9 +1672,12 @@ public static class DungeonGraphMapBuilder
                 }
                 queue.Enqueue(nextState);
             }
+            // Batch more path states per frame to reduce coroutine handoff overhead
+            // while still allowing the browser to repaint during long searches.
+            if ((++processedStates & (pathStateYieldInterval - 1)) == (pathStateYieldInterval - 1)) yield return null;
         }
 
-        if (endState < 0) return null;
+        if (endState < 0) { onComplete?.Invoke(null); yield break; }
         List<Vector2Int> path = new List<Vector2Int>();
         int cursor = endState;
         while (cursor != startState)
@@ -1498,7 +1689,7 @@ public static class DungeonGraphMapBuilder
         }
         path.Add(start);
         path.Reverse();
-        return path;
+        onComplete?.Invoke(path);
     }
 
     private static int EncodePathState(Vector2Int point, int direction, int straightRun,

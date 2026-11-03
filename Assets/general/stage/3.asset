@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: 3
   m_EditorClassIdentifier: Assembly-CSharp::StageData
   stageName: "It Doesn't Say R.I.P! \\n (\u30B9\u30B1\u30EB\u30C8\u30F3\u5927\u6226\u4E89\uFF01)\u3000"
+  backgroundMusic: {fileID: 8300000, guid: 2396e432979e69c45a690182bac34d3b, type: 3}
   requiredExplorationValue: 200
   playerLightRadiusPercent: 50
   normalItemOrderFalloff: 0.5

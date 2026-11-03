@@ -1428,6 +1428,7 @@ MonoBehaviour:
   usableExitCount: 4
   floorTilemap: {fileID: 6165983437750394772}
   wallTilemap: {fileID: 3213364645796081225}
+  trapTilemap: {fileID: 0}
   exits:
   - cell: {x: 0, y: 4}
     direction: 0

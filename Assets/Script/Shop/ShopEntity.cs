@@ -68,4 +68,15 @@ public sealed class ShopEntity : MonoBehaviour
     {
         if (other.CompareTag(playerTag)) playerNearby = false;
     }
+
+    private void Update()
+    {
+        if (BSPDungeonMaster.IsPlayerInputLocked || !playerNearby || ShopWindowUI.IsShopOpen) return;
+
+        bool pickUpPressed = controls.Player.PickUp.IsPressed();
+        if (!pickUpPressed && InputKeyboardFallback.WasPressedThisFrame(KeyCode.X))
+        {
+            OnPickUpPerformed(default);
+        }
+    }
 }

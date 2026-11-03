@@ -49,6 +49,23 @@ public class Inventory : MonoBehaviour
     private void OnEnable()  => controls.Enable();
     private void OnDisable() => controls.Disable();
 
+    private void Update()
+    {
+        if (BSPDungeonMaster.IsPlayerInputLocked) return;
+
+        if (!controls.Player.Drop.IsPressed() && InputKeyboardFallback.WasPressedThisFrame(KeyCode.Q))
+            OnDropAction();
+
+        if (!controls.Player.NextSlot.IsPressed() && InputKeyboardFallback.WasPressedThisFrame(KeyCode.A))
+            OnNextSlotAction();
+
+        if (!controls.Player.PrevSlot.IsPressed() && InputKeyboardFallback.WasPressedThisFrame(KeyCode.D))
+            OnPrevSlotAction();
+
+        if (!controls.Player.EquipRight.IsPressed() && InputKeyboardFallback.WasPressedThisFrame(KeyCode.S))
+            OnEquipRightAction();
+    }
+
     void Start()
     {
         items.Clear();
